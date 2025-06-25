@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import steps, { tips, Step as StepType } from './meetingFlowData';
 import { useResponsive } from '../../hooks/useResponsive';
 import { focusStyles } from '../../utils/accessibility';
+import { useMeetingFlowStore } from './useMeetingFlowStore';
 
 interface MeetingFlowProps {
   onBack: (updatedTeams?: string[][]) => void;
@@ -21,12 +22,28 @@ interface MeetingFlowProps {
 export default function MeetingFlow({ onBack, teams, setTeams, members }: MeetingFlowProps) {
   const theme = useTheme();
   const { isMobile, isTablet, spacing, cardPadding } = useResponsive();
-  const [activeStep, setActiveStep] = useState<number>(0);
-  const [timerRunning, setTimerRunning] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [stepTimes, setStepTimes] = useState<number[]>(steps.map(s => s.time));
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [stepTipsContent, setStepTipsContent] = useState<string[]>([]);
+  
+  // Zustandストアから状態とアクションを取得
+  const {
+    activeStep,
+    stepTimes,
+    stepTipsContent,
+    timerRunning,
+    showAlert,
+    sidebarOpen,
+    setActiveStep,
+    nextStep,
+    prevStep,
+    setTimerRunning,
+    startTimer,
+    pauseTimer,
+    finishTimer,
+    closeAlert,
+    setStepTime,
+    setStepTipsContent,
+    setSidebarOpen,
+    toggleSidebar,
+  } = useMeetingFlowStore();
   
   // ステップのMarkdownコンテンツを読み込み
   useEffect(() => {
@@ -64,37 +81,15 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
     teams: teams,
   };
 
-  const handleNext = () => {
-    setTimerRunning(false);
-    setShowAlert(false);
-    setTimeout(() => {
-      setActiveStep(s => Math.min(s + 1, steps.length - 1));
-      setTimerRunning(false);
-    }, 200);
-  };
-  const handleBack = () => {
-    setTimerRunning(false);
-    setShowAlert(false);
-    setTimeout(() => {
-      setActiveStep(s => Math.max(s - 1, 0));
-      setTimerRunning(false);
-    }, 200);
-  };
-
   // チーム分け画面に戻る時に最新のteamsをAppに戻す
   const handleReturnToShuffle = () => {
     onBack(teams);
   };
-  const handleTimerFinish = () => {
-    setShowAlert(true);
-  };
+  
+  // 時間変更ハンドラー
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Math.max(1, Math.min(120, Number(e.target.value)));
-    setStepTimes(times => {
-      const newTimes = [...times];
-      newTimes[activeStep] = v;
-      return newTimes;
-    });
+    setStepTime(activeStep, v);
   };
 
   return (
@@ -116,7 +111,7 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
             zIndex: 1300,
           }}>
             <IconButton
-              onClick={() => setSidebarOpen(true)}
+              onClick={toggleSidebar}
               sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(10px)',
@@ -159,12 +154,13 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
               timerRunning={timerRunning}
               showAlert={showAlert}
               onTimeChange={handleTimeChange}
-              onTimerFinish={handleTimerFinish}
-              onStart={() => setTimerRunning(true)}
-              onPause={() => setTimerRunning(false)}
-              onBack={handleBack}
-              onNext={handleNext}
+              onTimerFinish={finishTimer}
+              onStart={startTimer}
+              onPause={pauseTimer}
+              onBack={prevStep}
+              onNext={nextStep}
               onReturnToShuffle={handleReturnToShuffle}
+              onAlertClose={closeAlert}
               theme={theme}
             />
           </Box>

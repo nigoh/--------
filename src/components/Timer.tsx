@@ -10,8 +10,18 @@ const timerPulse = keyframes`
 `;
 
 const urgentBlink = keyframes`
-  0%, 100% { color: #f44336; text-shadow: 0 0 10px rgba(244, 67, 54, 0.5); }
-  50% { color: #ff1744; text-shadow: 0 0 20px rgba(255, 23, 68, 0.8); }
+  0%, 100% { 
+    color: #f44336; 
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(244, 67, 54, 0.5);
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+  50% { 
+    color: #ff1744; 
+    background: rgba(255, 245, 245, 1);
+    border-color: rgba(255, 23, 68, 0.8);
+    box-shadow: 0 0 30px rgba(255, 23, 68, 0.5), inset 0 0 30px rgba(255, 245, 245, 1);
+  }
 `;
 
 const progressRing = keyframes`
@@ -110,12 +120,26 @@ export default function Timer({ seconds, running, onFinish, onStart, onPause }: 
           fontWeight: 700, 
           textAlign: 'center',
           fontFamily: 'monospace',
-          color: isUrgent ? '#f44336' : 'text.primary',
+          color: isUrgent ? '#f44336' : '#2c3e50',
           animation: isUrgent ? `${urgentBlink} 1s ease-in-out infinite` : 
                      running ? `${timerPulse} 2s ease-in-out infinite` : 'none',
-          textShadow: isUrgent ? '0 0 10px rgba(244, 67, 54, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
+          textShadow: isUrgent 
+            ? '2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 0 10px rgba(244, 67, 54, 0.3)'
+            : '2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 2px 4px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease-in-out',
           zIndex: 1,
+          background: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '50%',
+          width: '200px',
+          height: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(10px)',
+          border: '3px solid rgba(255, 255, 255, 0.8)',
+          boxShadow: isUrgent 
+            ? '0 0 20px rgba(244, 67, 54, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.8)'
+            : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.8)',
         }}>
           {minutes}:{secondsLeft.toString().padStart(2, '0')}
         </Box>
