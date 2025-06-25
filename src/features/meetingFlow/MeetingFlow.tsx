@@ -8,7 +8,6 @@ import TipsSidePanel from './TipsSidePanel';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import { useState, useEffect } from 'react';
 import steps, { tips, Step as StepType } from './meetingFlowData';
-import { loadStepTips } from './tipsLoader';
 import { useResponsive } from '../../hooks/useResponsive';
 import { focusStyles } from '../../utils/accessibility';
 
@@ -37,7 +36,7 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
         const step = steps[i];
         if (step.tipsMarkdownFile) {
           try {
-            const response = await fetch(`/src/features/meetingFlow/tips/${step.tipsMarkdownFile}`);
+            const response = await fetch(`/tips/${step.tipsMarkdownFile}`);
             if (response.ok) {
               const content = await response.text();
               tipsContent[i] = content;
@@ -148,7 +147,7 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
           {/* ステップ進行部（左カラム） */}
           <Box sx={{ 
             boxSizing: 'border-box',
-            flex: { xs: '1 1 auto', md: '1 1 58%' },
+            flex: { xs: '1 1 auto', md: '1 1 45%' },
             height: { xs: 'auto', md: '100%' },
             display: 'flex',
             flexDirection: 'column'
