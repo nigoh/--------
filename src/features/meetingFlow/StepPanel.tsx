@@ -47,7 +47,12 @@ const StepPanel: React.FC<StepPanelProps> = ({
       boxShadow: '0 12px 40px rgba(103, 126, 234, 0.15)',
     },
   }}>
-    <StepHeader step={step} time={step.time} onTimeChange={onTimeChange} />
+    <StepHeader 
+      step={step} 
+      time={step.time} 
+      onTimeChange={onTimeChange} 
+      onReturnToShuffle={onReturnToShuffle}
+    />
     
     <Box
       component="img"
@@ -117,33 +122,6 @@ const StepPanel: React.FC<StepPanelProps> = ({
         時間です！次のステップへ進んでください。
       </Alert>
     )}
-
-    <Button 
-      variant="outlined" 
-      color="secondary" 
-      size="large" 
-      sx={{ 
-        maxWidth: 200, 
-        mt: 2,
-        borderRadius: 2,
-        fontWeight: 600,
-        px: 3,
-        py: 1.5,
-        borderWidth: 2,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-          borderWidth: 2,
-          backgroundColor: 'rgba(118, 75, 162, 0.1)',
-          transform: 'translateY(-2px)',
-          boxShadow: '0 4px 12px rgba(118, 75, 162, 0.2)',
-        },
-      }} 
-      onClick={onReturnToShuffle}
-    >
-      チーム分けに戻る
-    </Button>
   </Paper>
 );
 

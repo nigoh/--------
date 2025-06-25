@@ -43,7 +43,7 @@ const steps = [
         tipsMarkdownFile: 'step2-tips.md'
     },
     {
-        title: 'Step 3：グループで議論',
+        title: 'Step 3：グループ議論',
         time: 15,
         contents: {
             facilitator: '● 4-6人のグループを作成\n● ペアで選んだアイデアを持ち寄り\n● 議論して上位3つに絞る',
@@ -55,7 +55,7 @@ const steps = [
         tipsMarkdownFile: 'step3-tips.md'
     },
     {
-        title: 'Step 4：全体で発表・統合',
+        title: 'Step 4：グループ共有',
         time: 10,
         contents: {
             facilitator: '● 各グループが3分で発表\n● 類似アイデアをまとめ、重複を排除\n● 全体で5-7個のアイデアに統合',
@@ -67,7 +67,7 @@ const steps = [
         tipsMarkdownFile: 'step4-tips.md'
     },
     {
-        title: 'Step 5：優先順位をつける',
+        title: 'Step 5：意見を醸成',
         time: 10,
         contents: {
             facilitator: '● Impact × Effort マトリクスを使用\n● 各アイデアを4象限に配置\n● 高Impact・低Effortの象限から優先的に選択',

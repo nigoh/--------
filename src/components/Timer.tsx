@@ -79,24 +79,24 @@ export default function Timer({ seconds, running, onFinish, onStart, onPause }: 
       {/* タイマー表示部 - 円形プログレスバー付き */}
       <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {/* 背景円 */}
-        <svg width="200" height="200" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
+        <svg width="280" height="280" style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
           <circle
-            cx="100"
-            cy="100"
-            r="45"
+            cx="140"
+            cy="140"
+            r="65"
             fill="transparent"
             stroke="rgba(103, 126, 234, 0.1)"
-            strokeWidth="6"
+            strokeWidth="8"
           />
           <circle
-            cx="100"
-            cy="100"
-            r="45"
+            cx="140"
+            cy="140"
+            r="65"
             fill="transparent"
             stroke={isUrgent ? '#f44336' : '#667eea'}
-            strokeWidth="6"
-            strokeDasharray="283"
-            strokeDashoffset={283 - (283 * progress) / 100}
+            strokeWidth="8"
+            strokeDasharray="408"
+            strokeDashoffset={408 - (408 * progress) / 100}
             style={{
               transition: 'all 0.3s ease-in-out',
               filter: isUrgent ? 'drop-shadow(0 0 8px rgba(244, 67, 54, 0.6))' : 'none'
@@ -106,7 +106,7 @@ export default function Timer({ seconds, running, onFinish, onStart, onPause }: 
         
         {/* タイマー数字 */}
         <Box sx={{ 
-          fontSize: { xs: '2.5rem', sm: '3.5rem' }, 
+          fontSize: { xs: '3.5rem', sm: '4.5rem', md: '5rem' }, 
           fontWeight: 700, 
           textAlign: 'center',
           fontFamily: 'monospace',

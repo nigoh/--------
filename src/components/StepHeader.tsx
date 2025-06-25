@@ -1,42 +1,85 @@
-import { Box, Typography, TextField } from '@mui/material';
+import { Box, Typography, TextField, Button } from '@mui/material';
 import { Step } from '../features/meetingFlow/meetingFlowData';
 
 interface StepHeaderProps {
   step: Step;
   time: number;
   onTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onReturnToShuffle?: () => void;
 }
 
 /**
  * ステップタイトルとタイマー設定UI
  */
-export default function StepHeader({ step, time, onTimeChange }: StepHeaderProps) {
+export default function StepHeader({ step, time, onTimeChange, onReturnToShuffle }: StepHeaderProps) {
   return (
     <Box sx={{ 
       width: '100%', 
-      mb: 3, 
-      display: 'flex', 
-      alignItems: 'center', 
+      mb: 4,
+      display: 'flex',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      flexWrap: 'wrap',
-      gap: 2
+      gap: 2,
+      flexWrap: { xs: 'wrap', md: 'nowrap' }
     }}>
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          fontWeight: 700,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          flex: 1,
-          minWidth: 'fit-content'
-        }}
-      >
-        {step.title}
-      </Typography>
-      
+      {/* 左側: 戻るボタン */}
+      <Box sx={{ flex: '0 0 auto', order: { xs: 3, md: 1 } }}>
+        {onReturnToShuffle && (
+          <Button 
+            variant="outlined" 
+            color="secondary" 
+            size="small"
+            sx={{ 
+              borderRadius: 2,
+              fontWeight: 600,
+              px: 2,
+              py: 1,
+              fontSize: '0.8rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 2px 8px rgba(118, 75, 162, 0.2)',
+              },
+            }} 
+            onClick={onReturnToShuffle}
+          >
+            ← チーム分けに戻る
+          </Button>
+        )}
+      </Box>
+
+      {/* 中央: メインタイトル */}
       <Box sx={{ 
+        flex: '1 1 auto', 
+        textAlign: 'center',
+        order: { xs: 1, md: 2 },
+        width: { xs: '100%', md: 'auto' }
+      }}>
+        <Typography 
+          variant="h2" 
+          sx={{ 
+            fontWeight: 800,
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            textShadow: '0 4px 8px rgba(103, 126, 234, 0.1)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+          }}
+        >
+          {step.title}
+        </Typography>
+      </Box>
+
+      {/* 右側: タイマー設定 */}
+      <Box sx={{ 
+        flex: '0 0 auto',
+        order: { xs: 2, md: 3 },
         display: 'flex', 
         alignItems: 'center',
         gap: 1,
