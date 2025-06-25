@@ -1,3 +1,4 @@
+// components/Timer.tsxを参照してください
 import { useEffect, useRef, useState } from 'react';
 import { Box, Button } from '@mui/material';
 
@@ -11,7 +12,7 @@ interface TimerProps {
 
 export default function Timer({ seconds, running, onFinish, onStart, onPause }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(seconds);
-  const intervalRef = useRef<number>();
+  const intervalRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     setTimeLeft(seconds);
