@@ -3,7 +3,10 @@ import { Box, TextField, Button, Chip, Paper, Typography, Stack, Container, Fade
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { getMemberColor } from './utils';
+import { EmployeeSelector } from './EmployeeSelector';
+import { Employee } from '../employeeRegister/useEmployeeStore';
 
 // チップのアニメーション定義
 const chipSlideIn = keyframes`
@@ -38,6 +41,7 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
   const [input, setInput] = useState('');
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [employeeSelectorOpen, setEmployeeSelectorOpen] = useState(false);
 
   const handleAdd = () => {
     const name = input.trim();
@@ -58,6 +62,17 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
     onEditMember && onEditMember(idx, newName);
     setEditIdx(null);
     setEditValue('');
+  };
+
+  /**
+   * 社員選択から追加
+   */
+  const handleSelectEmployees = (selectedEmployees: Employee[]) => {
+    selectedEmployees.forEach(employee => {
+      if (!members.includes(employee.name)) {
+        onAddMember(employee.name);
+      }
+    });
   };
 
   return (
@@ -116,33 +131,58 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
               },
             }}
           />
-          <Button 
-            variant="contained" 
-            onClick={handleAdd} 
-            disabled={!input.trim()}
-            startIcon={<AddIcon />}
-            sx={{
-              minWidth: 100,
-              borderRadius: 2,
-              px: 3,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 4px 12px rgba(103, 126, 234, 0.3)',
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 16px rgba(103, 126, 234, 0.4)',
-                animation: input.trim() ? `${buttonPulse} 2s infinite` : 'none',
-              },
-              '&:disabled': {
-                background: 'rgba(0, 0, 0, 0.12)',
-                transform: 'none',
-                animation: 'none',
-              },
-            }}
-          >
-            追加
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button 
+              variant="contained" 
+              onClick={handleAdd} 
+              disabled={!input.trim()}
+              startIcon={<AddIcon />}
+              sx={{
+                minWidth: 100,
+                borderRadius: 2,
+                px: 3,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 4px 12px rgba(103, 126, 234, 0.3)',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 16px rgba(103, 126, 234, 0.4)',
+                  animation: input.trim() ? `${buttonPulse} 2s infinite` : 'none',
+                },
+                '&:disabled': {
+                  background: 'rgba(0, 0, 0, 0.12)',
+                  transform: 'none',
+                  animation: 'none',
+                },
+              }}
+            >
+              追加
+            </Button>
+            <Button 
+              variant="outlined" 
+              onClick={() => setEmployeeSelectorOpen(true)}
+              startIcon={<PersonAddIcon />}
+              sx={{
+                minWidth: 120,
+                borderRadius: 2,
+                px: 3,
+                borderColor: 'rgba(103, 126, 234, 0.5)',
+                color: '#667eea',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: '#667eea',
+                  backgroundColor: 'rgba(103, 126, 234, 0.1)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(103, 126, 234, 0.2)',
+                },
+              }}
+            >
+              社員選択
+            </Button>
+          </Stack>
         </Stack>
         
         <Box sx={{ width: '100%' }}>
@@ -231,6 +271,14 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
           </Stack>
         </Box>
       </Paper>
+
+      {/* 社員選択ダイアログ */}
+      <EmployeeSelector
+        open={employeeSelectorOpen}
+        onClose={() => setEmployeeSelectorOpen(false)}
+        onSelectEmployees={handleSelectEmployees}
+        excludeNames={members}
+      />
     </Container>
   );
 };
