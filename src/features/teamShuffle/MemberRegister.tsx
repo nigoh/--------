@@ -164,7 +164,7 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
               onClick={() => setEmployeeSelectorOpen(true)}
               startIcon={<PersonAddIcon />}
               sx={{
-                minWidth: 120,
+                minWidth: 150,
                 borderRadius: 2,
                 px: 3,
                 borderColor: 'rgba(103, 126, 234, 0.5)',
