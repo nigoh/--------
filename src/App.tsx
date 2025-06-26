@@ -4,7 +4,7 @@ import { ThemeProvider, CssBaseline, Box, Tabs, Tab, Container } from '@mui/mate
 import { 
   Shuffle as ShuffleIcon, 
   People as PeopleIcon,
-  MeetingRoom as MeetingIcon 
+  MeetingRoom as MeetingIcon, AccessTime as TimeIcon 
 } from '@mui/icons-material';
 import { createModernTheme } from './theme/modernTheme';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
@@ -18,6 +18,7 @@ import { ProgressOverlay } from './components/ProgressOverlay';
 const TeamShuffle = React.lazy(() => import('./features/teamShuffle/TeamShuffle'));
 const MeetingFlow = React.lazy(() => import('./features/meetingFlow/MeetingFlow'));
 const EmployeeRegister = React.lazy(() => import('./features/employeeRegister/EmployeeRegister').then(module => ({ default: module.EmployeeRegister })));
+const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 
 /**
  * タブパネルコンポーネント
@@ -148,6 +149,11 @@ function AppContent() {
                   label="社員管理"
                   {...a11yProps(1)}
                 />
+                <Tab
+                  icon={<TimeIcon />}
+                  label="勤怠管理"
+                  {...a11yProps(2)}
+                />
               </Tabs>
             </Container>
           </Box>
@@ -168,6 +174,12 @@ function AppContent() {
           <TabPanel value={currentTab} index={1}>
             <Suspense fallback={<PageLoader message="社員管理を読み込み中..." />}>
               <EmployeeRegister />
+            </Suspense>
+          </TabPanel>
+
+          <TabPanel value={currentTab} index={2}>
+            <Suspense fallback={<PageLoader message="勤怠管理を読み込み中..." />}>
+              <Timecard />
             </Suspense>
           </TabPanel>
         </Container>
