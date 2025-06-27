@@ -9,10 +9,13 @@ import {
 import { createModernTheme } from './theme/modernTheme';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import SettingsPanel from './components/SettingsPanel';
+import EnterpriseSettingsPanel from './components/EnterpriseSettingsPanel';
 import { PageLoader } from './components/LoadingSpinner';
 import { NotificationSystem } from './components/NotificationSystem';
 import { ProgressOverlay } from './components/ProgressOverlay';
+import { PageTransition, FadeIn } from './components/ui/Animation/MotionComponents';
+import { surfaceStyles } from './theme/componentStyles';
+import { initPerformanceMonitoring, PerformanceDevTools } from './utils/performance';
 
 // Lazy load components for better performance
 const TeamShuffle = React.lazy(() => import('./features/teamShuffle/TeamShuffle'));
@@ -66,6 +69,11 @@ function AppContent() {
     fontSize 
   });
 
+  // パフォーマンス監視を初期化
+  React.useEffect(() => {
+    initPerformanceMonitoring();
+  }, []);
+
   /**
    * タブ変更ハンドラー
    */
@@ -79,18 +87,20 @@ function AppContent() {
       <ThemeProvider theme={currentTheme}>
         <CssBaseline />
         <ErrorBoundary>
-          <SettingsPanel />
-          <Suspense fallback={<PageLoader message="ミーティングフローを読み込み中..." />}>
-            <MeetingFlow
-              onBack={(updatedTeams?: string[][]) => {
-                if (updatedTeams) setTeams(updatedTeams);
-                setShowMeeting(false);
-              }}
-              teams={teams}
-              setTeams={setTeams}
-              members={members}
-            />
-          </Suspense>
+          <EnterpriseSettingsPanel />
+          <PageTransition mode="slide">
+            <Suspense fallback={<PageLoader message="ミーティングフローを読み込み中..." />}>
+              <MeetingFlow
+                onBack={(updatedTeams?: string[][]) => {
+                  if (updatedTeams) setTeams(updatedTeams);
+                  setShowMeeting(false);
+                }}
+                teams={teams}
+                setTeams={setTeams}
+                members={members}
+              />
+            </Suspense>
+          </PageTransition>
         </ErrorBoundary>
       </ThemeProvider>
     );
@@ -100,93 +110,112 @@ function AppContent() {
     <ThemeProvider theme={currentTheme}>
       <CssBaseline />
       <ErrorBoundary>
-        <SettingsPanel />
+        <EnterpriseSettingsPanel />
         
         {/* メインナビゲーション */}
         <Container maxWidth={false} disableGutters>
-          <Box 
-            sx={{ 
-              borderBottom: 1, 
-              borderColor: 'divider',
-              backgroundColor: 'background.paper',
-              position: 'sticky',
-              top: 0,
-              zIndex: 1000,
-              boxShadow: 1
-            }}
-          >
-            <Container maxWidth="lg">
-              <Tabs
-                value={currentTab}
-                onChange={handleTabChange}
-                centered
-                sx={{
-                  '& .MuiTabs-indicator': {
-                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                    height: 3,
-                  },
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    minHeight: 64,
-                    '&.Mui-selected': {
-                      background: 'linear-gradient(45deg, #2196F3 10%, #21CBF3 90%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+          <FadeIn>
+            <Box 
+              sx={{ 
+                ...surfaceStyles.glassmorphism(currentTheme),
+                borderBottom: 1, 
+                borderColor: 'divider',
+                position: 'sticky',
+                top: 0,
+                zIndex: 1000,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              }}
+            >
+              <Container maxWidth="lg">
+                <Tabs
+                  value={currentTab}
+                  onChange={handleTabChange}
+                  centered
+                  sx={{
+                    '& .MuiTabs-indicator': {
+                      background: `linear-gradient(45deg, ${currentTheme.palette.primary.main} 30%, ${currentTheme.palette.secondary.main} 90%)`,
+                      height: 3,
+                      borderRadius: '2px 2px 0 0',
                     },
-                  },
-                }}
-              >
-                <Tab
-                  icon={<ShuffleIcon />}
-                  label="チーム分け"
-                  {...a11yProps(0)}
-                />
-                <Tab
-                  icon={<PeopleIcon />}
-                  label="社員管理"
-                  {...a11yProps(1)}
-                />
-                <Tab
-                  icon={<TimeIcon />}
-                  label="勤怠管理"
-                  {...a11yProps(2)}
-                />
-              </Tabs>
-            </Container>
-          </Box>
+                    '& .MuiTab-root': {
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      fontSize: '1rem',
+                      minHeight: 64,
+                      transition: 'all 0.3s ease',
+                      '&.Mui-selected': {
+                        background: `linear-gradient(45deg, ${currentTheme.palette.primary.main} 10%, ${currentTheme.palette.secondary.main} 90%)`,
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        transform: 'scale(1.05)',
+                      },
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        backgroundColor: currentTheme.palette.action.hover,
+                      },
+                    },
+                  }}
+                >
+                  <Tab
+                    icon={<ShuffleIcon />}
+                    label="チーム分け"
+                    {...a11yProps(0)}
+                  />
+                  <Tab
+                    icon={<PeopleIcon />}
+                    label="社員管理"
+                    {...a11yProps(1)}
+                  />
+                  <Tab
+                    icon={<TimeIcon />}
+                    label="勤怠管理"
+                    {...a11yProps(2)}
+                  />
+                </Tabs>
+              </Container>
+            </Box>
+          </FadeIn>
 
           {/* タブコンテンツ */}
           <TabPanel value={currentTab} index={0}>
-            <Suspense fallback={<PageLoader message="チームシャッフルを読み込み中..." />}>
-              <TeamShuffle
-                onShowMeeting={() => setShowMeeting(true)}
-                members={members}
-                setMembers={setMembers}
-                teams={teams}
-                setTeams={setTeams}
-              />
-            </Suspense>
+            <PageTransition mode="fade" key="team-shuffle">
+              <Suspense fallback={<PageLoader message="チームシャッフルを読み込み中..." />}>
+                <TeamShuffle
+                  onShowMeeting={() => setShowMeeting(true)}
+                  members={members}
+                  setMembers={setMembers}
+                  teams={teams}
+                  setTeams={setTeams}
+                />
+              </Suspense>
+            </PageTransition>
           </TabPanel>
 
           <TabPanel value={currentTab} index={1}>
-            <Suspense fallback={<PageLoader message="社員管理を読み込み中..." />}>
-              <EmployeeRegister />
-            </Suspense>
+            <PageTransition mode="fade" key="employee-register">
+              <Suspense fallback={<PageLoader message="社員管理を読み込み中..." />}>
+                <EmployeeRegister />
+              </Suspense>
+            </PageTransition>
           </TabPanel>
 
           <TabPanel value={currentTab} index={2}>
-            <Suspense fallback={<PageLoader message="勤怠管理を読み込み中..." />}>
-              <Timecard />
-            </Suspense>
+            <PageTransition mode="fade" key="timecard">
+              <Suspense fallback={<PageLoader message="勤怠管理を読み込み中..." />}>
+                <Timecard />
+              </Suspense>
+            </PageTransition>
           </TabPanel>
         </Container>
 
         {/* グローバル通知システム */}
         <NotificationSystem />
         <ProgressOverlay />
+        
+        {/* 開発環境でのパフォーマンス監視ツール */}
+        <PerformanceDevTools />
       </ErrorBoundary>
     </ThemeProvider>
   );
