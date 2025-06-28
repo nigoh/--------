@@ -2,6 +2,13 @@
  * Advanced Error Boundary with Performance Monitoring
  * 
  * エラー境界の拡張版 - パフォーマンス監視とエラー解析機能付き
+ * 
+ * 機能:
+ * - エラーの自動キャッチと分析
+ * - 詳細なエラーレポートの生成
+ * - クリップボードへのエラー情報コピー（簡易版・詳細版）
+ * - 視覚的フィードバック付きのユーザビリティ
+ * - エラー監視サービスへの自動送信（本番環境）
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -18,6 +25,7 @@ import {
   Stack,
   Chip,
   Divider,
+  Snackbar,
 } from '@mui/material';
 import {
   ErrorOutline as ErrorIcon,
@@ -26,6 +34,7 @@ import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon,
   ContentCopy as CopyIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material';
 
 interface Props {
@@ -40,6 +49,8 @@ interface State {
   errorInfo: ErrorInfo | null;
   errorId: string;
   showDetails: boolean;
+  copySuccess: boolean;
+  showCopySnackbar: boolean;
 }
 
 /**
@@ -120,6 +131,8 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
       errorInfo: null,
       errorId: '',
       showDetails: false,
+      copySuccess: false,
+      showCopySnackbar: false,
     };
   }
 
@@ -154,26 +167,103 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
       errorInfo: null,
       errorId: '',
       showDetails: false,
+      copySuccess: false,
+      showCopySnackbar: false,
     });
   };
 
-  handleCopyError = () => {
+  handleCopyError = async () => {
     const { error, errorInfo, errorId } = this.state;
-    const errorText = `
-Error ID: ${errorId}
-Error: ${error?.message}
-Stack: ${error?.stack}
-Component Stack: ${errorInfo?.componentStack}
+    
+    const currentTime = new Date().toLocaleString('ja-JP');
+    const errorReport = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 エラーレポート - ${currentTime}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 基本情報:
+  エラーID: ${errorId}
+  発生時刻: ${currentTime}
+  URL: ${window.location.href}
+  ユーザーエージェント: ${navigator.userAgent}
+
+🔍 エラー詳細:
+  メッセージ: ${error?.message || 'Unknown error'}
+  エラータイプ: ${error?.name || 'Unknown'}
+
+📜 スタックトレース:
+${error?.stack || 'No stack trace available'}
+
+🏗️ コンポーネントスタック:
+${errorInfo?.componentStack || 'No component stack available'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 サポート情報:
+このエラーレポートを開発チームに送信することで、問題の解決に役立ちます。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `.trim();
     
-    navigator.clipboard.writeText(errorText).then(() => {
-      console.log('Error details copied to clipboard');
-    });
+    try {
+      await navigator.clipboard.writeText(errorReport);
+      this.setState({ 
+        copySuccess: true, 
+        showCopySnackbar: true 
+      });
+      
+      // 2秒後にコピー成功状態をリセット
+      setTimeout(() => {
+        this.setState({ copySuccess: false });
+      }, 2000);
+      
+      console.log('📋 エラーレポートをクリップボードにコピーしました');
+    } catch (err) {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      
+      // フォールバック: テキストエリアを使用してコピー
+      const textArea = document.createElement('textarea');
+      textArea.value = errorReport;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      this.setState({ 
+        copySuccess: true, 
+        showCopySnackbar: true 
+      });
+      
+      setTimeout(() => {
+        this.setState({ copySuccess: false });
+      }, 2000);
+    }
+  };
+
+  handleCopySimple = async () => {
+    const { error, errorId } = this.state;
+    const simpleReport = `エラーID: ${errorId} | ${error?.message || 'Unknown error'}`;
+    
+    try {
+      await navigator.clipboard.writeText(simpleReport);
+      this.setState({ 
+        copySuccess: true, 
+        showCopySnackbar: true 
+      });
+      
+      setTimeout(() => {
+        this.setState({ copySuccess: false });
+      }, 2000);
+    } catch (err) {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+    }
+  };
+
+  handleCloseSnackbar = () => {
+    this.setState({ showCopySnackbar: false });
   };
 
   render() {
     if (this.state.hasError) {
-      const { error, errorInfo, errorId, showDetails } = this.state;
+      const { error, errorInfo, errorId, showDetails, copySuccess, showCopySnackbar } = this.state;
       
       if (this.props.fallback) {
         return this.props.fallback;
@@ -235,21 +325,52 @@ Component Stack: ${errorInfo?.componentStack}
                 </Alert>
               )}
 
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  🔧 エラーレポートの活用方法
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  <strong>簡易コピー:</strong> エラーIDとメッセージのみをコピーします（チャット・メール用）
+                </Typography>
+                <Typography variant="body2">
+                  <strong>詳細コピー:</strong> 技術的な詳細を含む完全なレポートをコピーします（開発者向け）
+                </Typography>
+              </Alert>
+
               <Box sx={{ mb: 2 }}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Chip
-                    icon={<BugIcon />}
-                    label={`エラーID: ${errorId}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <IconButton
-                    onClick={this.handleCopyError}
-                    size="small"
-                    title="エラー詳細をコピー"
-                  >
-                    <CopyIcon />
-                  </IconButton>
+                <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      icon={<BugIcon />}
+                      label={`エラーID: ${errorId}`}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </Stack>
+                  
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={copySuccess ? <CheckIcon /> : <CopyIcon />}
+                      onClick={this.handleCopySimple}
+                      color={copySuccess ? "success" : "primary"}
+                      sx={{ minWidth: 120 }}
+                    >
+                      {copySuccess ? 'コピー済み' : '簡易コピー'}
+                    </Button>
+                    
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={copySuccess ? <CheckIcon /> : <CopyIcon />}
+                      onClick={this.handleCopyError}
+                      color={copySuccess ? "success" : "primary"}
+                      sx={{ minWidth: 120 }}
+                    >
+                      {copySuccess ? 'コピー済み' : '詳細コピー'}
+                    </Button>
+                  </Stack>
                 </Stack>
               </Box>
 
@@ -327,6 +448,23 @@ Component Stack: ${errorInfo?.componentStack}
               </Stack>
             </CardActions>
           </Card>
+
+          {/* コピー成功時のスナックバー */}
+          <Snackbar
+            open={showCopySnackbar}
+            autoHideDuration={3000}
+            onClose={this.handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert 
+              onClose={this.handleCloseSnackbar} 
+              severity="success" 
+              sx={{ width: '100%' }}
+              variant="filled"
+            >
+              📋 エラー情報をクリップボードにコピーしました
+            </Alert>
+          </Snackbar>
         </Box>
       );
     }

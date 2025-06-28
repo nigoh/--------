@@ -2,8 +2,6 @@ import React from 'react';
 import { 
   Box, 
   Typography,
-  Card,
-  CardContent,
   Button,
   useTheme
 } from '@mui/material';
@@ -15,7 +13,8 @@ import {
 } from '@mui/icons-material';
 import { SlideUp, StaggerContainer } from '../ui/Animation/MotionComponents';
 import { SectionContainer, GridContainer } from '../layout/MainLayout';
-import { surfaceStyles, buttonStyles } from '../../theme/componentStyles';
+import { CustomCard, CustomCardContent } from '../ui/Card';
+import { buttonStyles } from '../../theme/componentStyles';
 
 /**
  * Feature Cards Component - M3 Expressive Style
@@ -95,19 +94,17 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
         >
           {features.map((feature, index) => (
             <SlideUp key={index}>
-              <Card
+              <CustomCard
+                interactive
+                hoverEffect="lift"
+                variant="elevated"
+                surfaceLevel={1}
+                onClick={() => handleFeatureClick(feature)}
                 sx={{
                   height: '100%',
-                  ...surfaceStyles.interactive(theme),
-                  borderRadius: 2,
+                  borderRadius: 0.5,
                   position: 'relative',
                   overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[6],
-                  },
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -115,13 +112,16 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
                     left: 0,
                     right: 0,
                     height: '3px',
-                    background: `linear-gradient(90deg, ${feature.color}, ${theme.palette.secondary.main})`,
                     opacity: 0.8,
                   },
                 }}
-                onClick={() => handleFeatureClick(feature)}
               >
-                <CardContent sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <CustomCardContent 
+                  padding="md" 
+                  flex 
+                  flexDirection="column" 
+                  fullHeight
+                >
                   <Box sx={{ 
                     mb: 1.5, 
                     color: feature.color,
@@ -130,7 +130,7 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
                     justifyContent: 'center',
                     width: 48,
                     height: 48,
-                    borderRadius: 1.5,
+                    borderRadius: 1,
                     bgcolor: `${feature.color}15`,
                     mx: 'auto',
                   }}>
@@ -155,27 +155,8 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
                   }}>
                     {feature.description}
                   </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      ...buttonStyles.small(theme),
-                      mt: 1.5,
-                      fontSize: '0.7rem',
-                      borderColor: feature.color,
-                      color: feature.color,
-                      backgroundColor: 'transparent',
-                      minHeight: '28px',
-                      '&:hover': {
-                        borderColor: feature.color,
-                        backgroundColor: `${feature.color}10`,
-                      },
-                    }}
-                  >
-                    {feature.title === 'ミーティング' ? '開始する' : '詳しく見る'}
-                  </Button>
-                </CardContent>
-              </Card>
+                </CustomCardContent>
+              </CustomCard>
             </SlideUp>
           ))}
         </GridContainer>

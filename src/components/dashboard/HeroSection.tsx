@@ -127,7 +127,8 @@ export const HeroSection: React.FC = () => {
                 fontWeight: 400,
                 lineHeight: 1.5,
                 maxWidth: '600px',
-                margin: `0 auto ${theme.spacing(2.5)}px auto`,
+                margin: '0 auto',
+                textAlign: 'center',
               }}
             >
               チーム分けからミーティング進行、勤怠管理まで<br />

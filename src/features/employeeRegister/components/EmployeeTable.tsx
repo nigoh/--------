@@ -16,6 +16,7 @@ import {
   TablePagination,
   Paper,
   useTheme,
+  TableSortLabel,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -23,7 +24,6 @@ import {
   Visibility as ViewIcon,
   PersonOff as PersonOffIcon,
   Person as PersonIcon,
-  TableSortLabel,
 } from '@mui/icons-material';
 import { spacingTokens } from '../../../theme/designSystem';
 import { Employee } from '../useEmployeeStore';
