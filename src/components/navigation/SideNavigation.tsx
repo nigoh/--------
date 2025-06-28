@@ -26,6 +26,7 @@ import {
   MeetingRoom as MeetingIcon,
   People as PeopleIcon,
   AccessTime as TimeIcon,
+  ReceiptLong as ExpenseIcon,
   Settings as SettingsIcon,
   Speed as SpeedIcon,
   ExpandLess,
@@ -100,6 +101,12 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       label: '勤怠管理',
       icon: <TimeIcon />,
       index: 2,
+    },
+    {
+      id: 'expense',
+      label: '経費管理',
+      icon: <ExpenseIcon />,
+      index: 4,
     },
   ];
 

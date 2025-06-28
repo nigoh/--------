@@ -15,6 +15,7 @@ import {
   People as PeopleIcon,
   MeetingRoom as MeetingIcon, 
   AccessTime as TimeIcon,
+  ReceiptLong as ExpenseIcon,
   Settings as SettingsIcon,
   Speed as SpeedIcon,
   Dashboard as DashboardIcon
@@ -60,6 +61,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     { icon: <MeetingIcon />, label: 'ミーティング進行', index: 3 },
     { icon: <PeopleIcon />, label: '社員管理', index: 1 },
     { icon: <TimeIcon />, label: '勤怠管理', index: 2 },
+    { icon: <ExpenseIcon />, label: '経費管理', index: 4 },
   ];
 
   const settingsNavigationItems = [
