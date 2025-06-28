@@ -1,19 +1,22 @@
 import React from 'react';
 import { 
   Box, 
-  Typography,
   Button,
-  useTheme
+  useTheme,
+  Divider
 } from '@mui/material';
 import { 
   Shuffle as ShuffleIcon, 
   People as PeopleIcon,
   MeetingRoom as MeetingIcon, 
-  AccessTime as TimeIcon
+  AccessTime as TimeIcon,
+  Inventory as InventoryIcon,
+  ReceiptLong as ExpenseIcon
 } from '@mui/icons-material';
 import { SlideUp, StaggerContainer } from '../ui/Animation/MotionComponents';
 import { SectionContainer, GridContainer } from '../layout/MainLayout';
 import { CustomCard, CustomCardContent } from '../ui/Card';
+import { SectionTitle, BodyText, CardTitle, Caption } from '../ui/Typography';
 import { buttonStyles } from '../../theme/componentStyles';
 
 /**
@@ -61,6 +64,20 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
       color: theme.palette.info.main,
       tabIndex: 2,
     },
+    {
+      icon: <ExpenseIcon />,
+      title: '経費管理',
+      description: '経費の登録・承認・分析を効率化し、透明性のある経費管理を実現',
+      color: theme.palette.warning.main,
+      tabIndex: 4,
+    },
+    {
+      icon: <InventoryIcon />,
+      title: '備品管理',
+      description: '備品の在庫管理・貸出管理を効率化し、リソースの最適化を実現',
+      color: theme.palette.error.main,
+      tabIndex: 5,
+    },
   ];
 
   const handleFeatureClick = (feature: typeof features[0]) => {
@@ -74,22 +91,14 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
   return (
     <SectionContainer maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
       <StaggerContainer>
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ mb: 1.5, fontWeight: 600, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-            主要機能
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.8 }}>
-            AIチーム分け、ミーティング進行、社員管理、勤怠管理を統合したワークフローソリューション
-          </Typography>
-        </Box>
-        
+        <Divider sx={{ mb: 3, borderColor: theme.palette.divider }} />
         <GridContainer 
           autoFit={true}
           minItemWidth="220px"
           gap={2}
           sx={{ 
-            maxHeight: { md: '280px' },
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }
+            maxHeight: { md: '420px' },
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }
           }}
         >
           {features.map((feature, index) => (
@@ -136,16 +145,15 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
                   }}>
                     {React.cloneElement(feature.icon, { sx: { fontSize: 24 } })}
                   </Box>
-                  <Typography variant="h6" sx={{ 
+                  <CardTitle sx={{ 
                     mb: 1, 
-                    fontWeight: 600,
                     textAlign: 'center',
                     color: theme.palette.text.primary,
                     fontSize: '1rem',
                   }}>
                     {feature.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
+                  </CardTitle>
+                  <Caption sx={{ 
                     opacity: 0.7, 
                     lineHeight: 1.5, 
                     flex: 1, 
@@ -154,7 +162,7 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
                     color: theme.palette.text.secondary,
                   }}>
                     {feature.description}
-                  </Typography>
+                  </Caption>
                 </CustomCardContent>
               </CustomCard>
             </SlideUp>

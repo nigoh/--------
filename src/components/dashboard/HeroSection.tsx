@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { 
   Box, 
   Container,
-  Typography,
   Chip,
   useTheme,
   alpha
@@ -15,6 +14,7 @@ import {
 } from '@mui/icons-material';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { FadeIn } from '../ui/Animation/MotionComponents';
+import { BrandText, BodyText } from '../ui/Typography';
 
 /**
  * Hero Section Component - Material Design 3 スタイル
@@ -100,12 +100,9 @@ export const HeroSection: React.FC = () => {
       <Container maxWidth="lg">
         <FadeIn>
           <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-            <Typography
-              variant="h1"
+            <BrandText
               component="h1"
               sx={{
-                fontSize: { xs: '2rem', md: '2.8rem' },
-                fontWeight: 700,
                 marginBottom: theme.spacing(0.5),
                 background: `linear-gradient(45deg, ${theme.palette.common.white} 30%, ${alpha(theme.palette.common.white, 0.8)} 90%)`,
                 backgroundClip: 'text',
@@ -115,10 +112,9 @@ export const HeroSection: React.FC = () => {
               }}
             >
               WorkApp
-            </Typography>
+            </BrandText>
             
-            <Typography
-              variant="h5"
+            <BodyText
               component="h2"
               sx={{
                 fontSize: { xs: '0.9rem', md: '1.1rem' },
@@ -133,7 +129,7 @@ export const HeroSection: React.FC = () => {
             >
               チーム分けからミーティング進行、勤怠管理まで<br />
               一つのプラットフォームで効率的にワークフローを管理
-            </Typography>
+            </BodyText>
             
             {/* Feature highlights */}
             <Box 

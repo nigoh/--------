@@ -1,15 +1,8 @@
-/**
- * 社員管理メインページコンポーネント
- * 
- * 社員一覧を中心とした設計
- * 新規登録・編集はモーダルで実装
- * Material Design 3 準拠のコンパクトなデザイン
- */
 import React from 'react';
 import {
   Box,
   Container,
-  Typography,
+  Divider,
   useTheme,
 } from '@mui/material';
 import { EnhancedEmployeeList } from './EnhancedEmployeeList';
@@ -18,6 +11,7 @@ import {
   StaggerContainer, 
   StaggerItem,
 } from '../../components/ui/Animation/MotionComponents';
+import { PageTitle, BodyText } from '../../components/ui/Typography';
 import { spacingTokens } from '../../theme/designSystem';
 
 /**
@@ -45,27 +39,17 @@ export const EmployeeRegister: React.FC = () => {
             <StaggerItem>
               <FadeIn>
                 <Box sx={{ mb: spacingTokens.md, textAlign: 'center' }}>
-                  <Typography 
-                    variant="h4" 
+                  <PageTitle 
                     sx={{ 
                       mb: spacingTokens.xs,
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+                      color: theme.palette.text.primary,
                       fontWeight: 600,
                       fontSize: { xs: '1.75rem', sm: '2rem' }
                     }}
                   >
                     社員管理
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{ maxWidth: 500, mx: 'auto' }}
-                  >
-                    社員情報の管理・検索・統計をワンストップで
-                  </Typography>
+                  </PageTitle>
+                  <Divider sx={{ my: spacingTokens.sm }} />
                 </Box>
               </FadeIn>
             </StaggerItem>

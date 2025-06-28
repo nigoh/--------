@@ -1,8 +1,9 @@
 import React from 'react';
-import { Container, Box, Typography, useTheme } from '@mui/material';
+import { Container, Box, useTheme } from '@mui/material';
 import { EquipmentForm } from './EquipmentForm';
 import { EquipmentList } from './EquipmentList';
 import { FadeIn } from '../../components/ui/Animation/MotionComponents';
+import { PageTitle } from '../../components/ui/Typography';
 import { surfaceStyles } from '../../theme/componentStyles';
 
 const Equipment: React.FC = () => {
@@ -28,9 +29,9 @@ const Equipment: React.FC = () => {
             flexShrink: 0,
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+          <PageTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>
             備品管理
-          </Typography>
+          </PageTitle>
         </Box>
       </FadeIn>
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>

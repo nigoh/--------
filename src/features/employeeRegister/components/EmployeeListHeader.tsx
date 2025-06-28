@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Typography, Button, Stack, useTheme } from '@mui/material';
+import { Box, Button, Stack, Typography, useTheme } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { surfaceStyles } from '../../../theme/componentStyles';
 import { spacingTokens } from '../../../theme/designSystem';
+import { SectionTitle } from '../../../components/ui/Typography';
 
 interface EmployeeListHeaderProps {
   count: number;
@@ -20,48 +21,53 @@ export const EmployeeListHeader: React.FC<EmployeeListHeaderProps> = ({
 }) => {
   const theme = useTheme();
   return (
-    <Box sx={{ ...surfaceStyles.elevated(1)(theme), p: spacingTokens.md, mb: spacingTokens.md }}>
+    <Box sx={{ width: '100%' }}>
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: { xs: 'space-between', lg: 'flex-end' },
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: spacingTokens.sm,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}30%, ${theme.palette.secondary.main} 90%)`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontWeight: 'bold',
-            fontSize: { xs: '1.25rem', sm: '1.5rem' },
-          }}
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          alignItems={{ xs: 'stretch', sm: 'center' }} 
+          spacing={spacingTokens.sm}
+          sx={{ width: { xs: '100%', lg: 'auto' } }}
         >
-          社員一覧 ({count}人)
-        </Typography>
-        <Stack direction="row" spacing={spacingTokens.sm}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={onExport}
-            size="small"
-            disabled={disableExport}
+          <Typography
+            variant="body2"
+            sx={{ 
+              color: theme.palette.text.secondary,
+              textAlign: { xs: 'center', lg: 'right' },
+              whiteSpace: 'nowrap'
+            }}
           >
-            CSV出力
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<PersonAddIcon />}
-            onClick={onAdd}
-            size="small"
-            sx={{ background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)` }}
-          >
-            社員登録
-          </Button>
+            登録社員 ({count}人)
+          </Typography>
+          
+          <Stack direction="row" spacing={spacingTokens.sm}>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onExport}
+              size="small"
+              disabled={disableExport}
+            >
+              CSV出力
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              onClick={onAdd}
+              size="small"
+              sx={{ background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)` }}
+            >
+              社員登録
+            </Button>
+          </Stack>
         </Stack>
       </Box>
     </Box>

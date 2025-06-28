@@ -40,7 +40,6 @@ export const EnhancedEmployeeList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -230,24 +229,45 @@ export const EnhancedEmployeeList: React.FC = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <EmployeeListHeader
-        count={filteredAndSortedEmployees.length}
-        onExport={exportToCSV}
-        onAdd={handleAddEmployee}
-        disableExport={filteredAndSortedEmployees.length === 0}
-      />
-      <EmployeeFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        departments={departments}
-        departmentFilter={departmentFilter}
-        statusFilter={statusFilter}
-        onDepartmentChange={setDepartmentFilter}
-        onStatusChange={setStatusFilter}
-        filtersExpanded={filtersExpanded}
-        onToggleExpanded={() => setFiltersExpanded(!filtersExpanded)}
-        onClearFilters={clearFilters}
-      />
+      {/* ヘッダー・フィルターエリア */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: spacingTokens.md,
+        mb: spacingTokens.sm,
+        flexDirection: { xs: 'column', lg: 'row' },
+        alignItems: { xs: 'stretch', lg: 'flex-start' }
+      }}>
+        {/* 左側: フィルターエリア */}
+        <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: '400px' } }}>
+          <EmployeeFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            departments={departments}
+            departmentFilter={departmentFilter}
+            statusFilter={statusFilter}
+            onDepartmentChange={setDepartmentFilter}
+            onStatusChange={setStatusFilter}
+            onClearFilters={clearFilters}
+          />
+        </Box>
+        
+        {/* 右側: ヘッダーエリア */}
+        <Box sx={{ 
+          flexShrink: 0,
+          minWidth: { xs: '100%', lg: 'auto' },
+          display: 'flex',
+          alignItems: 'flex-end'
+        }}>
+          <EmployeeListHeader
+            count={filteredAndSortedEmployees.length}
+            onExport={exportToCSV}
+            onAdd={handleAddEmployee}
+            disableExport={filteredAndSortedEmployees.length === 0}
+          />
+        </Box>
+      </Box>
+      
+      {/* テーブルエリア */}
       <EmployeeTable
         employees={employees}
         paginatedEmployees={paginatedEmployees}

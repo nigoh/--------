@@ -27,6 +27,7 @@ const MeetingFlow = React.lazy(() => import('./features/meetingFlow/MeetingFlow'
 const EmployeeRegister = React.lazy(() => import('./features/employeeRegister/EmployeeRegister').then(module => ({ default: module.EmployeeRegister })));
 const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
+const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -184,6 +185,16 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="経費管理を読み込み中..." />}>
                       <Expense />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={5}>
+                <PageTransition mode="fade" key="equipment">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="備品管理を読み込み中..." />}>
+                      <Equipment />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>

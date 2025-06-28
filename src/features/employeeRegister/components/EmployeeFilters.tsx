@@ -6,18 +6,22 @@ import {
   IconButton,
   Button,
   Stack,
-  Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   useTheme,
+  Badge,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
-  ExpandLess as ExpandLessIcon,
-  ExpandMore as ExpandMoreIcon,
+  FilterList as FilterListIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../../theme/componentStyles';
 import { spacingTokens } from '../../../theme/designSystem';
@@ -30,8 +34,6 @@ interface EmployeeFiltersProps {
   statusFilter: string;
   onDepartmentChange: (value: string) => void;
   onStatusChange: (value: string) => void;
-  filtersExpanded: boolean;
-  onToggleExpanded: () => void;
   onClearFilters: () => void;
 }
 
@@ -43,68 +45,143 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   statusFilter,
   onDepartmentChange,
   onStatusChange,
-  filtersExpanded,
-  onToggleExpanded,
   onClearFilters,
 }) => {
   const theme = useTheme();
+  const [filterDialogOpen, setFilterDialogOpen] = React.useState(false);
+  
+  // フィルターが適用されているかチェック
+  const hasActiveFilters = departmentFilter || statusFilter;
+  const activeFilterCount = [departmentFilter, statusFilter].filter(Boolean).length;
+
+  const handleOpenFilterDialog = () => {
+    setFilterDialogOpen(true);
+  };
+
+  const handleCloseFilterDialog = () => {
+    setFilterDialogOpen(false);
+  };
+
+  const handleClearAllFilters = () => {
+    onClearFilters();
+    setFilterDialogOpen(false);
+  };
+
   return (
-    <Box sx={{ ...surfaceStyles.elevated(1)(theme), p: spacingTokens.md, mb: spacingTokens.md }}>
-      <Stack spacing={spacingTokens.md}>
-        <TextField
-          fullWidth
-          placeholder="社員名、部署、役職、メール、スキルで検索..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            endAdornment:
-              searchQuery && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => onSearchChange('')}>
-                    <ClearIcon />
-                  </IconButton>
+    <>
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: spacingTokens.sm, flexWrap: 'wrap' }}>
+          {/* 検索フィールド */}
+          <TextField
+            fullWidth
+            placeholder="社員名、部署、役職、メール、スキルで検索..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
                 </InputAdornment>
               ),
-          }}
-          size="small"
-          sx={{ maxWidth: 500 }}
-        />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: spacingTokens.sm }}>
-          <Button
-            variant="text"
-            startIcon={filtersExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            onClick={onToggleExpanded}
+              endAdornment:
+                searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => onSearchChange('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+            }}
             size="small"
-          >
-            詳細フィルター
-          </Button>
-          {(departmentFilter || statusFilter) && (
+            sx={{ 
+              flex: 1,
+              minWidth: 300,
+              maxWidth: 500,
+              '& .MuiInputBase-input': {
+                color: theme.palette.text.primary,
+                '&::placeholder': {
+                  color: theme.palette.text.secondary,
+                  opacity: 0.7,
+                },
+                '&:-webkit-autofill': {
+                  WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+                  WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset !important`,
+                },
+                '&:-webkit-autofill:hover': {
+                  WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+                  WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset !important`,
+                },
+                '&:-webkit-autofill:focus': {
+                  WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+                  WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset !important`,
+                },
+              },
+            }}
+          />
+          
+          {/* 詳細フィルターボタン */}
+          <Badge badgeContent={activeFilterCount} color="primary" sx={{ flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              startIcon={<FilterListIcon />}
+              onClick={handleOpenFilterDialog}
+              size="small"
+              sx={{ 
+                whiteSpace: 'nowrap',
+                minWidth: 120,
+              }}
+            >
+              詳細フィルター
+            </Button>
+          </Badge>
+
+          {/* フィルタークリアボタン */}
+          {hasActiveFilters && (
             <Button
               variant="text"
               startIcon={<ClearIcon />}
               onClick={onClearFilters}
               size="small"
               color="warning"
+              sx={{ flexShrink: 0 }}
             >
-              フィルタークリア
+              クリア
             </Button>
           )}
         </Box>
-        <Collapse in={filtersExpanded}>
-          <Box
-            sx={{
-              display: 'flex',
-              gap: spacingTokens.md,
-              flexDirection: { xs: 'column', sm: 'row' },
-              maxWidth: 600,
-            }}
+      </Box>
+
+      {/* フィルターダイアログ */}
+      <Dialog 
+        open={filterDialogOpen} 
+        onClose={handleCloseFilterDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          pb: 1,
+        }}>
+          詳細フィルター
+          <IconButton
+            onClick={handleCloseFilterDialog}
+            size="small"
+            sx={{ color: theme.palette.text.secondary }}
           >
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          <Stack spacing={spacingTokens.lg}>
+            <FormControl fullWidth size="small">
               <InputLabel>部署</InputLabel>
               <Select
                 value={departmentFilter}
@@ -119,7 +196,8 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
                 ))}
               </Select>
             </FormControl>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            
+            <FormControl fullWidth size="small">
               <InputLabel>ステータス</InputLabel>
               <Select
                 value={statusFilter}
@@ -131,10 +209,26 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
                 <MenuItem value="inactive">退職済み</MenuItem>
               </Select>
             </FormControl>
-          </Box>
-        </Collapse>
-      </Stack>
-    </Box>
+          </Stack>
+        </DialogContent>
+        
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={handleClearAllFilters}
+            color="warning"
+            startIcon={<ClearIcon />}
+          >
+            すべてクリア
+          </Button>
+          <Button
+            onClick={handleCloseFilterDialog}
+            variant="contained"
+          >
+            適用
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

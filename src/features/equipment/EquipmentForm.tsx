@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Paper, Stack, TextField, Button, Typography } from '@mui/material';
+import { Paper, Stack, TextField, Button } from '@mui/material';
 import { useEquipmentStore } from './useEquipmentStore';
+import { SubsectionTitle } from '../../components/ui/Typography';
 
 export const EquipmentForm: React.FC = () => {
   const { addItem } = useEquipmentStore();
@@ -21,9 +22,9 @@ export const EquipmentForm: React.FC = () => {
 
   return (
     <Paper elevation={3} sx={{ p: 3, borderRadius: 2, maxWidth: 400, mx: 'auto' }}>
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+      <SubsectionTitle sx={{ fontWeight: 'bold', mb: 2 }}>
         備品登録
-      </Typography>
+      </SubsectionTitle>
       <Stack component="form" onSubmit={handleSubmit} spacing={2}>
         <TextField label="名称" value={name} onChange={(e) => setName(e.target.value)} required />
         <TextField label="カテゴリ" value={category} onChange={(e) => setCategory(e.target.value)} />
