@@ -6,6 +6,16 @@ export interface TimecardEntry {
   startTime: string;
   endTime?: string;
   note?: string;
+  /** 休暇かどうか */
+  isAbsence: boolean;
+  /** 休暇理由 */
+  absenceReason?: string;
+  /**
+   * 休暇種別
+   * - planned: 計画休
+   * - sudden: 突発休
+   */
+  absenceType?: 'planned' | 'sudden';
 }
 
 export interface TimecardState {
@@ -31,13 +41,22 @@ export const useTimecardStore = create<TimecardStore>((set) => ({
     set((state) => ({
       entries: [
         ...state.entries,
-        { id: crypto.randomUUID(), ...entry },
+        {
+          id: crypto.randomUUID(),
+          isAbsence: false,
+          ...entry,
+        },
       ],
     })),
   updateEntry: (id, entry) =>
     set((state) => ({
       entries: state.entries.map((e) =>
-        e.id === id ? { ...e, ...entry } : e
+        e.id === id
+          ? {
+              ...e,
+              ...entry,
+            }
+          : e
       ),
     })),
   deleteEntry: (id) =>

@@ -16,6 +16,12 @@ import {
   DialogActions,
   TextField,
   Stack,
+  Checkbox,
+  FormControlLabel,
+  RadioGroup,
+  FormControl,
+  FormLabel,
+  Radio,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -26,6 +32,9 @@ interface EditForm {
   startTime: string;
   endTime?: string;
   note?: string;
+  isAbsence: boolean;
+  absenceReason?: string;
+  absenceType?: 'planned' | 'sudden';
 }
 
 export const TimecardList: React.FC = () => {
@@ -36,6 +45,9 @@ export const TimecardList: React.FC = () => {
     startTime: '',
     endTime: '',
     note: '',
+    isAbsence: false,
+    absenceReason: '',
+    absenceType: 'planned',
   });
 
   const openEdit = (id: string) => {
@@ -46,6 +58,9 @@ export const TimecardList: React.FC = () => {
       startTime: entry.startTime,
       endTime: entry.endTime,
       note: entry.note,
+      isAbsence: entry.isAbsence,
+      absenceReason: entry.absenceReason ?? '',
+      absenceType: entry.absenceType ?? 'planned',
     });
     setEditingId(id);
   };
@@ -83,9 +98,13 @@ export const TimecardList: React.FC = () => {
               {entries.map((entry) => (
                 <TableRow key={entry.id}>
                   <TableCell>{entry.date}</TableCell>
-                  <TableCell>{entry.startTime}</TableCell>
-                  <TableCell>{entry.endTime}</TableCell>
-                  <TableCell>{entry.note}</TableCell>
+                  <TableCell>{entry.isAbsence ? '-' : entry.startTime}</TableCell>
+                  <TableCell>{entry.isAbsence ? '-' : entry.endTime}</TableCell>
+                  <TableCell>
+                    {entry.isAbsence
+                      ? `${entry.absenceReason ?? ''} (${entry.absenceType === 'planned' ? '計画' : '突発'})`
+                      : entry.note}
+                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -119,12 +138,24 @@ export const TimecardList: React.FC = () => {
               onChange={(e) => setForm({ ...form, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
             />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={form.isAbsence}
+                  onChange={(e) =>
+                    setForm({ ...form, isAbsence: e.target.checked })
+                  }
+                />
+              }
+              label="休暇"
+            />
             <TextField
               label="出勤時間"
               type="time"
               value={form.startTime}
               onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              disabled={form.isAbsence}
             />
             <TextField
               label="退勤時間"
@@ -132,7 +163,43 @@ export const TimecardList: React.FC = () => {
               value={form.endTime}
               onChange={(e) => setForm({ ...form, endTime: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              disabled={form.isAbsence}
             />
+            {form.isAbsence && (
+              <>
+                <TextField
+                  label="理由"
+                  value={form.absenceReason}
+                  onChange={(e) =>
+                    setForm({ ...form, absenceReason: e.target.value })
+                  }
+                />
+                <FormControl>
+                  <FormLabel>種別</FormLabel>
+                  <RadioGroup
+                    row
+                    value={form.absenceType}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        absenceType: e.target.value as 'planned' | 'sudden',
+                      })
+                    }
+                  >
+                    <FormControlLabel
+                      value="planned"
+                      control={<Radio />}
+                      label="計画"
+                    />
+                    <FormControlLabel
+                      value="sudden"
+                      control={<Radio />}
+                      label="突発"
+                    />
+                  </RadioGroup>
+                </FormControl>
+              </>
+            )}
             <TextField
               label="備考"
               value={form.note}
