@@ -1,31 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTitle, 
-  IconButton, 
-  Box, 
-  Button, 
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Box,
   Typography,
   useTheme,
   Slide,
-  ToggleButton,
-  ToggleButtonGroup,
-  CircularProgress,
   Tooltip,
   Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import KeyboardIcon from '@mui/icons-material/Keyboard';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { TransitionProps } from '@mui/material/transitions';
 import { soundManager } from './SoundManager';
 import { useTimerShortcuts, TIMER_SHORTCUTS_HELP } from './useTimerShortcuts';
+import ModeToggle from './components/ModeToggle';
+import TimePickerPanel from './components/TimePickerPanel';
+import TimerDisplay from './components/TimerDisplay';
 
 // ===== 型定義 =====
 interface TimerModalProps {
@@ -51,216 +46,6 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-/**
- * 時計のような時間選択コンポーネント
- */
-const ClockTimePicker: React.FC<{
-  selectedMinutes: number;
-  selectedSeconds: number;
-  onTimeChange: (minutes: number, seconds: number) => void;
-  theme: any;
-}> = ({ selectedMinutes, selectedSeconds, onTimeChange, theme }) => {
-  const minuteOptions = [1, 2, 3, 5, 10, 15, 20, 25, 30, 45, 60];
-  const secondOptions = [0, 15, 30, 45];
-
-  return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 3,
-      p: 3,
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? theme.palette.grey[800] 
-        : theme.palette.grey[50],
-      borderRadius: 3,
-      border: `1px solid ${theme.palette.divider}`,
-      maxWidth: 500,
-      mx: 'auto',
-    }}>
-      <Typography variant="h6" sx={{ 
-        color: theme.palette.text.primary,
-        fontWeight: 700,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-      }}>
-        <AccessTimeIcon /> 時間を選択
-      </Typography>
-
-      {/* 分の選択 */}
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="subtitle1" sx={{ 
-          mb: 2, 
-          color: theme.palette.text.secondary,
-          fontWeight: 600 
-        }}>
-          分
-        </Typography>
-        <Box sx={{ 
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 1,
-          maxWidth: 300,
-        }}>
-          {minuteOptions.map((minutes) => (
-            <Button
-              key={minutes}
-              variant={selectedMinutes === minutes ? "contained" : "outlined"}
-              onClick={() => onTimeChange(minutes, selectedSeconds)}
-              sx={{
-                minWidth: 60,
-                height: 60,
-                borderRadius: '50%',
-                fontSize: '1rem',
-                fontWeight: 600,
-                border: `2px solid ${theme.palette.primary.main}`,
-                ...(selectedMinutes === minutes && {
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  color: theme.palette.primary.contrastText,
-                  boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
-                  transform: 'scale(1.1)',
-                }),
-                '&:hover': {
-                  transform: selectedMinutes === minutes ? 'scale(1.1)' : 'scale(1.05)',
-                  boxShadow: `0 6px 16px ${theme.palette.primary.main}60`,
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {minutes}
-            </Button>
-          ))}
-        </Box>
-      </Box>
-
-      {/* 秒の選択 */}
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="subtitle1" sx={{ 
-          mb: 2, 
-          color: theme.palette.text.secondary,
-          fontWeight: 600 
-        }}>
-          秒
-        </Typography>
-        <Box sx={{ 
-          display: 'flex',
-          gap: 1,
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-        }}>
-          {secondOptions.map((seconds) => (
-            <Button
-              key={seconds}
-              variant={selectedSeconds === seconds ? "contained" : "outlined"}
-              onClick={() => onTimeChange(selectedMinutes, seconds)}
-              sx={{
-                minWidth: 60,
-                height: 60,
-                borderRadius: '50%',
-                fontSize: '1rem',
-                fontWeight: 600,
-                border: `2px solid ${theme.palette.secondary.main}`,
-                ...(selectedSeconds === seconds && {
-                  background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                  color: theme.palette.secondary.contrastText,
-                  boxShadow: `0 4px 12px ${theme.palette.secondary.main}40`,
-                  transform: 'scale(1.1)',
-                }),
-                '&:hover': {
-                  transform: selectedSeconds === seconds ? 'scale(1.1)' : 'scale(1.05)',
-                  boxShadow: `0 6px 16px ${theme.palette.secondary.main}60`,
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {seconds}
-            </Button>
-          ))}
-        </Box>
-      </Box>
-
-      {/* 選択時間の表示 */}
-      <Box sx={{ 
-        textAlign: 'center',
-        p: 2,
-        backgroundColor: theme.palette.background.paper,
-        borderRadius: 2,
-        border: `1px solid ${theme.palette.primary.main}`,
-        boxShadow: `0 2px 8px ${theme.palette.primary.main}20`,
-      }}>
-        <Typography variant="h5" sx={{ 
-          fontFamily: 'monospace',
-          fontWeight: 700,
-          color: theme.palette.primary.main,
-        }}>
-          {selectedMinutes}:{selectedSeconds.toString().padStart(2, '0')}
-        </Typography>
-        <Typography variant="caption" sx={{ 
-          color: theme.palette.text.secondary,
-          fontWeight: 500,
-        }}>
-          選択された時間
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
-
-/**
- * 円形プログレスインジケーター（最適化版）
- */
-const OptimizedCircularProgress: React.FC<{
-  progress: number;
-  size: number;
-  thickness: number;
-  isUrgent: boolean;
-  isFinished: boolean;
-  theme: any;
-}> = ({ progress, size, thickness, isUrgent, isFinished, theme }) => {
-  const getColor = () => {
-    if (isFinished) return theme.palette.error.main;
-    if (isUrgent) return theme.palette.warning.main;
-    return theme.palette.primary.main;
-  };
-
-  return (
-    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      {/* 背景円 */}
-      <CircularProgress
-        variant="determinate"
-        value={100}
-        size={size}
-        thickness={thickness}
-        sx={{
-          color: theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300],
-          position: 'absolute',
-          opacity: 0.3,
-        }}
-      />
-      {/* プログレス円 */}
-      <CircularProgress
-        variant="determinate"
-        value={Math.min(100, Math.max(0, progress))}
-        size={size}
-        thickness={thickness}
-        sx={{
-          color: getColor(),
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          filter: isUrgent || isFinished ? `drop-shadow(0 0 12px ${getColor()}60)` : 'none',
-          transform: 'rotate(-90deg) !important',
-          ...(isUrgent && {
-            animation: 'urgentPulse 1.5s ease-in-out infinite',
-            '@keyframes urgentPulse': {
-              '0%, 100%': { filter: `drop-shadow(0 0 8px ${getColor()}60)` },
-              '50%': { filter: `drop-shadow(0 0 16px ${getColor()}80)` },
-            },
-          }),
-        }}
-      />
-    </Box>
-  );
-};
 
 /**
  * 最適化されたタイマーモーダルコンポーネント
@@ -386,14 +171,6 @@ export default function TimerModal({
     }
   };
 
-  // UI状態の計算
-  const getButtonState = () => {
-    if (isFinished) return { text: '完了', disabled: true, action: () => {} };
-    if (running) return { text: '一時停止', disabled: false, action: handlePause };
-    return { text: 'スタート', disabled: false, action: handleStart };
-  };
-
-  const buttonState = getButtonState();
 
   return (
     <Dialog
@@ -448,72 +225,16 @@ export default function TimerModal({
             {title}
           </Typography>
           
-          {/* モード切替ボタン */}
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            onChange={handleModeToggle}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                borderRadius: 2,
-                px: 2,
-                py: 0.5,
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                textTransform: 'none',
-                border: `1px solid ${theme.palette.primary.main}`,
-                '&.Mui-selected': {
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  color: theme.palette.primary.contrastText,
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                  }
-                },
-                '&:hover': {
-                  backgroundColor: `${theme.palette.primary.main}10`,
-                }
-              }
+          <ModeToggle
+            mode={mode}
+            onModeChange={handleModeToggle}
+            soundEnabled={soundEnabled}
+            onSoundToggle={() => {
+              setSoundEnabled(!soundEnabled);
+              soundManager.toggleSound(!soundEnabled);
             }}
-          >
-            <ToggleButton value="timer">タイマー</ToggleButton>
-            <ToggleButton value="picker">時間選択</ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* 音声制御ボタン */}
-          <Tooltip title={soundEnabled ? "音声を無効化" : "音声を有効化"}>
-            <IconButton
-              onClick={() => {
-                setSoundEnabled(!soundEnabled);
-                soundManager.toggleSound(!soundEnabled);
-              }}
-              size="small"
-              sx={{
-                color: soundEnabled ? theme.palette.success.main : theme.palette.text.disabled,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.success.main}10`,
-                }
-              }}
-            >
-              {soundEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
-            </IconButton>
-          </Tooltip>
-
-          {/* キーボードショートカットヘルプ */}
-          <Tooltip title="キーボードショートカット">
-            <IconButton
-              onClick={() => setShowShortcuts(!showShortcuts)}
-              size="small"
-              sx={{
-                color: theme.palette.info.main,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.info.main}10`,
-                }
-              }}
-            >
-              <KeyboardIcon />
-            </IconButton>
-          </Tooltip>
+            onToggleShortcuts={() => setShowShortcuts(!showShortcuts)}
+          />
         </Box>
         
         <IconButton 
@@ -592,194 +313,25 @@ export default function TimerModal({
           </Box>
         )}
 
-        {/* タイマー実行状態のデータ属性 */}
         <Box data-timer-running={running} sx={{ display: 'none' }} />
         {mode === 'timer' ? (
-          // タイマー表示モード
-          <>
-            {/* タイマー表示 */}
-            <Box sx={{ 
-              position: 'relative', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              mb: 4,
-            }}>
-              <OptimizedCircularProgress
-                progress={progress}
-                size={360}
-                thickness={4}
-                isUrgent={isUrgent}
-                isFinished={isFinished}
-                theme={theme}
-              />
-              
-              {/* タイマー数字とプログレス */}
-              <Box sx={{ 
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                textAlign: 'center',
-              }}>
-                <Typography sx={{ 
-                  fontSize: { xs: '4rem', sm: '5rem', md: '6rem' }, 
-                  fontWeight: 800, 
-                  fontFamily: 'monospace',
-                  color: isFinished 
-                    ? theme.palette.error.main
-                    : isUrgent 
-                      ? theme.palette.warning.main
-                      : theme.palette.text.primary,
-                  lineHeight: 0.9,
-                  mb: 1,
-                  ...(isUrgent && {
-                    animation: 'timerPulse 1.5s ease-in-out infinite',
-                    '@keyframes timerPulse': {
-                      '0%, 100%': { transform: 'scale(1)' },
-                      '50%': { transform: 'scale(1.05)' },
-                    },
-                  }),
-                }}>
-                  {minutes}:{secondsLeft.toString().padStart(2, '0')}
-                </Typography>
-                
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  {Math.round(progress)}%
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* ステータス表示 */}
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 4,
-                color: isFinished 
-                  ? theme.palette.error.main
-                  : running 
-                    ? theme.palette.success.main
-                    : theme.palette.text.secondary,
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
-            >
-              {isFinished 
-                ? '⏰ 時間終了！' 
-                : running 
-                  ? '🏃 実行中...' 
-                  : '⏸️ 待機中'}
-            </Typography>
-
-            {/* コントロールボタン */}
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 2,
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}>
-              {/* メインボタン (スタート/一時停止) */}
-              <Button
-                variant="contained"
-                onClick={buttonState.action}
-                startIcon={running ? <PauseIcon /> : <PlayArrowIcon />}
-                size="large"
-                disabled={buttonState.disabled}
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  textTransform: 'none',
-                  background: running 
-                    ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
-                    : `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
-                  color: theme.palette.getContrastText(
-                    running ? theme.palette.warning.main : theme.palette.success.main
-                  ),
-                  boxShadow: `0 4px 16px ${running ? theme.palette.warning.main : theme.palette.success.main}40`,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 6px 20px ${running ? theme.palette.warning.main : theme.palette.success.main}60`,
-                  },
-                  '&:disabled': {
-                    background: theme.palette.action.disabledBackground,
-                    transform: 'none',
-                    boxShadow: 'none',
-                  },
-                }}
-              >
-                {buttonState.text}
-              </Button>
-
-              {/* リセットボタン */}
-              <Button
-                variant="outlined"
-                onClick={handleReset}
-                startIcon={<RestartAltIcon />}
-                size="large"
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  textTransform: 'none',
-                  borderColor: theme.palette.primary.main,
-                  color: theme.palette.primary.main,
-                  backgroundColor: theme.palette.background.paper,
-                  '&:hover': {
-                    borderColor: theme.palette.primary.dark,
-                    backgroundColor: `${theme.palette.primary.main}10`,
-                    transform: 'translateY(-1px)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                リセット
-              </Button>
-
-              {/* 時間変更ボタン */}
-              <Button
-                variant="text"
-                onClick={() => setMode('picker')}
-                startIcon={<AccessTimeIcon />}
-                size="large"
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  textTransform: 'none',
-                  color: theme.palette.secondary.main,
-                  '&:hover': {
-                    backgroundColor: `${theme.palette.secondary.main}10`,
-                    transform: 'translateY(-1px)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                時間変更
-              </Button>
-            </Box>
-          </>
+          <TimerDisplay
+            progress={progress}
+            minutes={minutes}
+            seconds={secondsLeft}
+            running={running}
+            isUrgent={isUrgent}
+            isFinished={isFinished}
+            onStart={handleStart}
+            onPause={handlePause}
+            onReset={handleReset}
+            onChangeTime={() => setMode('picker')}
+          />
         ) : (
-          // 時間選択モード
-          <ClockTimePicker
+          <TimePickerPanel
             selectedMinutes={selectedMinutes}
             selectedSeconds={selectedSeconds}
             onTimeChange={handleTimePickerChange}
-            theme={theme}
           />
         )}
       </DialogContent>
