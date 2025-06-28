@@ -10,9 +10,10 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { 
-  Shuffle as ShuffleIcon, 
+  Shuffle as ShuffleIcon,
   People as PeopleIcon,
   AccessTime as TimeIcon,
+  ReceiptLong as ReceiptLongIcon,
   Menu as MenuIcon,
   Dashboard as DashboardIcon
 } from '@mui/icons-material';
@@ -100,6 +101,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <Tab icon={<ShuffleIcon />} label="チーム分け" />
               <Tab icon={<PeopleIcon />} label="社員管理" />
               <Tab icon={<TimeIcon />} label="勤怠管理" />
+              <Tab icon={<ReceiptLongIcon />} label="経費管理" />
             </Tabs>
           )}
 
