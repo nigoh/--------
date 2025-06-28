@@ -92,7 +92,7 @@ export const surfaceStyles = {
  * ボタンスタイル
  */
 export const buttonStyles = {
-  // Filled Button (Primary)
+  // Filled Button (Primary) - コンパクトサイズ
   filled: (theme: Theme): SxProps => ({
     backgroundColor: theme.palette.mode === 'dark' 
       ? colorTokens.primary[80] 
@@ -100,10 +100,12 @@ export const buttonStyles = {
     color: theme.palette.mode === 'dark' 
       ? colorTokens.primary[20] 
       : colorTokens.primary[100],
-    borderRadius: shapeTokens.corner.large,
-    padding: `${spacingTokens.sm}px ${spacingTokens.lg}px`,
+    borderRadius: shapeTokens.corner.small,
+    padding: `${spacingTokens.sm}px ${spacingTokens.md}px`,
+    minHeight: '32px',
+    fontSize: '0.875rem',
     textTransform: 'none',
-    ...typographyTokens.labelLarge,
+    fontWeight: 500,
     transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
     '&:hover': {
       backgroundColor: theme.palette.mode === 'dark'
@@ -122,7 +124,7 @@ export const buttonStyles = {
     },
   }),
 
-  // Outlined Button (Secondary)
+  // Outlined Button (Secondary) - コンパクトサイズ
   outlined: (theme: Theme): SxProps => ({
     backgroundColor: 'transparent',
     color: theme.palette.mode === 'dark' 
@@ -131,10 +133,12 @@ export const buttonStyles = {
     border: `1px solid ${theme.palette.mode === 'dark' 
       ? colorTokens.primary[80] 
       : colorTokens.primary[40]}`,
-    borderRadius: shapeTokens.corner.large,
-    padding: `${spacingTokens.sm}px ${spacingTokens.lg}px`,
+    borderRadius: shapeTokens.corner.small,
+    padding: `${spacingTokens.sm}px ${spacingTokens.md}px`,
+    minHeight: '32px',
+    fontSize: '0.875rem',
     textTransform: 'none',
-    ...typographyTokens.labelLarge,
+    fontWeight: 500,
     transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
     '&:hover': {
       backgroundColor: theme.palette.mode === 'dark'
@@ -150,17 +154,19 @@ export const buttonStyles = {
     },
   }),
 
-  // Text Button
+  // Text Button - コンパクトサイズ
   text: (theme: Theme): SxProps => ({
     backgroundColor: 'transparent',
     color: theme.palette.mode === 'dark' 
       ? colorTokens.primary[80] 
       : colorTokens.primary[40],
     border: 'none',
-    borderRadius: shapeTokens.corner.large,
-    padding: `${spacingTokens.sm}px ${spacingTokens.md}px`,
+    borderRadius: shapeTokens.corner.small,
+    padding: `${spacingTokens.sm}px ${spacingTokens.lg}px`,
+    minHeight: '32px',
+    fontSize: '0.875rem',
     textTransform: 'none',
-    ...typographyTokens.labelLarge,
+    fontWeight: 500,
     transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
     '&:hover': {
       backgroundColor: theme.palette.mode === 'dark'
@@ -174,7 +180,43 @@ export const buttonStyles = {
     },
   }),
 
-  // FAB (Floating Action Button)
+  // Small Button - より小さなボタン
+  small: (theme: Theme): SxProps => ({
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? colorTokens.primary[80] 
+      : colorTokens.primary[40],
+    color: theme.palette.mode === 'dark' 
+      ? colorTokens.primary[20] 
+      : colorTokens.primary[100],
+    borderRadius: shapeTokens.corner.small,
+    padding: `${spacingTokens.xs}px ${spacingTokens.sm}px`,
+    minHeight: '24px',
+    fontSize: '0.75rem',
+    textTransform: 'none',
+    fontWeight: 500,
+    transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
+  }),
+
+  // Icon Button - アイコンボタン
+  icon: (theme: Theme): SxProps => ({
+    backgroundColor: 'transparent',
+    color: theme.palette.mode === 'dark' 
+      ? colorTokens.primary[80] 
+      : colorTokens.primary[40],
+    border: 'none',
+    borderRadius: shapeTokens.corner.small,
+    padding: spacingTokens.sm,
+    minWidth: '32px',
+    minHeight: '32px',
+    transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'dark'
+        ? `rgba(${hexToRgb(colorTokens.primary[80])}, ${stateLayerTokens.hover})`
+        : `rgba(${hexToRgb(colorTokens.primary[40])}, ${stateLayerTokens.hover})`,
+    },
+  }),
+
+  // FAB (Floating Action Button) - コンパクト版
   fab: (theme: Theme): SxProps => ({
     backgroundColor: theme.palette.mode === 'dark' 
       ? colorTokens.secondary[80] 
@@ -182,7 +224,9 @@ export const buttonStyles = {
     color: theme.palette.mode === 'dark' 
       ? colorTokens.secondary[20] 
       : colorTokens.primary[100],
-    borderRadius: shapeTokens.corner.large,
+    borderRadius: shapeTokens.corner.medium,
+    width: '48px',
+    height: '48px',
     ...elevationTokens.level3,
     transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
     '&:hover': {
@@ -202,13 +246,15 @@ export const buttonStyles = {
  * 入力フィールドスタイル
  */
 export const inputStyles = {
-  // Outlined TextField
+  // Outlined TextField - コンパクトサイズ
   outlined: (theme: Theme): SxProps => ({
     '& .MuiOutlinedInput-root': {
       backgroundColor: theme.palette.mode === 'dark'
         ? `rgba(${hexToRgb(colorTokens.neutral[20])}, 0.5)`
         : `rgba(${hexToRgb(colorTokens.neutral[99])}, 0.8)`,
       borderRadius: shapeTokens.corner.small,
+      minHeight: '40px',
+      fontSize: '0.875rem',
       transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
       '& fieldset': {
         borderColor: theme.palette.mode === 'dark'
@@ -226,9 +272,12 @@ export const inputStyles = {
           : colorTokens.primary[40],
         borderWidth: 2,
       },
+      '& input': {
+        padding: `${spacingTokens.md}px`,
+      },
     },
     '& .MuiInputLabel-root': {
-      ...typographyTokens.bodyLarge,
+      fontSize: '0.875rem',
       color: theme.palette.mode === 'dark'
         ? colorTokens.neutralVariant[80]
         : colorTokens.neutralVariant[30],
@@ -240,13 +289,33 @@ export const inputStyles = {
     },
   }),
 
-  // Filled TextField
+  // Small TextField - より小さな入力フィールド
+  small: (theme: Theme): SxProps => ({
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: theme.palette.mode === 'dark'
+        ? `rgba(${hexToRgb(colorTokens.neutral[20])}, 0.5)`
+        : `rgba(${hexToRgb(colorTokens.neutral[99])}, 0.8)`,
+      borderRadius: shapeTokens.corner.small,
+      minHeight: '32px',
+      fontSize: '0.75rem',
+      '& input': {
+        padding: `${spacingTokens.sm}px`,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      fontSize: '0.75rem',
+    },
+  }),
+
+  // Filled TextField - コンパクト版
   filled: (theme: Theme): SxProps => ({
     '& .MuiFilledInput-root': {
       backgroundColor: theme.palette.mode === 'dark'
         ? colorTokens.neutralVariant[30]
         : colorTokens.neutralVariant[90],
       borderRadius: `${shapeTokens.corner.small} ${shapeTokens.corner.small} 0 0`,
+      minHeight: '40px',
+      fontSize: '0.875rem',
       transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
       '&:hover': {
         backgroundColor: theme.palette.mode === 'dark'
@@ -267,6 +336,9 @@ export const inputStyles = {
         borderBottomColor: theme.palette.mode === 'dark'
           ? colorTokens.primary[80]
           : colorTokens.primary[40],
+      },
+      '& input': {
+        padding: `${spacingTokens.md}px`,
       },
     },
   }),
@@ -375,27 +447,60 @@ function hexToRgb(hex: string): string {
     : '0, 0, 0';
 }
 
+// ==================== Scrollbar Styles ====================
+
+/**
+ * スクロールバースタイル（インポート）
+ */
+export { scrollbarStyles } from './scrollbarStyles';
+
 // ==================== Layout Styles ====================
 
 /**
  * レイアウト関連のスタイル
  */
 export const layoutStyles = {
-  // コンテナ
+  // コンテナ - コンパクト余白
   container: (theme: Theme): SxProps => ({
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: `0 ${spacingTokens.lg}px`,
+    padding: `0 ${spacingTokens.md}px`,
     [theme.breakpoints.down('sm')]: {
-      padding: `0 ${spacingTokens.md}px`,
+      padding: `0 ${spacingTokens.sm}px`,
     },
   }),
 
-  // グリッドコンテナ
+  // グリッドコンテナ - 密なレイアウト
   gridContainer: {
     display: 'grid',
-    gap: spacingTokens.lg,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: spacingTokens.md,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+  },
+
+  // カード - コンパクトサイズ
+  card: (theme: Theme): SxProps => ({
+    ...surfaceStyles.surface(theme),
+    padding: spacingTokens.md,
+    borderRadius: shapeTokens.corner.small,
+    '&:hover': {
+      ...elevationTokens.level2,
+      transform: 'translateY(-2px)',
+    },
+  }),
+
+  // 小さなカード
+  cardSmall: (theme: Theme): SxProps => ({
+    ...surfaceStyles.surface(theme),
+    padding: spacingTokens.sm,
+    borderRadius: shapeTokens.corner.small,
+    minHeight: '80px',
+  }),
+
+  // リストアイテム - 密なレイアウト
+  listItem: {
+    padding: `${spacingTokens.sm}px ${spacingTokens.md}px`,
+    minHeight: '48px',
+    borderRadius: shapeTokens.corner.small,
   },
 
   // フレックスセンター
@@ -415,6 +520,47 @@ export const layoutStyles = {
   // フルハイト
   fullHeight: {
     minHeight: '100vh',
+  },
+
+  // スペーシング
+  spacing: {
+    xs: { gap: spacingTokens.xs },
+    sm: { gap: spacingTokens.sm },
+    md: { gap: spacingTokens.md },
+    lg: { gap: spacingTokens.lg },
+    xl: { gap: spacingTokens.xl },
+  },
+
+  // マージン
+  margin: {
+    none: { margin: 0 },
+    xs: { margin: spacingTokens.xs },
+    sm: { margin: spacingTokens.sm },
+    md: { margin: spacingTokens.md },
+    lg: { margin: spacingTokens.lg },
+    xl: { margin: spacingTokens.xl },
+    top: {
+      xs: { marginTop: spacingTokens.xs },
+      sm: { marginTop: spacingTokens.sm },
+      md: { marginTop: spacingTokens.md },
+      lg: { marginTop: spacingTokens.lg },
+    },
+    bottom: {
+      xs: { marginBottom: spacingTokens.xs },
+      sm: { marginBottom: spacingTokens.sm },
+      md: { marginBottom: spacingTokens.md },
+      lg: { marginBottom: spacingTokens.lg },
+    },
+  },
+
+  // パディング
+  padding: {
+    none: { padding: 0 },
+    xs: { padding: spacingTokens.xs },
+    sm: { padding: spacingTokens.sm },
+    md: { padding: spacingTokens.md },
+    lg: { padding: spacingTokens.lg },
+    xl: { padding: spacingTokens.xl },
   },
 };
 

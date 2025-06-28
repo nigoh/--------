@@ -4,7 +4,9 @@ html, body, #root {
   width: 100vw;
   height: 100vh;
   box-sizing: border-box;
+  overflow: hidden; /* ページ全体のスクロールを無効 */
 }
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -20,6 +22,36 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* スクロールバーのスタイリング - WebKit based browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -32,7 +64,8 @@ a:hover {
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden; /* body のスクロールも無効 */
 }
 
 h1 {

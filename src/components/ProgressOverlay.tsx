@@ -2,8 +2,9 @@
  * グローバル進行状況表示コンポーネント
  * 
  * アプリ全体の進行状況をオーバーレイダイアログで表示
+ * テーマ対応、アクセシビリティ改善、パフォーマンス最適化
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +13,14 @@ import {
   Box,
   CircularProgress,
   Fade,
+  useTheme,
+  alpha,
+  Button,
 } from '@mui/material';
 import {
   CheckCircle as SuccessIcon,
   Error as ErrorIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useTemporaryStore } from '../stores/useTemporaryStore';
 
@@ -23,37 +28,54 @@ import { useTemporaryStore } from '../stores/useTemporaryStore';
  * 進行状況オーバーレイコンポーネント
  */
 export const ProgressOverlay: React.FC = () => {
-  const { progress } = useTemporaryStore();
+  const { progress, clearProgress } = useTemporaryStore();
+  const theme = useTheme();
+
+  // ダイアログスタイルをメモ化
+  const dialogStyles = useMemo(() => ({
+    minWidth: { xs: '300px', sm: '450px' },
+    maxWidth: { xs: '90vw', sm: '500px' },
+    padding: theme.spacing(4),
+    borderRadius: `${typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 2 : 16}px`,
+    backgroundColor: theme.palette.background.paper,
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+    boxShadow: theme.shadows[10],
+  }), [theme]);
+
+  // プログレスの計算をメモ化
+  const progressData = useMemo(() => {
+    if (!progress) return null;
+    const percentage = Math.min((progress.current / progress.total) * 100, 100);
+    return { percentage, isCompleted: percentage === 100 };
+  }, [progress]);
 
   if (!progress) return null;
 
-  const progressPercentage = Math.min((progress.current / progress.total) * 100, 100);
+  const { percentage } = progressData!;
+  const canClose = progress.status === 'completed' || progress.status === 'error';
 
   return (
     <Dialog
       open={true}
-      disableEscapeKeyDown
+      disableEscapeKeyDown={!canClose}
+      maxWidth={false}
       PaperProps={{
-        sx: {
-          minWidth: 450,
-          maxWidth: 500,
-          p: 3,
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        },
+        sx: dialogStyles,
+        role: 'dialog',
+        'aria-labelledby': 'progress-title',
+        'aria-describedby': 'progress-description',
       }}
     >
-      <DialogContent sx={{ textAlign: 'center' }}>
-        <Box sx={{ mb: 3 }}>
+      <DialogContent sx={{ textAlign: 'center', padding: 0 }}>
+        <Box sx={{ marginBottom: theme.spacing(3) }}>
           <Typography 
+            id="progress-title"
             variant="h6" 
             gutterBottom
             sx={{
-              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontWeight: 'bold'
+              color: theme.palette.text.primary,
+              fontWeight: 600,
+              marginBottom: theme.spacing(1),
             }}
           >
             {progress.label}
@@ -61,16 +83,21 @@ export const ProgressOverlay: React.FC = () => {
         </Box>
         
         {progress.status === 'running' && (
-          <Fade in={true}>
-            <Box>
-              <Box sx={{ position: 'relative', mb: 3 }}>
+          <Fade in={true} timeout={400}>
+            <Box role="progressbar" aria-live="polite">
+              <Box sx={{ 
+                position: 'relative', 
+                marginBottom: theme.spacing(3),
+                display: 'flex',
+                justifyContent: 'center',
+              }}>
                 <CircularProgress
                   variant="determinate"
-                  value={progressPercentage}
-                  size={80}
-                  thickness={4}
+                  value={percentage}
+                  size={100}
+                  thickness={3}
                   sx={{
-                    color: 'primary.main',
+                    color: theme.palette.primary.main,
                     '& .MuiCircularProgress-circle': {
                       strokeLinecap: 'round',
                     },
@@ -88,28 +115,42 @@ export const ProgressOverlay: React.FC = () => {
                     justifyContent: 'center',
                   }}
                 >
-                  <Typography variant="h6" component="div" color="text.secondary">
-                    {Math.round(progressPercentage)}%
+                  <Typography 
+                    variant="h6" 
+                    component="div" 
+                    sx={{ 
+                      color: theme.palette.text.primary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {Math.round(percentage)}%
                   </Typography>
                 </Box>
               </Box>
               
               <LinearProgress
                 variant="determinate"
-                value={progressPercentage}
+                value={percentage}
                 sx={{ 
-                  mb: 2, 
+                  marginBottom: theme.spacing(2), 
                   height: 8, 
                   borderRadius: 4,
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 4,
-                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                    backgroundColor: theme.palette.primary.main,
+                    transition: theme.transitions.create('transform', {
+                      duration: theme.transitions.duration.short,
+                    }),
                   },
                 }}
               />
               
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                id="progress-description"
+                variant="body2" 
+                sx={{ color: theme.palette.text.secondary }}
+              >
                 {progress.current} / {progress.total}
                 {progress.total > 1 && ' 件'}
               </Typography>
@@ -118,41 +159,119 @@ export const ProgressOverlay: React.FC = () => {
         )}
 
         {progress.status === 'completed' && (
-          <Fade in={true}>
+          <Fade in={true} timeout={500}>
             <Box>
               <SuccessIcon 
                 sx={{ 
                   fontSize: 80, 
-                  color: 'success.main',
-                  mb: 2,
+                  color: theme.palette.success.main,
+                  marginBottom: theme.spacing(2),
+                  animation: 'bounceIn 0.6s ease-out',
+                  '@keyframes bounceIn': {
+                    '0%': { 
+                      opacity: 0, 
+                      transform: 'scale(0.3)' 
+                    },
+                    '50%': { 
+                      opacity: 1, 
+                      transform: 'scale(1.05)' 
+                    },
+                    '100%': { 
+                      opacity: 1, 
+                      transform: 'scale(1)' 
+                    },
+                  },
                 }} 
+                aria-label="完了"
               />
-              <Typography variant="h6" color="success.main" gutterBottom>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: theme.palette.success.main,
+                  marginBottom: theme.spacing(1),
+                  fontWeight: 600,
+                }}
+              >
                 完了しました！
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  marginBottom: theme.spacing(3),
+                }}
+              >
                 処理が正常に完了しました
               </Typography>
+              <Button
+                variant="contained"
+                onClick={clearProgress}
+                sx={{
+                  borderRadius: `${typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12}px`,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                閉じる
+              </Button>
             </Box>
           </Fade>
         )}
 
         {progress.status === 'error' && (
-          <Fade in={true}>
+          <Fade in={true} timeout={500}>
             <Box>
               <ErrorIcon 
                 sx={{ 
                   fontSize: 80, 
-                  color: 'error.main',
-                  mb: 2,
+                  color: theme.palette.error.main,
+                  marginBottom: theme.spacing(2),
+                  animation: 'shake 0.6s ease-in-out',
+                  '@keyframes shake': {
+                    '0%, 100%': { transform: 'translateX(0)' },
+                    '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+                    '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
+                  },
                 }} 
+                aria-label="エラー"
               />
-              <Typography variant="h6" color="error.main" gutterBottom>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: theme.palette.error.main,
+                  marginBottom: theme.spacing(1),
+                  fontWeight: 600,
+                }}
+              >
                 エラーが発生しました
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  marginBottom: theme.spacing(3),
+                }}
+              >
                 処理中にエラーが発生しました
               </Typography>
+              <Button
+                variant="outlined"
+                onClick={clearProgress}
+                startIcon={<CloseIcon />}
+                sx={{
+                  borderRadius: `${typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12}px`,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: theme.palette.error.main,
+                  color: theme.palette.error.main,
+                  '&:hover': {
+                    borderColor: theme.palette.error.dark,
+                    backgroundColor: alpha(theme.palette.error.main, 0.05),
+                  },
+                }}
+              >
+                閉じる
+              </Button>
             </Box>
           </Fade>
         )}

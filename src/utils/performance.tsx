@@ -6,6 +6,19 @@
 
 import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
 import React from 'react';
+import { 
+  RocketLaunch as RocketIcon,
+  CheckCircle as CheckIcon,
+  Warning as WarningIcon,
+  Error as ErrorIcon,
+  Search as SearchIcon,
+  Timer as TimerIcon,
+  Assessment as AssessmentIcon,
+  Close as CloseIcon,
+  TrendingUp as TrendingUpIcon,
+  Delete as DeleteIcon,
+  ContentCopy as CopyIcon,
+} from '@mui/icons-material';
 
 // パフォーマンスメトリクスの型定義
 interface PerformanceMetric {
@@ -20,7 +33,7 @@ interface PerformanceMetric {
  * パフォーマンスメトリクスをコンソールに出力
  */
 const logMetric = (metric: PerformanceMetric) => {
-  console.group(`🚀 ${metric.name} Performance Metric`);
+  console.group(`Performance Metric: ${metric.name}`);
   console.log(`Value: ${metric.value.toFixed(2)}ms`);
   console.log(`Delta: ${metric.delta.toFixed(2)}ms`);
   console.log(`ID: ${metric.id}`);
@@ -43,8 +56,8 @@ const logMetric = (metric: PerformanceMetric) => {
       rating = 'needs-improvement';
     }
     
-    const emoji = rating === 'good' ? '✅' : rating === 'needs-improvement' ? '⚠️' : '❌';
-    console.log(`Rating: ${emoji} ${rating}`);
+    const ratingText = rating === 'good' ? 'Good' : rating === 'needs-improvement' ? 'Needs Improvement' : 'Poor';
+    console.log(`Rating: ${ratingText}`);
   }
   
   console.groupEnd();
@@ -100,7 +113,7 @@ export const initPerformanceMonitoring = () => {
   // Time to First Byte (TTFB)
   onTTFB(handleMetric);
   
-  console.log('🔍 Performance monitoring initialized with Web Vitals');
+  console.log('Performance monitoring initialized with Web Vitals');
 };
 
 /**
@@ -143,7 +156,7 @@ export class PerformanceTracker {
     
     this.measurements.delete(name);
     
-    console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
+    console.log(`Timer: ${name}: ${duration.toFixed(2)}ms`);
     return duration;
   }
 
@@ -188,7 +201,7 @@ export class PerformanceTracker {
       return acc;
     }, {} as Record<string, number[]>);
 
-    let reportText = '📊 Performance Report\n\n';
+    let reportText = 'Performance Report\n\n';
     
     Object.entries(report).forEach(([name, values]) => {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
@@ -209,11 +222,19 @@ export class PerformanceTracker {
 /**
  * 開発環境でのパフォーマンス情報表示
  */
-export const PerformanceDevTools = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
+interface PerformanceDevToolsProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export const PerformanceDevTools: React.FC<PerformanceDevToolsProps> = ({ open, onClose }) => {
   const tracker = PerformanceTracker.getInstance();
 
   if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+
+  if (!open) {
     return null;
   }
 
@@ -221,54 +242,149 @@ export const PerformanceDevTools = () => {
     <div
       style={{
         position: 'fixed',
-        bottom: 20,
-        left: 20,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 10000,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '8px',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        maxWidth: '400px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
+      onClick={onClose}
     >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
+      <div
         style={{
-          backgroundColor: 'transparent',
-          border: '1px solid white',
+          backgroundColor: '#1a1a1a',
           color: 'white',
-          padding: '5px 10px',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: isOpen ? '10px' : '0',
+          padding: '20px',
+          borderRadius: '12px',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          maxWidth: '600px',
+          maxHeight: '80vh',
+          overflow: 'auto',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+          border: '1px solid #333',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {isOpen ? 'Hide' : 'Show'} Performance Metrics
-      </button>
-      
-      {isOpen && (
-        <div>
-          <pre style={{ margin: 0, fontSize: '10px', lineHeight: '1.4' }}>
-            {tracker.generateReport()}
-          </pre>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '15px',
+          borderBottom: '1px solid #333',
+          paddingBottom: '10px'
+        }}>
+          <h3 style={{ margin: 0, color: '#4fc3f7', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <RocketIcon style={{ fontSize: '16px' }} />
+            Performance Monitor
+          </h3>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ 
+              backgroundColor: '#2e7d32', 
+              color: 'white', 
+              padding: '2px 8px', 
+              borderRadius: '12px', 
+              fontSize: '10px',
+              fontWeight: 'bold'
+            }}>
+              DEV
+            </span>
+            <button
+              onClick={onClose}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #666',
+                color: 'white',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <CloseIcon style={{ fontSize: '12px' }} />
+              Close
+            </button>
+          </div>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          {tracker.getStoredMetrics().length === 0 ? (
+            <div style={{ 
+              textAlign: 'center', 
+              color: '#999', 
+              padding: '20px',
+              border: '1px dashed #444',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <TrendingUpIcon style={{ fontSize: '24px', color: '#666' }} />
+              No performance data collected yet.
+              <small>Navigate through the app to generate metrics.</small>
+            </div>
+          ) : (
+            <pre style={{ margin: 0, fontSize: '11px', lineHeight: '1.5', color: '#e0e0e0' }}>
+              {tracker.generateReport()}
+            </pre>
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button
-            onClick={() => tracker.clearStoredMetrics()}
+            onClick={() => {
+              tracker.clearStoredMetrics();
+              onClose();
+            }}
             style={{
-              backgroundColor: '#ff4444',
+              backgroundColor: '#f44336',
               border: 'none',
               color: 'white',
-              padding: '5px 10px',
-              borderRadius: '4px',
+              padding: '8px 15px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              marginTop: '10px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
+            <DeleteIcon style={{ fontSize: '14px' }} />
             Clear Metrics
           </button>
+          <button
+            onClick={() => {
+              console.log(tracker.generateReport());
+              alert('Performance report logged to console');
+            }}
+            style={{
+              backgroundColor: '#4caf50',
+              border: 'none',
+              color: 'white',
+              padding: '8px 15px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <CopyIcon style={{ fontSize: '14px' }} />
+            Export to Console
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -2,8 +2,9 @@
  * グローバル通知システムコンポーネント
  * 
  * アプリ全体の通知（Alert）とトースト（Snackbar）を表示
+ * テーマ対応、パフォーマンス最適化、アクセシビリティ対応
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Snackbar,
   Alert,
@@ -14,6 +15,8 @@ import {
   IconButton,
   Typography,
   Box,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -25,20 +28,29 @@ import {
 import { useTemporaryStore } from '../stores/useTemporaryStore';
 
 /**
- * 通知アイコンを取得
+ * 通知タイプ
  */
-const getNotificationIcon = (type: 'success' | 'error' | 'warning' | 'info') => {
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
+/**
+ * 通知アイコンを取得（メモ化）
+ */
+const getNotificationIcon = (type: NotificationType) => {
+  const iconProps = {
+    sx: { fontSize: '1.5rem' }
+  };
+  
   switch (type) {
     case 'success':
-      return <SuccessIcon />;
+      return <SuccessIcon {...iconProps} />;
     case 'error':
-      return <ErrorIcon />;
+      return <ErrorIcon {...iconProps} />;
     case 'warning':
-      return <WarningIcon />;
+      return <WarningIcon {...iconProps} />;
     case 'info':
-      return <InfoIcon />;
+      return <InfoIcon {...iconProps} />;
     default:
-      return <InfoIcon />;
+      return <InfoIcon {...iconProps} />;
   }
 };
 
@@ -47,29 +59,77 @@ const getNotificationIcon = (type: 'success' | 'error' | 'warning' | 'info') => 
  */
 export const NotificationSystem: React.FC = () => {
   const { notifications, removeNotification, toast, hideToast } = useTemporaryStore();
+  const theme = useTheme();
+
+  // 通知リストのスタイルをメモ化
+  const notificationStackStyles = useMemo(() => ({
+    position: 'fixed',
+    top: theme.spacing(10), // ナビゲーションの下に表示
+    right: theme.spacing(2.5),
+    zIndex: theme.zIndex.snackbar + 100,
+    maxWidth: '400px',
+    minWidth: '320px',
+    maxHeight: 'calc(100vh - 100px)',
+    overflow: 'hidden auto',
+    gap: theme.spacing(1),
+    // スクロールバースタイル
+    '&::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.3),
+      borderRadius: '3px',
+      '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.5),
+      },
+    },
+  }), [theme]);
+
+  // アラートのスタイルをメモ化
+  const getAlertStyles = useMemo(() => (type: NotificationType) => ({
+    borderRadius: `${typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12}px`,
+    backgroundColor: theme.palette.background.paper,
+    border: `1px solid ${alpha(theme.palette[type].main, 0.2)}`,
+    boxShadow: theme.shadows[4],
+    transition: theme.transitions.create(['transform', 'box-shadow'], {
+      duration: theme.transitions.duration.short,
+    }),
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: theme.shadows[8],
+    },
+    '& .MuiAlert-icon': {
+      color: theme.palette[type].main,
+      fontSize: '1.5rem',
+    },
+    '& .MuiAlert-message': {
+      padding: theme.spacing(1, 0),
+      width: '100%',
+    },
+    '& .MuiAlert-action': {
+      paddingTop: 0,
+    },
+  }), [theme]);
 
   return (
     <Portal>
       {/* 通知リスト */}
-      <Stack
-        spacing={1}
-        sx={{
-          position: 'fixed',
-          top: 80, // ナビゲーションの下に表示
-          right: 20,
-          zIndex: 9999,
-          maxWidth: 400,
-          maxHeight: 'calc(100vh - 100px)',
-          overflow: 'auto',
-        }}
-      >
+      <Stack sx={notificationStackStyles}>
         {notifications.map((notification, index) => (
           <Slide
             key={notification.id}
             direction="left"
             in={true}
-            timeout={300}
-            style={{ transitionDelay: `${index * 100}ms` }}
+            timeout={{
+              enter: 400,
+              exit: 200,
+            }}
+            style={{ 
+              transitionDelay: `${index * 100}ms`,
+            }}
           >
             <Alert
               severity={notification.type}
@@ -77,40 +137,43 @@ export const NotificationSystem: React.FC = () => {
               icon={getNotificationIcon(notification.type)}
               action={
                 <IconButton
-                  aria-label="close"
+                  aria-label="通知を閉じる"
                   color="inherit"
                   size="small"
                   onClick={() => removeNotification(notification.id)}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.action.hover, 0.1),
+                    },
+                  }}
                 >
-                  <CloseIcon fontSize="inherit" />
+                  <CloseIcon fontSize="small" />
                 </IconButton>
               }
-              sx={{
-                boxShadow: 4,
-                borderRadius: 2,
-                backgroundColor: 'background.paper',
-                '& .MuiAlert-icon': {
-                  fontSize: '1.5rem',
-                },
-                '& .MuiAlert-message': {
-                  padding: '8px 0',
-                },
-              }}
+              sx={getAlertStyles(notification.type)}
             >
-              <Box>
+              <Box sx={{ width: '100%' }}>
                 {notification.title && (
                   <Typography
                     variant="subtitle2"
+                    component="h6"
                     sx={{
-                      fontWeight: 'bold',
-                      mb: notification.message ? 0.5 : 0,
+                      fontWeight: 600,
+                      marginBottom: notification.message ? 0.5 : 0,
+                      color: theme.palette.text.primary,
                     }}
                   >
                     {notification.title}
                   </Typography>
                 )}
                 {notification.message && (
-                  <Typography variant="body2">
+                  <Typography 
+                    variant="body2"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      lineHeight: 1.5,
+                    }}
+                  >
                     {notification.message}
                   </Typography>
                 )}
@@ -138,11 +201,18 @@ export const NotificationSystem: React.FC = () => {
           onClose={hideToast}
           icon={toast ? getNotificationIcon(toast.type) : undefined}
           sx={{
-            borderRadius: 2,
-            boxShadow: 3,
-            minWidth: 300,
+            borderRadius: `${typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12}px`,
+            backgroundColor: theme.palette.background.paper,
+            boxShadow: theme.shadows[6],
+            minWidth: '300px',
+            maxWidth: '500px',
+            border: toast ? `1px solid ${alpha(theme.palette[toast.type].main, 0.2)}` : 'none',
             '& .MuiAlert-icon': {
               fontSize: '1.25rem',
+              color: toast ? theme.palette[toast.type].main : undefined,
+            },
+            '& .MuiAlert-message': {
+              fontWeight: 500,
             },
           }}
         >

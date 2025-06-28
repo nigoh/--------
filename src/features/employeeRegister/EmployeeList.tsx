@@ -182,21 +182,22 @@ export const EmployeeList: React.FC = () => {
     <Paper 
       elevation={3} 
       sx={{ 
-        p: 3,
+        p: 2,
         borderRadius: 2,
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       }}
     >
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography 
           variant="h5" 
           sx={{ 
-            mb: 2,
+            mb: 1.5,
             background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: '1.25rem'
           }}
         >
           社員一覧
@@ -215,9 +216,10 @@ export const EmployeeList: React.FC = () => {
               </InputAdornment>
             ),
           }}
+          size="small"
           sx={{ 
             maxWidth: 400,
-            mb: 2,
+            mb: 1.5,
             '& .MuiOutlinedInput-root': {
               backgroundColor: 'rgba(255, 255, 255, 0.8)',
             }
@@ -229,14 +231,14 @@ export const EmployeeList: React.FC = () => {
         <Box 
           sx={{ 
             textAlign: 'center', 
-            py: 6,
+            py: 4,
             color: 'text.secondary' 
           }}
         >
-          <Typography variant="h6">
+          <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
             まだ社員が登録されていません
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1 }}>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
             「社員登録」タブから新しい社員を登録してください
           </Typography>
         </Box>
@@ -385,7 +387,7 @@ export const EmployeeList: React.FC = () => {
               `${from}-${to} / ${count}件`
             }
             sx={{ 
-              mt: 2,
+              mt: 1.5,
               '& .MuiTablePagination-toolbar': {
                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                 borderRadius: 1,

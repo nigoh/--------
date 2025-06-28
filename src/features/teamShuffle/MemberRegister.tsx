@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Chip, Paper, Typography, Stack, Container, Fade, keyframes } from '@mui/material';
+import { Box, TextField, Button, Chip, Typography, Stack, Fade, useTheme } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -7,24 +7,6 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { getMemberColor } from './utils';
 import { EmployeeSelector } from './EmployeeSelector';
 import { Employee } from '../employeeRegister/useEmployeeStore';
-
-// チップのアニメーション定義
-const chipSlideIn = keyframes`
-  0% { 
-    opacity: 0; 
-    transform: translateX(-20px) scale(0.8); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: translateX(0) scale(1); 
-  }
-`;
-
-const buttonPulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(103, 126, 234, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(103, 126, 234, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(103, 126, 234, 0); }
-`;
 
 /**
  * 名簿登録用コンポーネント
@@ -38,6 +20,7 @@ export interface MemberRegisterProps {
 }
 
 const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, renderListItem }: MemberRegisterProps) => {
+  const theme = useTheme();
   const [input, setInput] = useState('');
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -76,35 +59,44 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
   };
 
   return (
-    <Container maxWidth="md" sx={{ px: { xs: 1, sm: 2 }, mb: 4 }}>
-      <Paper 
+    <Box sx={{ mb: 3 }}>
+      {/* タイトル */}
+      <Typography 
+        variant="h6" 
         sx={{ 
-          p: { xs: 2, sm: 4 }, 
-          maxWidth: 800, 
-          mx: 'auto',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          borderRadius: 3,
-          boxShadow: '0 8px 32px rgba(103, 126, 234, 0.1)',
-        }} 
-        elevation={3}
+          mb: 2,
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
       >
-        <Typography 
-          variant="h6" 
+        <Box 
           sx={{ 
-            mb: 3,
-            fontWeight: 700,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          名簿リスト
-        </Typography>
-        
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            width: 4, 
+            height: 24, 
+            background: `linear-gradient(to bottom, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            borderRadius: 2
+          }} 
+        />
+        名簿リスト
+      </Typography>
+      
+      {/* 入力エリア - セカンダリカラー25% */}
+      <Box 
+        sx={{ 
+          p: 2,
+          mb: 3,
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? theme.palette.grey[800] 
+            : theme.palette.grey[50],
+          borderRadius: 2,
+          border: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          {/* メインカラー70% - 入力フィールド */}
           <TextField
             label="名前を入力"
             value={input}
@@ -116,82 +108,104 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
             fullWidth
             sx={{
               '& .MuiOutlinedInput-root': {
+                backgroundColor: theme.palette.background.paper,
                 borderRadius: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
                 transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  transform: 'translateY(-1px)',
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.primary.main,
                 },
                 '&.Mui-focused': {
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  boxShadow: '0 0 0 2px rgba(103, 126, 234, 0.2)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme.palette.primary.main,
+                  },
                 },
               },
             }}
           />
-          <Stack direction="row" spacing={1}>
+          
+          {/* アクションボタン */}
+          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+            {/* アクセントカラー5% - 追加ボタン */}
             <Button 
               variant="contained" 
               onClick={handleAdd} 
               disabled={!input.trim()}
               startIcon={<AddIcon />}
               sx={{
-                minWidth: 100,
+                minWidth: { xs: '100%', sm: 120 },
                 borderRadius: 2,
-                px: 3,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                boxShadow: '0 4px 12px rgba(103, 126, 234, 0.3)',
-                transition: 'all 0.2s ease-in-out',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                color: theme.palette.primary.contrastText,
+                fontWeight: 600,
+                textTransform: 'none',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 16px rgba(103, 126, 234, 0.4)',
-                  animation: input.trim() ? `${buttonPulse} 2s infinite` : 'none',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
+                  transform: 'translateY(-1px)',
                 },
                 '&:disabled': {
-                  background: 'rgba(0, 0, 0, 0.12)',
+                  background: theme.palette.action.disabledBackground,
                   transform: 'none',
-                  animation: 'none',
                 },
+                transition: 'all 0.2s ease',
               }}
             >
               追加
             </Button>
+            
+            {/* セカンダリボタン */}
             <Button 
               variant="outlined" 
               onClick={() => setEmployeeSelectorOpen(true)}
               startIcon={<PersonAddIcon />}
               sx={{
-                minWidth: 150,
+                minWidth: { xs: '100%', sm: 140 },
                 borderRadius: 2,
-                px: 3,
-                borderColor: 'rgba(103, 126, 234, 0.5)',
-                color: '#667eea',
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.2s ease-in-out',
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+                backgroundColor: theme.palette.background.paper,
+                fontWeight: 500,
+                textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#667eea',
-                  backgroundColor: 'rgba(103, 126, 234, 0.1)',
+                  borderColor: theme.palette.primary.dark,
+                  backgroundColor: theme.palette.primary.main + '10',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(103, 126, 234, 0.2)',
                 },
+                transition: 'all 0.2s ease',
               }}
             >
               社員選択
             </Button>
           </Stack>
         </Stack>
-        
-        <Box sx={{ width: '100%' }}>
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', gap: 1.5 }}>
+      </Box>
+      
+      {/* メンバー表示エリア - メインカラー70% */}
+      <Box sx={{ 
+        minHeight: 120,
+        p: 2,
+        backgroundColor: theme.palette.background.paper,
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+      }}>
+        {members.length === 0 ? (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: theme.palette.text.secondary,
+              textAlign: 'center',
+              py: 4,
+              fontStyle: 'italic'
+            }}
+          >
+            メンバーがまだ登録されていません
+          </Typography>
+        ) : (
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
             {members.map((name, idx) => {
               if (editIdx === idx) {
                 return (
                   <Fade in key={`edit-${name}-${idx}`}>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
                       <TextField
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
@@ -203,7 +217,7 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
                         autoFocus
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            backgroundColor: theme.palette.background.paper,
                             borderRadius: 2,
                           },
                         }}
@@ -211,13 +225,13 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
                       <Button 
                         size="small" 
                         onClick={() => handleEditSave(idx)}
+                        variant="contained"
                         sx={{ 
                           minWidth: 'auto',
                           borderRadius: 2,
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          color: 'white',
+                          background: theme.palette.primary.main,
                           '&:hover': {
-                            background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                            background: theme.palette.primary.dark,
                           },
                         }}
                       >
@@ -243,16 +257,14 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
                       bgcolor: color, 
                       color: '#ffffff', 
                       fontWeight: 600, 
-                      fontSize: '0.9rem',
+                      fontSize: '0.875rem',
                       borderRadius: 2,
                       px: 1,
-                      boxShadow: `0 2px 8px ${color}40`,
-                      animation: `${chipSlideIn} 0.3s ease-out ${idx * 0.05}s both`,
                       transition: 'all 0.2s ease-in-out',
                       cursor: 'pointer',
                       '&:hover': {
-                        transform: 'translateY(-2px) scale(1.05)',
-                        boxShadow: `0 4px 12px ${color}60`,
+                        transform: 'translateY(-1px) scale(1.02)',
+                        boxShadow: `0 4px 8px ${color}60`,
                         bgcolor: color,
                       },
                       '& .MuiChip-deleteIcon': {
@@ -260,7 +272,7 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
                         transition: 'all 0.2s ease-in-out',
                         '&:hover': {
                           color: '#ffffff',
-                          transform: 'scale(1.2)',
+                          transform: 'scale(1.1)',
                         },
                       },
                     }}
@@ -269,8 +281,8 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
               );
             })}
           </Stack>
-        </Box>
-      </Paper>
+        )}
+      </Box>
 
       {/* 社員選択ダイアログ */}
       <EmployeeSelector
@@ -279,7 +291,7 @@ const MemberRegister = ({ members, onAddMember, onRemoveMember, onEditMember, re
         onSelectEmployees={handleSelectEmployees}
         excludeNames={members}
       />
-    </Container>
+    </Box>
   );
 };
 

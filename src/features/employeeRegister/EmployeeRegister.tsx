@@ -2,7 +2,7 @@
  * 社員登録メインページコンポーネント
  * 
  * 社員登録フォームと社員一覧をタブで切り替えて表示する
- * Material Design 3 準拠のモダンデザイン
+ * Material Design 3 準拠のコンパクトなデザイン
  */
 import React, { useState } from 'react';
 import {
@@ -14,6 +14,7 @@ import {
   Badge,
   Paper,
   useTheme,
+  Chip,
 } from '@mui/material';
 import {
   PersonAdd as PersonAddIcon,
@@ -34,7 +35,6 @@ import {
   buttonStyles 
 } from '../../theme/componentStyles';
 import { spacingTokens, shapeTokens } from '../../theme/designSystem';
-import { BentoGrid, createBentoItem, createWideBentoItem } from '../../components/ui/Bento/BentoGrid';
 
 /**
  * タブパネルコンポーネント
@@ -53,7 +53,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
       id={`employee-tabpanel-${index}`}
       aria-labelledby={`employee-tab-${index}`}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ py: 1 }}>{children}</Box>}
     </div>
   );
 };
@@ -86,215 +86,166 @@ export const EmployeeRegister: React.FC = () => {
   // アクティブな社員数を計算
   const activeEmployeeCount = employees.filter(emp => emp.isActive).length;
 
-  // ダッシュボード用のBentoアイテムを作成
-  const bentoItems = [
-    createWideBentoItem(
-      'header',
-      <Box sx={{ textAlign: 'center', py: spacingTokens.lg }}>
-        <Typography 
-          variant="h3" 
-          sx={{ 
-            mb: spacingTokens.md,
-            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontWeight: 'bold'
-          }}
-        >
-          社員管理システム
-        </Typography>
-        <Typography 
-          variant="h6" 
-          color="text.secondary"
-          sx={{ maxWidth: 600, mx: 'auto' }}
-        >
-          社員の基本情報、スキル、経験を管理し、効率的なチーム編成を支援します
-        </Typography>
-      </Box>,
-      { minHeight: 200 }
-    ),
-    createBentoItem(
-      'stats-total',
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
-          {employees.length}
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          総社員数
-        </Typography>
-      </Box>,
-      { 
-        backgroundColor: theme.palette.primary.light + '20',
-        interactive: true,
-        minHeight: 150,
-      }
-    ),
-    createBentoItem(
-      'stats-active',
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold' }}>
-          {activeEmployeeCount}
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          アクティブ
-        </Typography>
-      </Box>,
-      { 
-        backgroundColor: theme.palette.success.light + '20',
-        interactive: true,
-        minHeight: 150,
-      }
-    ),
-    createBentoItem(
-      'stats-inactive',
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold' }}>
-          {employees.length - activeEmployeeCount}
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          非アクティブ
-        </Typography>
-      </Box>,
-      { 
-        backgroundColor: theme.palette.warning.light + '20',
-        interactive: true,
-        minHeight: 150,
-      }
-    ),
-  ];
-
   return (
-    <Container maxWidth="lg" sx={{ py: spacingTokens.xl }}>
-      <StaggerContainer>
-        {/* ダッシュボード */}
-        <StaggerItem>
-          <BentoGrid 
-            items={bentoItems}
-            columns={{
-              xs: 1,
-              sm: 2,
-              md: 4,
-              lg: 4,
-              xl: 4,
-            }}
-            gap={spacingTokens.lg}
-            animated={true}
-            sx={{ mb: spacingTokens.xxl }}
-          />
-        </StaggerItem>
-
-        {/* タブナビゲーション */}
-        <StaggerItem>
-          <Paper 
-            sx={{ 
-              ...surfaceStyles.elevated(3)(theme),
-              borderRadius: shapeTokens.corner.extraLarge,
-              overflow: 'hidden',
-              position: 'relative',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              },
-            }}
-          >
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              centered
-              sx={{
-                borderBottom: 1,
-                borderColor: 'divider',
-                '& .MuiTabs-indicator': {
-                  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-                  height: 4,
-                  borderRadius: '2px 2px 0 0',
-                },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  minHeight: 80,
-                  transition: 'all 0.3s ease',
-                  '&.Mui-selected': {
-                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 10%, ${theme.palette.secondary.main} 90%)`,
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    transform: 'scale(1.05)',
-                  },
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                    transform: 'translateY(-2px)',
-                  },
-                },
-              }}
-            >
-              <Tab
-                icon={<PersonAddIcon />}
-                label="社員登録"
-                {...a11yProps(0)}
-                sx={{ flex: 1 }}
-              />
-              <Tab
-                icon={
-                  <Badge 
-                    badgeContent={activeEmployeeCount} 
-                    color="primary"
-                    sx={{
-                      '& .MuiBadge-badge': {
-                        background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      }
+    <Box sx={{ 
+      height: '100vh', 
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* スクロール可能なコンテンツエリア */}
+      <Box sx={{ 
+        flex: 1, 
+        overflow: 'auto',
+        py: spacingTokens.xs,
+      }}>
+        <Container maxWidth="lg" sx={{ height: '100%', py: 0 }}>
+          <StaggerContainer>
+            {/* コンパクトなヘッダー */}
+            <StaggerItem>
+              <FadeIn>
+                <Box sx={{ mb: spacingTokens.sm, textAlign: 'center' }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      mb: spacingTokens.xs,
+                      color: theme.palette.primary.main,
+                      fontWeight: 600,
+                      fontSize: { xs: '1.75rem', sm: '2rem' }
                     }}
                   >
-                    <PeopleIcon />
-                  </Badge>
-                }
-                label="社員一覧"
-                {...a11yProps(1)}
-                sx={{ flex: 1 }}
-              />
-            </Tabs>
+                    社員管理
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ maxWidth: 400, mx: 'auto' }}
+                  >
+                    社員情報とスキル管理
+                  </Typography>
+                </Box>
+              </FadeIn>
+            </StaggerItem>
 
-            {/* タブパネル */}
-            <TabPanel value={tabValue} index={0}>
-              <PageTransition mode="fade" key="employee-form">
-                <EmployeeRegisterForm />
-              </PageTransition>
-            </TabPanel>
+            {/* コンパクトな統計情報 */}
+            <StaggerItem>
+              <FadeIn>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  mb: spacingTokens.sm 
+                }}>
+                  <Chip
+                    label={`総社員数: ${employees.length}人`}
+                    color="primary"
+                    variant="filled"
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      px: spacingTokens.xs,
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+                      color: theme.palette.primary.contrastText,
+                      '& .MuiChip-label': {
+                        px: spacingTokens.xs,
+                      },
+                    }}
+                  />
+                </Box>
+              </FadeIn>
+            </StaggerItem>
 
-            <TabPanel value={tabValue} index={1}>
-              <PageTransition mode="fade" key="employee-list">
-                <EmployeeList />
-              </PageTransition>
-            </TabPanel>
-          </Paper>
-        </StaggerItem>
-
-        {/* フッター */}
-        <StaggerItem>
-          <FadeIn>
-            <Box sx={{ mt: spacingTokens.xxxxl, textAlign: 'center' }}>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{
-                  padding: spacingTokens.md,
-                  borderRadius: shapeTokens.corner.large,
-                  backgroundColor: theme.palette.action.hover,
+            {/* タブナビゲーション */}
+            <StaggerItem>
+              <Paper 
+                sx={{ 
+                  ...surfaceStyles.elevated(2)(theme),
+                  borderRadius: shapeTokens.corner.medium,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  },
                 }}
               >
-                © 2025 社員管理システム - チーム分けツールと連携
-              </Typography>
-            </Box>
-          </FadeIn>
-        </StaggerItem>
-      </StaggerContainer>
-    </Container>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  centered
+                  sx={{
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    minHeight: 48,
+                    '& .MuiTabs-indicator': {
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+                      height: 2,
+                      borderRadius: '1px 1px 0 0',
+                    },
+                    '& .MuiTab-root': {
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      minHeight: 48,
+                      py: spacingTokens.xs,
+                      transition: 'all 0.2s ease',
+                      '&.Mui-selected': {
+                        color: theme.palette.primary.main,
+                      },
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    },
+                  }}
+                >
+                  <Tab
+                    icon={<PersonAddIcon />}
+                    label="社員登録"
+                    {...a11yProps(0)}
+                    sx={{ flex: 1 }}
+                  />
+                  <Tab
+                    icon={
+                      <Badge 
+                        badgeContent={activeEmployeeCount} 
+                        color="primary"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                          }
+                        }}
+                      >
+                        <PeopleIcon />
+                      </Badge>
+                    }
+                    label="社員一覧"
+                    {...a11yProps(1)}
+                    sx={{ flex: 1 }}
+                  />
+                </Tabs>
+
+                {/* タブパネル */}
+                <TabPanel value={tabValue} index={0}>
+                  <PageTransition mode="fade" key="employee-form">
+                    <EmployeeRegisterForm />
+                  </PageTransition>
+                </TabPanel>
+
+                <TabPanel value={tabValue} index={1}>
+                  <PageTransition mode="fade" key="employee-list">
+                    <EmployeeList />
+                  </PageTransition>
+                </TabPanel>
+              </Paper>
+            </StaggerItem>
+          </StaggerContainer>
+        </Container>
+      </Box>
+    </Box>
   );
 };
