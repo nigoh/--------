@@ -1,4 +1,4 @@
-import { Paper, Typography, Box, Chip, Stack, Grow, keyframes } from '@mui/material';
+import { Paper, Typography, Box, Chip, Stack, Grow, useTheme } from '@mui/material';
 import React from 'react';
 import { getMemberColorByName } from './utils';
 
@@ -9,32 +9,9 @@ interface TeamCardProps {
   allMembers?: string[]; // 全メンバーリストを追加
 }
 
-// チップのアニメーション定義（控えめに調整）
-const chipSlideIn = keyframes`
-  0% { 
-    opacity: 0; 
-    transform: translateY(10px) scale(0.9); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
-  }
-`;
-
-const cardFloat = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-`;
-
-const chipColors = [
-  '#1976d2', '#9c27b0', '#388e3c', '#fbc02d', '#d32f2f', '#0288d1',
-  '#7b1fa2', '#388e3c', '#ffa000', '#c2185b', '#0097a7', '#512da8',
-  '#689f38', '#f57c00', '#455a64', '#8bc34a', '#f44336', '#00bcd4',
-  '#ff9800', '#607d8b', '#e91e63', '#43a047', '#ffb300', '#5d4037',
-];
-
-
 const TeamCard = ({ team, teamIndex, animate, allMembers = [] }: TeamCardProps) => {
+  const theme = useTheme();
+
   return (
     <Grow in={animate} style={{ transformOrigin: '0 0 0' }} timeout={600 + teamIndex * 200}>
       <Box 
@@ -46,29 +23,43 @@ const TeamCard = ({ team, teamIndex, animate, allMembers = [] }: TeamCardProps) 
           px: 2,
         }}
       >
+        {/* セカンダリカラー25% - カード背景 */}
         <Paper 
           variant="outlined" 
           sx={{
             p: 3,
             borderRadius: 3,
             mb: 3,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(103, 126, 234, 0.2)',
-            boxShadow: '0 8px 32px rgba(103, 126, 234, 0.1)',
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? theme.palette.grey[800] 
+              : theme.palette.grey[50],
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: theme.shadows[4],
             minWidth: 240,
             width: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            overflow: 'hidden',
             '&:hover': {
               transform: 'translateY(-4px) scale(1.01)',
-              boxShadow: '0 12px 36px rgba(103, 126, 234, 0.15)',
-              background: 'rgba(255, 255, 255, 1)',
+              boxShadow: theme.shadows[8],
+              borderColor: theme.palette.primary.main,
+            },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 4,
+              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             },
           }}
         >
+          {/* チーム名ヘッダー */}
           <Typography 
             variant="h5" 
             fontWeight="bold" 
@@ -77,64 +68,101 @@ const TeamCard = ({ team, teamIndex, animate, allMembers = [] }: TeamCardProps) 
             sx={{ 
               mb: 2, 
               letterSpacing: 1,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: theme.palette.text.primary,
               fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
             }}
           >
+            <Box 
+              sx={{ 
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                color: theme.palette.primary.contrastText,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+              }}
+            >
+              {teamIndex + 1}
+            </Box>
             チーム{teamIndex + 1}
           </Typography>
           
+          {/* 区切り線 */}
           <Box sx={{ 
             width: '60%', 
             height: '2px', 
-            background: 'linear-gradient(90deg, transparent, rgba(103, 126, 234, 0.5), transparent)',
+            background: `linear-gradient(90deg, transparent, ${theme.palette.primary.main}80, transparent)`,
             borderRadius: 1,
             mb: 3 
           }} />
           
-          <Stack 
-            direction="row" 
-            spacing={1} 
-            flexWrap="wrap" 
-            justifyContent="center" 
+          {/* メンバー表示エリア - メインカラー70% */}
+          <Box sx={{
+            width: '100%',
+            p: 2,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.divider}`,
+            minHeight: 100,
+          }}>
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              flexWrap="wrap" 
+              justifyContent="center" 
+              sx={{ 
+                width: '100%', 
+                gap: 1
+              }}
+            >
+              {team.map((member, i) => {
+                // 統一されたカラーパレットを使用
+                const color = getMemberColorByName(member, allMembers.length > 0 ? allMembers : team);
+                return (
+                  <Chip
+                    key={i}
+                    label={member}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      bgcolor: color,
+                      color: '#ffffff',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      boxShadow: `0 2px 8px ${color}40`,
+                      opacity: animate ? 1 : 0,
+                      transform: animate ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
+                      transition: `all 0.2s ease-in-out ${i * 0.08}s`,
+                      '&:hover': {
+                        transform: 'translateY(-2px) scale(1.03)',
+                        boxShadow: `0 4px 12px ${color}60`,
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+          </Box>
+
+          {/* メンバー数表示 */}
+          <Typography 
+            variant="body2" 
             sx={{ 
-              width: '100%', 
-              minHeight: 56,
-              gap: 1
+              mt: 2,
+              color: theme.palette.text.secondary,
+              fontWeight: 500,
             }}
           >
-            {team.map((member, i) => {
-              // 統一されたカラーパレットを使用
-              const color = getMemberColorByName(member, allMembers.length > 0 ? allMembers : team);
-              return (
-                <Chip
-                  key={i}
-                  label={member}
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    bgcolor: color,
-                    color: '#ffffff',
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    boxShadow: `0 4px 12px ${color}40`,
-                    transform: animate ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
-                    opacity: animate ? 1 : 0,
-                    animation: animate ? `${chipSlideIn} 0.4s ease-out ${i * 0.08}s both` : 'none',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-2px) scale(1.03)',
-                      boxShadow: `0 6px 16px ${color}50`,
-                    },
-                  }}
-                />
-              );
-            })}
-          </Stack>
+            メンバー {team.length}名
+          </Typography>
         </Paper>
       </Box>
     </Grow>

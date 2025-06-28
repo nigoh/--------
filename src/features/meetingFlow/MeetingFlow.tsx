@@ -1,16 +1,17 @@
-import { Box, Button, Paper, Divider, Alert, Stack, MobileStepper, useTheme, IconButton, Typography, Grid, Drawer, useMediaQuery } from '@mui/material';
-import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
+/**
+ * ミーティングフローメインコンポーネント（リファクタリング後）
+ * 
+ * 責務分離により、レイアウト・データ読み込み・UI描画を分離し、
+ * よりシンプルで保守しやすい構造に変更
+ */
+import React from 'react';
+import { useTheme } from '@mui/material';
 import StepPanel from './StepPanel';
 import TipsSidePanel from './TipsSidePanel';
-import AnimatedBackground from '../../components/AnimatedBackground';
-import { useState, useEffect } from 'react';
 import steps, { tips, Step as StepType } from './meetingFlowData';
-import { useResponsive } from '../../hooks/useResponsive';
-import { focusStyles } from '../../utils/accessibility';
 import { useMeetingFlowStore } from './useMeetingFlowStore';
+import { useTipsContentLoader } from './hooks/useTipsContentLoader';
+import { MeetingFlowLayout, MeetingFlowContent } from './components/MeetingFlowLayout';
 
 interface MeetingFlowProps {
   onBack: (updatedTeams?: string[][]) => void;
@@ -21,60 +22,29 @@ interface MeetingFlowProps {
 
 export default function MeetingFlow({ onBack, teams, setTeams, members }: MeetingFlowProps) {
   const theme = useTheme();
-  const { isMobile, isTablet, spacing, cardPadding } = useResponsive();
   
   // Zustandストアから状態とアクションを取得
   const {
     activeStep,
     stepTimes,
-    stepTipsContent,
     timerRunning,
     showAlert,
     sidebarOpen,
-    setActiveStep,
-    nextStep,
-    prevStep,
-    setTimerRunning,
     startTimer,
     pauseTimer,
     finishTimer,
     closeAlert,
     setStepTime,
-    setStepTipsContent,
     setSidebarOpen,
     toggleSidebar,
+    nextStep,
+    prevStep,
   } = useMeetingFlowStore();
   
-  // ステップのMarkdownコンテンツを読み込み
-  useEffect(() => {
-    const loadTips = async () => {
-      const tipsContent: string[] = [];
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
-        if (step.tipsMarkdownFile) {
-          try {
-            const response = await fetch(`/tips/${step.tipsMarkdownFile}`);
-            if (response.ok) {
-              const content = await response.text();
-              tipsContent[i] = content;
-            } else {
-              tipsContent[i] = `# Step ${i + 1} のコツ\n\nコツの情報を読み込み中にエラーが発生しました。`;
-            }
-          } catch (error) {
-            console.error(`Error loading tips for step ${i + 1}:`, error);
-            tipsContent[i] = `# Step ${i + 1} のコツ\n\nコツの情報を読み込み中にエラーが発生しました。`;
-          }
-        } else {
-          tipsContent[i] = '';
-        }
-      }
-      setStepTipsContent(tipsContent);
-    };
-
-    loadTips();
-  }, []);
+  // Tipsコンテンツを読み込み
+  const { stepTipsContent } = useTipsContentLoader();
   
-  // step情報にteams・timeを上書きし、他プロパティ（imageUrl等）も展開
+  // step情報にteams・timeを上書きし、他プロパティも展開
   const step: StepType = {
     ...steps[activeStep],
     time: stepTimes[activeStep],
@@ -92,152 +62,40 @@ export default function MeetingFlow({ onBack, teams, setTeams, members }: Meetin
     setStepTime(activeStep, v);
   };
 
-  return (
-    <AnimatedBackground>
-      <Box sx={{ 
-        minHeight: '100svh', 
-        p: { xs: 1, sm: 2 }, 
-        width: '100vw', 
-        height: '100svh', 
-        boxSizing: 'border-box', 
-        overflow: 'auto' 
-      }}>
-        {/* モバイル用ハンバーガーメニュー */}
-        {isMobile && (
-          <Box sx={{ 
-            position: 'fixed', 
-            top: 16, 
-            right: 16, 
-            zIndex: 1300,
-          }}>
-            <IconButton
-              onClick={toggleSidebar}
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  transform: 'scale(1.05)',
-                },
-                ...focusStyles,
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-          </Box>
-        )}
+  // サイドバーコンテンツ
+  const sidebarContent = (
+    <TipsSidePanel 
+      markdownContent={stepTipsContent[activeStep] || ''} 
+      tips={stepTipsContent[activeStep] ? undefined : tips} 
+    />
+  );
 
-        <Box 
-          sx={{ 
-            height: '100%', 
-            width: '100%', 
-            maxWidth: '100vw', 
-            display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            gap: spacing,
-            boxSizing: 'border-box' 
-          }} 
-        >
-          {/* ステップ進行部（左カラム） */}
-          <Box sx={{ 
-            boxSizing: 'border-box',
-            flex: { xs: '1 1 auto', md: '1 1 45%' },
-            height: { xs: 'auto', md: '100%' },
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <StepPanel
-              step={step}
-              stepsLength={steps.length}
-              activeStep={activeStep}
-              timerRunning={timerRunning}
-              showAlert={showAlert}
-              onTimeChange={handleTimeChange}
-              onTimerFinish={finishTimer}
-              onStart={startTimer}
-              onPause={pauseTimer}
-              onBack={prevStep}
-              onNext={nextStep}
-              onReturnToShuffle={handleReturnToShuffle}
-              onAlertClose={closeAlert}
-              theme={theme}
-            />
-          </Box>
-          
-          {/* Tipsパネル部 - デスクトップは右カラム、モバイルはDrawer */}
-          {isMobile ? (
-            <Drawer
-              anchor="right"
-              open={sidebarOpen}
-              onClose={() => setSidebarOpen(false)}
-              sx={{
-                '& .MuiDrawer-paper': {
-                  width: '85vw',
-                  maxWidth: 400,
-                  backgroundColor: 'transparent',
-                  backgroundImage: 'none',
-                },
-              }}
-            >
-              <Box sx={{ 
-                height: '100%',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  mb: 2 
-                }}>
-                  <Typography variant="h6" sx={{ 
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}>
-                    進行のコツ
-                  </Typography>
-                  <IconButton 
-                    onClick={() => setSidebarOpen(false)}
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 1)',
-                      },
-                      ...focusStyles,
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <TipsSidePanel 
-                    markdownContent={stepTipsContent[activeStep] || ''} 
-                    tips={stepTipsContent[activeStep] ? undefined : tips} 
-                  />
-                </Box>
-              </Box>
-            </Drawer>
-          ) : (
-            <Box sx={{ 
-              boxSizing: 'border-box',
-              flex: { xs: '1 1 auto', md: '1 1 42%' },
-              height: { xs: 'auto', md: '100%' },
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <TipsSidePanel 
-                markdownContent={stepTipsContent[activeStep] || ''} 
-                tips={stepTipsContent[activeStep] ? undefined : tips} 
-              />
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </AnimatedBackground>
+  return (
+    <MeetingFlowLayout
+      sidebarOpen={sidebarOpen}
+      onToggleSidebar={toggleSidebar}
+      onCloseSidebar={() => setSidebarOpen(false)}
+      sidebarContent={sidebarContent}
+    >
+      {/* ステップ進行部 */}
+      <MeetingFlowContent>
+        <StepPanel
+          step={step}
+          stepsLength={steps.length}
+          activeStep={activeStep}
+          timerRunning={timerRunning}
+          showAlert={showAlert}
+          onTimeChange={handleTimeChange}
+          onTimerFinish={finishTimer}
+          onStart={startTimer}
+          onPause={pauseTimer}
+          onBack={prevStep}
+          onNext={nextStep}
+          onReturnToShuffle={handleReturnToShuffle}
+          onAlertClose={closeAlert}
+          theme={theme}
+        />
+      </MeetingFlowContent>
+    </MeetingFlowLayout>
   );
 }
