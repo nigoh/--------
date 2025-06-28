@@ -164,7 +164,7 @@ src/
 
 ## 📄 ライセンス
 
-MIT License - 詳細は `LICENSE` ファイルを参照してください。
+MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してください。
 
 ## 🙏 謝辞
 
