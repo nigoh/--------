@@ -1,7 +1,8 @@
-import React from 'react';
-import { Container, Stack, Box, Typography, useTheme } from '@mui/material';
+import React, { useState } from 'react';
+import { Container, Stack, Box, Typography, useTheme, TextField } from '@mui/material';
 import { TimecardForm } from './TimecardForm';
 import { TimecardList } from './TimecardList';
+import TimecardSummary from './TimecardSummary';
 import { 
   FadeIn, 
   SlideUp, 
@@ -13,6 +14,7 @@ import { spacingTokens, shapeTokens } from '../../theme/designSystem';
 
 const Timecard: React.FC = () => {
   const theme = useTheme();
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   return (
     <Box sx={{ 
@@ -65,10 +67,26 @@ const Timecard: React.FC = () => {
             <Stack spacing={spacingTokens.xl}>
               <StaggerItem>
                 <SlideUp>
+                  <Stack spacing={spacingTokens.md}>
+                    <TextField
+                      label="対象月"
+                      type="month"
+                      value={month}
+                      onChange={(e) => setMonth(e.target.value)}
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <TimecardSummary month={month} />
+                  </Stack>
+                </SlideUp>
+              </StaggerItem>
+
+              <StaggerItem>
+                <SlideUp>
                   <TimecardForm />
                 </SlideUp>
               </StaggerItem>
-              
+
               <StaggerItem>
                 <SlideUp>
                   <TimecardList />

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { calculateDuration } from './utils';
 
 export interface TimecardEntry {
   id: string;
@@ -65,3 +66,16 @@ export const useTimecardStore = create<TimecardStore>((set) => ({
     })),
   reset: () => set(initialState),
 }));
+
+/**
+ * 月別の合計勤務時間を計算する
+ */
+export const calculateMonthlyHours = (
+  entries: TimecardEntry[],
+): Record<string, number> =>
+  entries.reduce<Record<string, number>>((acc, e) => {
+    if (e.isAbsence || !e.startTime || !e.endTime) return acc;
+    const month = e.date.slice(0, 7);
+    acc[month] = (acc[month] ?? 0) + calculateDuration(e.startTime, e.endTime);
+    return acc;
+  }, {});
