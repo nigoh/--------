@@ -185,3 +185,70 @@ src/features/
 5. **開発効率の向上**: チーム開発での並行作業が可能
 
 すべてのコンポーネントがエラーなく動作し、アプリケーションの機能は保持されています。
+
+---
+
+## 🗑️ **使用されていないソースファイルの削除**
+
+### **削除されたファイル**
+
+#### **1. 経費管理機能**
+- `ExpenseList.tsx` - EnhancedExpenseListに置き換えられ未使用
+
+#### **2. 備品管理機能**
+- `EquipmentList.tsx` - EnhancedEquipmentListに置き換えられ未使用
+- `EquipmentForm.tsx` - EnhancedEquipmentListに統合され未使用
+
+#### **3. Storybookサンプルファイル**
+- `src/stories/` フォルダ全体 - 開発で使用されていないサンプルファイル
+  - Button.stories.ts
+  - Button.tsx
+  - Header.stories.ts
+  - Header.tsx
+  - Page.stories.ts
+  - Page.tsx
+  - Configure.mdx
+  - assets/ フォルダ
+
+#### **4. 重複ファイル**
+- `src/features/meetingFlow/index.tsx` - index.tsと重複
+
+### **修正されたファイル**
+
+#### **1. Equipment.tsx の統合**
+- 古いEquipment.tsxをEquipmentRegister.tsxを使用するように更新
+- EquipmentFormとEquipmentListの直接使用を削除
+
+#### **2. index.ts エクスポートの更新**
+- `src/features/equipment/index.ts` - 削除されたコンポーネントのエクスポートを削除
+- `src/features/expense/index.ts` - ExpenseListのエクスポートを削除
+
+#### **3. TypeScriptエラーの修正**
+- `EmployeeListTable.tsx` - Typographyコンポーネントのインポート追加
+- `main.tsx` - .tsx拡張子の削除
+
+### **削除による効果**
+
+#### **1. プロジェクトサイズの削減**
+- 不要なファイル約30個を削除
+- コードベースの簡素化
+
+#### **2. 保守性の向上**
+- 重複したコンポーネントの削除
+- 使用されていないコードの除去
+- 責務が明確化された新しいコンポーネントのみ残存
+
+#### **3. ビルド時間の短縮**
+- 不要なファイルのトランスパイル削除
+- バンドルサイズの最適化
+
+---
+
+## ✅ **クリーンアップ完了**
+
+関心の分離による責務分割リファクタリングと合わせて、使用されていないソースファイルの削除も完了しました。これにより以下を達成：
+
+1. **最新のアーキテクチャに統一**: Enhanced系コンポーネントのみ使用
+2. **コードの一貫性**: 重複や未使用コードの完全除去
+3. **プロジェクトの整理**: 開発に不要なサンプルファイルの削除
+4. **型安全性の確保**: TypeScriptエラーの修正

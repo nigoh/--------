@@ -10,7 +10,6 @@ export { ExpenseRegister } from './ExpenseRegister';
 export { EnhancedExpenseList } from './EnhancedExpenseList';
 export { ExpenseModal } from './ExpenseModal';
 export { ExpenseForm } from './ExpenseForm';
-export { ExpenseList } from './ExpenseList';
 export { ReceiptUpload } from './ReceiptUpload';
 export { StatusManager } from './StatusManager';
 

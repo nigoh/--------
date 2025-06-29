@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, IconButton, Tooltip, Stack, Avatar, Box, TablePagination, Paper } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, IconButton, Tooltip, Stack, Avatar, Box, TablePagination, Paper, Typography } from '@mui/material';
 import { Delete, Visibility, PersonOff, Person } from '@mui/icons-material';
 import { Employee } from '../useEmployeeStore';
 
