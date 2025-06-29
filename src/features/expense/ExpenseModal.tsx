@@ -1,10 +1,10 @@
 /**
  * 経費登録・編集モーダルコンポーネント
  * 
+ * Zustandフォームストアを活用
  * 新規登録と既存経費の編集の両方に対応
- * フォームバリデーションとアニメーションを含む
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -19,6 +19,8 @@ import {
   MenuItem,
   useTheme,
   Divider,
+  Alert,
+  Fade,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -27,11 +29,11 @@ import {
   Save as SaveIcon,
 } from '@mui/icons-material';
 import { useExpenseStore, ExpenseEntry, ExpenseReceipt } from './useExpenseStore';
-import { useTemporary } from '../../hooks/useTemporary';
+import { useExpenseForm } from './hooks/useExpenseForm';
 import { ReceiptUpload } from './ReceiptUpload';
 import { surfaceStyles } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
-import { EXPENSE_CATEGORIES, VALIDATION_MESSAGES, AMOUNT_LIMITS, TEXT_LIMITS } from './constants/expenseConstants';
+import { EXPENSE_CATEGORIES } from './constants/expenseConstants';
 
 interface ExpenseModalProps {
   open: boolean;
@@ -45,179 +47,95 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   expense,
 }) => {
   const theme = useTheme();
-  const { addExpense, updateExpense, addReceipt } = useExpenseStore();
-  const { toast, progress } = useTemporary();
-  const isEditing = !!expense;
-
-  // フォーム状態
-  const [formData, setFormData] = useState({
-    date: '',
-    category: '',
-    amount: '',
-    note: '',
+  const { addReceipt } = useExpenseStore();
+  
+  // メッセージ状態
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  
+  // Zustandフォームフック
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    isEditing,
+    handleFieldChange,
+    handleSubmit,
+    startEdit,
+    resetForm,
+    getFieldError,
+  } = useExpenseForm((text, type) => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 3000);
   });
 
-  // 領収書状態
+  // 領収書状態（一時的）
   const [tempReceipts, setTempReceipts] = useState<ExpenseReceipt[]>([]);
 
-  // バリデーションエラー
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   /**
-   * フォームデータを初期化
+   * モーダルが開いた時の初期化
    */
   useEffect(() => {
     if (open) {
       if (expense) {
-        // 編集モードの場合、既存データをセット
-        setFormData({
-          date: expense.date,
-          category: expense.category,
-          amount: expense.amount.toString(),
-          note: expense.note || '',
-        });
+        // 編集モード
+        startEdit(expense);
         setTempReceipts(expense.receipts || []);
       } else {
-        // 新規登録の場合、フォームをリセット
-        setFormData({
-          date: new Date().toISOString().split('T')[0],
-          category: '',
-          amount: '',
-          note: '',
-        });
+        // 新規登録モード
+        resetForm();
         setTempReceipts([]);
       }
-      setErrors({});
+      setMessage(null);
     }
-  }, [open, expense]);
+  }, [open, expense, startEdit, resetForm]);
 
   /**
-   * 入力フィールドの変更ハンドラー
+   * フィールド変更ハンドラー
    */
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-    
-    // エラーをクリア
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
-  };
+  const handleInputChange = useCallback((field: string, value: string) => {
+    handleFieldChange(field, value);
+  }, [handleFieldChange]);
 
   /**
    * 領収書の追加ハンドラー
    */
-  const handleReceiptAdd = (receipts: ExpenseReceipt[]) => {
+  const handleReceiptAdd = useCallback((receipts: ExpenseReceipt[]) => {
     setTempReceipts(prev => [...prev, ...receipts]);
-  };
+  }, []);
 
   /**
    * 領収書の削除ハンドラー
    */
-  const handleReceiptRemove = (receiptId: string) => {
+  const handleReceiptRemove = useCallback((receiptId: string) => {
     setTempReceipts(prev => prev.filter(receipt => receipt.id !== receiptId));
-  };
-
-  /**
-   * バリデーション
-   */
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.date) {
-      newErrors.date = VALIDATION_MESSAGES.REQUIRED_DATE;
-    }
-
-    if (!formData.category) {
-      newErrors.category = VALIDATION_MESSAGES.REQUIRED_CATEGORY;
-    }
-
-    if (!formData.amount) {
-      newErrors.amount = VALIDATION_MESSAGES.REQUIRED_AMOUNT;
-    } else {
-      const amount = Number(formData.amount);
-      if (isNaN(amount) || amount <= 0) {
-        newErrors.amount = VALIDATION_MESSAGES.INVALID_AMOUNT;
-      } else if (amount > AMOUNT_LIMITS.MAX) {
-        newErrors.amount = VALIDATION_MESSAGES.AMOUNT_TOO_LARGE;
-      }
-    }
-
-    if (formData.note && formData.note.length > TEXT_LIMITS.NOTE_MAX_LENGTH) {
-      newErrors.note = VALIDATION_MESSAGES.NOTE_TOO_LONG;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, []);
 
   /**
    * 保存処理
    */
-  const handleSave = async () => {
-    if (!validateForm()) {
-      toast.error('入力内容に不備があります');
-      return;
-    }
-
-    progress.start(isEditing ? '経費情報を更新中...' : '経費を登録中...', 1);
-
-    try {
-      // 擬似的な遅延
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const expenseData = {
-        date: formData.date,
-        category: formData.category,
-        amount: Number(formData.amount),
-        note: formData.note,
-      };
-
-      if (isEditing && expense) {
-        // 更新
-        updateExpense(expense.id, expenseData);
-        toast.success(`経費情報を更新しました`);
-      } else {
-        // 新規登録
-        const newExpenseId = addExpense(expenseData);
-        
-        // 領収書がある場合は関連付ける
-        if (tempReceipts.length > 0 && newExpenseId) {
-          tempReceipts.forEach(receipt => {
-            addReceipt(newExpenseId, receipt);
-          });
-        }
-        
-        toast.success(`経費を登録しました (領収書 ${tempReceipts.length}件)`);
-      }
-
-      progress.complete();
+  const handleSave = useCallback(async () => {
+    const success = await handleSubmit();
+    if (success) {
+      // 新規登録時に領収書がある場合の処理は
+      // 実際のAPIと連携する際に実装
       onClose();
-
-      // 1秒後に進行状況をクリア
-      setTimeout(() => {
-        progress.clear();
-      }, 1000);
-
-    } catch (err) {
-      progress.error();
-      toast.error(isEditing ? '更新に失敗しました' : '登録に失敗しました');
-      
-      setTimeout(() => {
-        progress.clear();
-      }, 2000);
     }
-  };
+  }, [handleSubmit, onClose]);
+
+  /**
+   * キャンセル処理
+   */
+  const handleCancel = useCallback(() => {
+    resetForm();
+    setTempReceipts([]);
+    setMessage(null);
+    onClose();
+  }, [resetForm, onClose]);
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleCancel}
       maxWidth="sm"
       fullWidth
       slotProps={{
@@ -250,7 +168,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         <IconButton
           edge="end"
           color="inherit"
-          onClick={onClose}
+          onClick={handleCancel}
           sx={{ color: 'inherit' }}
         >
           <CloseIcon />
@@ -258,6 +176,18 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ p: spacingTokens.md }}>
+        {/* メッセージ表示 */}
+        {message && (
+          <Fade in={!!message}>
+            <Alert 
+              severity={message.type} 
+              sx={{ mb: spacingTokens.md }}
+            >
+              {message.text}
+            </Alert>
+          </Fade>
+        )}
+
         <Stack spacing={spacingTokens.md}>
           {/* 基本情報 */}
           <Box>
@@ -272,29 +202,36 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               基本情報
             </Typography>
             <Stack spacing={spacingTokens.sm}>
-              <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: spacingTokens.md, 
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                alignItems: 'flex-start' 
+              }}>
                 <TextField
                   label="日付"
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleInputChange('date', e.target.value)}
-                  error={!!errors.date}
-                  helperText={errors.date}
+                  error={!!getFieldError('date')}
+                  helperText={getFieldError('date')}
                   required
                   size="small"
                   sx={{ maxWidth: 200 }}
                   InputLabelProps={{ shrink: true }}
+                  disabled={isSubmitting}
                 />
                 <TextField
                   select
                   label="カテゴリ"
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  error={!!errors.category}
-                  helperText={errors.category}
+                  error={!!getFieldError('category')}
+                  helperText={getFieldError('category')}
                   required
                   size="small"
                   sx={{ maxWidth: 200 }}
+                  disabled={isSubmitting}
                 >
                   {EXPENSE_CATEGORIES.map((category) => (
                     <MenuItem key={category} value={category}>
@@ -303,17 +240,23 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   ))}
                 </TextField>
               </Box>
-              <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: spacingTokens.md, 
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                alignItems: 'flex-start' 
+              }}>
                 <TextField
                   label="金額"
                   type="number"
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
-                  error={!!errors.amount}
-                  helperText={errors.amount}
+                  error={!!getFieldError('amount')}
+                  helperText={getFieldError('amount')}
                   required
                   size="small"
                   sx={{ maxWidth: 200 }}
+                  disabled={isSubmitting}
                   slotProps={{
                     input: {
                       startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
@@ -343,11 +286,12 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               rows={3}
               value={formData.note}
               onChange={(e) => handleInputChange('note', e.target.value)}
-              error={!!errors.note}
-              helperText={errors.note}
+              error={!!getFieldError('note')}
+              helperText={getFieldError('note')}
               placeholder="経費の詳細や目的を記入してください"
               size="small"
               sx={{ width: '100%', mb: spacingTokens.md }}
+              disabled={isSubmitting}
             />
           </Box>
 
@@ -371,7 +315,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <ReceiptUpload
               expenseId={expense?.id || "temp-modal-upload"}
               receipts={tempReceipts}
-              disabled={false}
+              disabled={isSubmitting}
               onReceiptsAdd={handleReceiptAdd}
               onReceiptRemove={handleReceiptRemove}
             />
@@ -382,10 +326,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
       <DialogActions sx={{ p: spacingTokens.md, gap: spacingTokens.sm, justifyContent: 'center' }}>
         <Button
-          onClick={onClose}
+          onClick={handleCancel}
           variant="outlined"
           size="medium"
           sx={{ minWidth: 100 }}
+          disabled={isSubmitting}
         >
           キャンセル
         </Button>
@@ -394,12 +339,13 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           variant="contained"
           size="medium"
           startIcon={<SaveIcon />}
+          disabled={isSubmitting}
           sx={{
             background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
             minWidth: 120,
           }}
         >
-          {isEditing ? '更新' : '登録'}
+          {isSubmitting ? '処理中...' : (isEditing ? '更新' : '登録')}
           {tempReceipts.length > 0 && ` (領収書 ${tempReceipts.length}件)`}
         </Button>
       </DialogActions>

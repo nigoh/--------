@@ -1,13 +1,13 @@
 /**
  * 拡張経費一覧コンポーネント
  * 
- * employeeRegisterと同様の画面構成
+ * Zustandカスタムフックを活用した統一的な状態管理
  * - 検索・フィルタリング機能
  * - 詳細表示・編集・削除機能
  * - ページネーション
  * - レスポンシブ対応
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -22,12 +22,12 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  FilterList as FilterIcon,
   CloudDownload as ExportIcon,
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
-import { useExpenseStore, ExpenseEntry } from './useExpenseStore';
+import { ExpenseEntry } from './useExpenseStore';
 import { ExpenseModal } from './ExpenseModal';
+import { useExpenseList } from './hooks/useExpenseForm';
 import ExpenseDialogs from './components/ExpenseDialogs';
 import ExpenseListTable from './components/ExpenseListTable';
 import ExpenseFilters from './components/ExpenseFilters';
@@ -49,8 +49,16 @@ export const EnhancedExpenseList: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  // Zustandストア
-  const { expenses, deleteExpense } = useExpenseStore();
+  // メッセージ状態
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Zustandリストフック
+  const { expenses, handleDelete } = useExpenseList((message, type) => {
+    if (type === 'success') {
+      setSuccessMessage(message);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
+  });
   
   // モーダル・ダイアログの状態
   const [modalOpen, setModalOpen] = useState(false);
@@ -73,9 +81,6 @@ export const EnhancedExpenseList: React.FC = () => {
   // ページネーション状態
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
-  // 成功メッセージ
-  const [successMessage, setSuccessMessage] = useState('');
 
   // フィルタリングされた経費データ
   const filteredExpenses = useMemo(() => {
@@ -127,29 +132,29 @@ export const EnhancedExpenseList: React.FC = () => {
   }, [filteredExpenses, page, rowsPerPage]);
 
   // ユーティリティ関数
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('ja-JP');
-  };
+  }, []);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('ja-JP', {
       style: 'currency',
       currency: 'JPY',
     }).format(amount);
-  };
+  }, []);
 
   // イベントハンドラー
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setFilters(prev => ({ ...prev, search: value }));
     setPage(0);
-  };
+  }, []);
 
-  const handleFilterChange = (key: keyof ExpenseListFilters, value: string) => {
+  const handleFilterChange = useCallback((key: keyof ExpenseListFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPage(0);
-  };
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters({
       search: '',
       category: '',
@@ -160,57 +165,55 @@ export const EnhancedExpenseList: React.FC = () => {
       dateTo: '',
     });
     setPage(0);
-  };
+  }, []);
 
-  const handleOpenModal = (expense: ExpenseEntry | null = null) => {
+  const handleOpenModal = useCallback((expense: ExpenseEntry | null = null) => {
     setExpenseToEdit(expense);
     setModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setModalOpen(false);
     setExpenseToEdit(null);
-  };
+  }, []);
 
-  const handleViewExpense = (expense: ExpenseEntry) => {
+  const handleViewExpense = useCallback((expense: ExpenseEntry) => {
     setSelectedExpense(expense);
-  };
+  }, []);
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = useCallback(() => {
     setSelectedExpense(null);
-  };
+  }, []);
 
-  const handleDeleteExpense = (expense: ExpenseEntry) => {
+  const handleDeleteExpense = useCallback((expense: ExpenseEntry) => {
     setExpenseToDelete(expense);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (expenseToDelete) {
-      deleteExpense(expenseToDelete.id);
-      setSuccessMessage('経費を削除しました');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      await handleDelete(expenseToDelete.id);
     }
     setDeleteDialogOpen(false);
     setExpenseToDelete(null);
-  };
+  }, [expenseToDelete, handleDelete]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setDeleteDialogOpen(false);
     setExpenseToDelete(null);
-  };
+  }, []);
 
-  const handlePageChange = (event: unknown, newPage: number) => {
+  const handlePageChange = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRowsPerPageChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
+  }, []);
 
   // CSVエクスポート
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     const csvData = filteredExpenses.map(expense => ({
       日付: formatDate(expense.date),
       カテゴリ: expense.category,
@@ -234,10 +237,7 @@ export const EnhancedExpenseList: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  // アクティブフィルターの数
-  const activeFilterCount = Object.values(filters).filter(value => value !== '').length;
+  }, [filteredExpenses, formatDate]);
 
   return (
     <Container maxWidth="xl" sx={{ py: spacingTokens.lg }}>

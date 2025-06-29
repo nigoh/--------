@@ -27,15 +27,31 @@ export interface ExpenseEntry {
 
 export interface ExpenseState {
   expenses: ExpenseEntry[];
+  loading: boolean;
+  error: string | null;
 }
 
 export interface ExpenseActions {
-  addExpense: (entry: Omit<ExpenseEntry, 'id' | 'status' | 'receipts' | 'submittedDate'>) => void;
+  // CRUD操作
+  addExpense: (entry: Omit<ExpenseEntry, 'id' | 'status' | 'receipts' | 'submittedDate'>) => string;
   updateExpense: (id: string, entry: Partial<ExpenseEntry>) => void;
   deleteExpense: (id: string) => void;
+  
+  // ステータス管理
   updateStatus: (id: string, status: ExpenseStatus, metadata?: { approvedBy?: string; rejectionReason?: string }) => void;
+  
+  // 領収書管理
   addReceipt: (expenseId: string, receipt: Omit<ExpenseReceipt, 'id' | 'uploadDate'>) => void;
   removeReceipt: (expenseId: string, receiptId: string) => void;
+  
+  // ユーティリティ
+  getExpenseById: (id: string) => ExpenseEntry | undefined;
+  getExpensesByStatus: (status: ExpenseStatus) => ExpenseEntry[];
+  getTotalAmount: (status?: ExpenseStatus) => number;
+  
+  // リセット・ローディング
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   reset: () => void;
 }
 
@@ -80,10 +96,14 @@ const initialState: ExpenseState = {
       approvedBy: '佐藤部長',
     },
   ],
+  loading: false,
+  error: null,
 };
 
-export const useExpenseStore = create<ExpenseStore>((set) => ({
+export const useExpenseStore = create<ExpenseStore>((set, get) => ({
   ...initialState,
+  
+  // CRUD操作
   addExpense: (entry) => {
     const newExpense = {
       id: crypto.randomUUID(),
@@ -95,21 +115,51 @@ export const useExpenseStore = create<ExpenseStore>((set) => ({
     
     set((state) => ({
       expenses: [...state.expenses, newExpense],
+      error: null,
     }));
     
-    return newExpense.id; // IDを返す
+    return newExpense.id;
   },
-  updateExpense: (id, entry) =>
+
+  updateExpense: (id, entry) => {
+    const state = get();
+    const existingExpense = state.expenses.find(e => e.id === id);
+    if (!existingExpense) {
+      set({ error: `経費ID: ${id} が見つかりません` });
+      return;
+    }
+
     set((state) => ({
       expenses: state.expenses.map((e) =>
         e.id === id ? { ...e, ...entry } : e
       ),
-    })),
-  deleteExpense: (id) =>
+      error: null,
+    }));
+  },
+
+  deleteExpense: (id) => {
+    const state = get();
+    const expenseExists = state.expenses.some(e => e.id === id);
+    if (!expenseExists) {
+      set({ error: `削除対象の経費ID: ${id} が見つかりません` });
+      return;
+    }
+
     set((state) => ({
       expenses: state.expenses.filter((e) => e.id !== id),
-    })),
-  updateStatus: (id, status, metadata = {}) =>
+      error: null,
+    }));
+  },
+
+  // ステータス管理
+  updateStatus: (id, status, metadata = {}) => {
+    const state = get();
+    const expense = state.expenses.find(e => e.id === id);
+    if (!expense) {
+      set({ error: `経費ID: ${id} が見つかりません` });
+      return;
+    }
+
     set((state) => ({
       expenses: state.expenses.map((e) => {
         if (e.id !== id) return e;
@@ -132,8 +182,19 @@ export const useExpenseStore = create<ExpenseStore>((set) => ({
         
         return { ...e, ...updates };
       }),
-    })),
-  addReceipt: (expenseId, receipt) =>
+      error: null,
+    }));
+  },
+
+  // 領収書管理
+  addReceipt: (expenseId, receipt) => {
+    const state = get();
+    const expense = state.expenses.find(e => e.id === expenseId);
+    if (!expense) {
+      set({ error: `経費ID: ${expenseId} が見つかりません` });
+      return;
+    }
+
     set((state) => ({
       expenses: state.expenses.map((e) =>
         e.id === expenseId
@@ -150,8 +211,18 @@ export const useExpenseStore = create<ExpenseStore>((set) => ({
             }
           : e
       ),
-    })),
-  removeReceipt: (expenseId, receiptId) =>
+      error: null,
+    }));
+  },
+
+  removeReceipt: (expenseId, receiptId) => {
+    const state = get();
+    const expense = state.expenses.find(e => e.id === expenseId);
+    if (!expense) {
+      set({ error: `経費ID: ${expenseId} が見つかりません` });
+      return;
+    }
+
     set((state) => ({
       expenses: state.expenses.map((e) =>
         e.id === expenseId
@@ -161,6 +232,30 @@ export const useExpenseStore = create<ExpenseStore>((set) => ({
             }
           : e
       ),
-    })),
+      error: null,
+    }));
+  },
+
+  // ユーティリティ
+  getExpenseById: (id) => {
+    return get().expenses.find(expense => expense.id === id);
+  },
+
+  getExpensesByStatus: (status) => {
+    return get().expenses.filter(expense => expense.status === status);
+  },
+
+  getTotalAmount: (status) => {
+    const expenses = status 
+      ? get().expenses.filter(expense => expense.status === status)
+      : get().expenses;
+    return expenses.reduce((total, expense) => total + expense.amount, 0);
+  },
+
+  // リセット・ローディング
+  setLoading: (loading) => set({ loading }),
+  
+  setError: (error) => set({ error }),
+
   reset: () => set(initialState),
 }));

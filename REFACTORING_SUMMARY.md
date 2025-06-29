@@ -193,7 +193,13 @@ src/features/
 ### **削除されたファイル**
 
 #### **1. 経費管理機能**
+
 - `ExpenseList.tsx` - EnhancedExpenseListに置き換えられ未使用
+- `EnhancedExpenseList_new.tsx` - 開発途中のファイル（未使用）
+- `ExpenseModal_new.tsx` - 開発途中のファイル（未使用）
+- `components/ExpenseFilterDialog.tsx` - 使用されていないフィルターダイアログ
+- `components/SearchField.tsx` - 使用されていない検索フィールド
+- `stores/` フォルダー（空） - 使用されていない空のフォルダー
 
 #### **2. 備品管理機能**
 - `EquipmentList.tsx` - EnhancedEquipmentListに置き換えられ未使用
@@ -252,3 +258,57 @@ src/features/
 2. **コードの一貫性**: 重複や未使用コードの完全除去
 3. **プロジェクトの整理**: 開発に不要なサンプルファイルの削除
 4. **型安全性の確保**: TypeScriptエラーの修正
+
+---
+
+## 🎯 **Zustand状態管理の統一（expense機能）**
+
+### **実装完了（2025年6月30日）**
+
+#### **Before（問題点）**
+- ローカルuseStateとZustandストアの混在
+- フォーム管理の非効率な実装
+- コンポーネント間の状態同期が困難
+
+#### **After（改善）**
+```
+src/features/expense/
+├── useExpenseStore.ts              # メインデータストア（拡張済み）
+├── stores/
+│   └── useExpenseFormStore.ts      # フォーム専用ストア
+└── hooks/
+    └── useExpenseForm.ts           # 統一カスタムフック
+```
+
+#### **実装した機能**
+
+##### **1. フォーム専用Zustandストア**
+- **useExpenseFormStore**: フォーム状態の完全管理
+- 無限ループ防止のupdateField実装
+- バリデーション状態の統合管理
+- 編集モードの自動切り替え
+
+##### **2. カスタムフック統一**
+- **useExpenseForm**: フォーム管理＋ビジネスロジック
+- **useExpenseList**: リスト操作＋CRUD処理
+- メッセージハンドリングの統一
+- useCallbackによるパフォーマンス最適化
+
+##### **3. メインストア拡張**
+- エラーハンドリングの統合
+- ユーティリティメソッド追加（getExpenseById, getTotalAmountなど）
+- 楽観的更新でのロールバック対応
+- loading/error状態の管理
+
+##### **4. コンポーネント更新**
+- **ExpenseModal**: Zustandフォームストア活用
+- **EnhancedExpenseList**: 統一カスタムフック使用
+- プロップスバケツリレーの解消
+
+#### **成果**
+- **パフォーマンス**: 無駄な再レンダリング防止
+- **保守性**: 状態管理の一元化
+- **再利用性**: カスタムフックによる機能分離
+- **型安全性**: TypeScript型定義の完全サポート
+
+---

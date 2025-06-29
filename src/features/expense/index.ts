@@ -1,7 +1,7 @@
 /**
- * 経費管理機能のエクスポートインデックス（リファクタリング後）
+ * 経費管理機能のエクスポートインデックス（Zustand統一後）
  * 
- * 関心の分離後のコンポーネント、フック、定数を統一的にエクスポート
+ * Zustandストア、カスタムフック、コンポーネントを統一的にエクスポート
  */
 
 // メインコンポーネント
@@ -17,12 +17,18 @@ export { StatusManager } from './StatusManager';
 export { ExpenseListHeader } from './components/ExpenseListHeader';
 export { ExpenseFilters } from './components/ExpenseFilters';
 
-// カスタムフック
+// Zustandストア（統一）
+export { useExpenseStore } from './useExpenseStore';
+export { useExpenseFormStore } from './stores/useExpenseFormStore';
+
+// Zustandカスタムフック（推奨）
+export { useExpenseForm, useExpenseList } from './hooks/useExpenseForm';
+
+// レガシーカスタムフック（後で削除予定）
 export { useExpenseListFilter } from './hooks/useExpenseListFilter';
 export { useExpenseListActions } from './hooks/useExpenseListActions';
 
-// ストア
-export { useExpenseStore } from './useExpenseStore';
+// 型定義
 export type {
   ExpenseEntry,
   ExpenseState,
@@ -31,6 +37,14 @@ export type {
   ExpenseStatus,
   ExpenseReceipt,
 } from './useExpenseStore';
+
+export type {
+  ExpenseFormData,
+  ExpenseFormErrors,
+  ExpenseFormState,
+  ExpenseFormActions,
+  ExpenseFormStore
+} from './stores/useExpenseFormStore';
 
 // 定数
 export {
@@ -45,7 +59,7 @@ export {
 } from './constants/expenseConstants';
 export type { ExpenseCategory } from './constants/expenseConstants';
 
-// 型定義
+// レガシー型定義（後で削除予定）
 export type { 
   SortField, 
   SortDirection, 
