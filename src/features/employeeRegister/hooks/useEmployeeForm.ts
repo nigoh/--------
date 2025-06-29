@@ -1,156 +1,195 @@
 /**
- * 社員登録フォーム状態管理のカスタムフック
+ * 社員フォーム管理用Hook (Zustand準拠版)
  * 
- * フォームの状態管理、送信処理、リセット処理を分離し、
- * UIコンポーネントから独立したビジネスロジックを提供
+ * Zustandストアを使用した状態管理、バリデーション、保存処理
  */
-import { useState } from 'react';
-import { useEmployeeStore } from '../useEmployeeStore';
+import { useCallback } from 'react';
+import { useEmployeeStore, Employee } from '../useEmployeeStore';
+import { useEmployeeFormStore } from '../stores/useEmployeeFormStore';
 import { useTemporary } from '../../../hooks/useTemporary';
-import { useEmployeeFormValidation, EmployeeFormData } from './useEmployeeFormValidation';
 
-/**
- * 初期フォームデータ
- */
-const initialFormData: EmployeeFormData = {
-  name: '',
-  email: '',
-  phone: '',
-  department: '',
-  position: '',
-  skills: [],
-  joinDate: new Date().toISOString().split('T')[0], // 今日の日付
-  notes: '',
-};
+export interface ValidationErrors {
+  [key: string]: string;
+}
 
-/**
- * 社員登録フォーム状態管理のカスタムフック
- */
-export const useEmployeeForm = () => {
-  const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [skillsExpanded, setSkillsExpanded] = useState(false);
-  
-  const { addEmployee } = useEmployeeStore();
-  const { toast, progress } = useTemporary();
+export const useEmployeeForm = (
+  employee?: Employee | null,
+  mode: 'create' | 'edit' | 'view' = 'create'
+) => {
+  // Zustandストアから状態とアクションを取得
   const {
-    validationErrors,
-    validateForm,
-    validateField,
-    clearErrors,
-    isFormValid,
-  } = useEmployeeFormValidation();
+    formData,
+    errors,
+    customSkill,
+    isSubmitting,
+    isDirty,
+    initializeForm,
+    updateField,
+    setCustomSkill,
+    addCustomSkill,
+    setSubmitting,
+    clearAllErrors,
+    setErrors,
+  } = useEmployeeFormStore();
+
+  const { addEmployee, updateEmployee } = useEmployeeStore();
+  const { toast, progress } = useTemporary();
+  
+  const isEditing = mode === 'edit';
+  const isViewing = mode === 'view';
+  const isCreating = mode === 'create';
 
   /**
-   * フォームデータを更新
+   * フォームデータを初期化（メモ化）
    */
-  const updateFormData = (field: keyof EmployeeFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // リアルタイムバリデーション（文字列フィールドのみ）
-    if (typeof value === 'string') {
-      validateField(field, value);
+  const initializeFormWithOpen = useCallback((isOpen: boolean) => {
+    if (isOpen) {
+      initializeForm(employee, mode);
     }
-  };
+  }, [employee?.id, mode, initializeForm]); // employeeの変更はIDで判定
 
   /**
-   * スキルを追加/削除
+   * 入力フィールドの変更ハンドラー（メモ化）
    */
-  const handleSkillChange = (skill: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: checked
-        ? [...prev.skills, skill]
-        : prev.skills.filter(s => s !== skill),
-    }));
-  };
+  const handleInputChange = useCallback((field: keyof typeof formData, value: any) => {
+    updateField(field, value);
+  }, [updateField]);
 
   /**
-   * スキルを削除
+   * カスタムスキル追加ハンドラー（メモ化）
    */
-  const handleSkillDelete = (skillToDelete: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToDelete),
-    }));
-  };
+  const handleAddCustomSkill = useCallback(() => {
+    addCustomSkill();
+  }, [addCustomSkill]);
 
   /**
-   * フォーム送信処理
+   * Enterキーでのカスタムスキル追加（メモ化）
    */
-  const handleSubmit = async (): Promise<boolean> => {
-    // バリデーション実行
-    if (!isFormValid(formData)) {
-      toast.error('入力に不備があります。確認してください。');
+  const handleCustomSkillKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddCustomSkill();
+    }
+  }, [handleAddCustomSkill]);
+
+  /**
+   * バリデーション（メモ化）
+   */
+  const validateForm = useCallback((): boolean => {
+    const newErrors: ValidationErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = '氏名は必須です';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'メールアドレスは必須です';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = '有効なメールアドレスを入力してください';
+    }
+
+    if (!formData.department.trim()) {
+      newErrors.department = '部署は必須です';
+    }
+
+    if (!formData.position.trim()) {
+      newErrors.position = '役職は必須です';
+    }
+
+    if (!formData.joinDate) {
+      newErrors.joinDate = '入社日は必須です';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData, setErrors]);
+
+  /**
+   * 保存処理（メモ化）
+   */
+  const handleSave = useCallback(async (onSuccess?: () => void) => {
+    if (!validateForm()) {
+      toast.error('入力内容に不備があります');
       return false;
     }
 
-    setIsSubmitting(true);
-    progress.start('社員情報を登録中...', 1);
+    setSubmitting(true);
+    progress.start(isEditing ? '社員情報を更新中...' : '社員を登録中...', 1);
 
     try {
-      // 擬似的な遅延（API呼び出しの模擬）
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      // 擬似的な遅延
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 社員を登録
-      addEmployee(formData);
+      if (isEditing && employee) {
+        // 更新
+        updateEmployee(employee.id, formData);
+        toast.success(`${formData.name}さんの情報を更新しました`);
+      } else {
+        // 新規登録
+        const newEmployee: Employee = {
+          id: Date.now().toString(),
+          ...formData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        addEmployee(newEmployee);
+        toast.success(`${formData.name}さんを登録しました`);
+      }
 
-      // 成功処理
       progress.complete();
-      toast.success(`${formData.name}さんを登録しました`);
-      
-      // フォームをリセット
-      handleReset();
-      
+      onSuccess?.();
+
+      // 1秒後に進行状況をクリア
+      setTimeout(() => {
+        progress.clear();
+      }, 1000);
+
       return true;
-    } catch (error) {
-      console.error('Registration error:', error);
-      progress.complete();
-      toast.error('登録に失敗しました。もう一度お試しください。');
+
+    } catch (err) {
+      progress.error();
+      toast.error(isEditing ? '更新に失敗しました' : '登録に失敗しました');
+
+      setTimeout(() => {
+        progress.clear();
+      }, 2000);
+
       return false;
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
-  };
-
-  /**
-   * フォームリセット処理
-   */
-  const handleReset = () => {
-    setFormData(initialFormData);
-    clearErrors();
-    setSkillsExpanded(false);
-    toast.info('フォームをリセットしました');
-  };
-
-  /**
-   * スキル展開状態を切り替え
-   */
-  const toggleSkillsExpanded = () => {
-    setSkillsExpanded(prev => !prev);
-  };
+  }, [
+    validateForm, 
+    setSubmitting, 
+    formData, 
+    isEditing, 
+    employee, 
+    updateEmployee, 
+    addEmployee, 
+    toast, 
+    progress
+  ]);
 
   return {
-    // フォーム状態
+    // Zustand状態
     formData,
+    errors,
+    customSkill,
     isSubmitting,
-    skillsExpanded,
-    validationErrors,
+    isDirty,
     
-    // フォーム操作
-    updateFormData,
-    handleSkillChange,
-    handleSkillDelete,
-    handleSubmit,
-    handleReset,
-    toggleSkillsExpanded,
+    // フラグ
+    isEditing,
+    isViewing,
+    isCreating,
     
-    // バリデーション
-    isFormValid: () => isFormValid(formData),
+    // 関数
+    initializeForm: initializeFormWithOpen,
+    handleInputChange,
+    handleAddCustomSkill,
+    handleCustomSkillKeyPress,
+    validateForm,
+    handleSave,
+    setCustomSkill,
   };
 };
-
-export default useEmployeeForm;

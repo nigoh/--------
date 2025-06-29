@@ -4,7 +4,7 @@
  * 新規登録と既存社員の編集の両方に対応
  * フォームバリデーションとアニメーションを含む
  */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,6 @@ import {
   DialogActions,
   Button,
   TextField,
-  Grid,
   Box,
   Typography,
   IconButton,
@@ -23,15 +22,22 @@ import {
   FormControlLabel,
   useTheme,
   Divider,
+  FormGroup,
+  Checkbox,
+  FormLabel,
+  Paper,
+  InputAdornment,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   PersonAdd as PersonAddIcon,
   Edit as EditIcon,
   Save as SaveIcon,
+  Add as AddIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
-import { useEmployeeStore, Employee } from '../useEmployeeStore';
-import { useTemporary } from '../../../hooks/useTemporary';
+import { Employee } from '../useEmployeeStore';
+import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { surfaceStyles } from '../../../theme/componentStyles';
 import { spacingTokens } from '../../../theme/designSystem';
 
@@ -39,6 +45,7 @@ interface EmployeeModalProps {
   open: boolean;
   onClose: () => void;
   employee?: Employee | null; // nullの場合は新規登録
+  mode?: 'create' | 'edit' | 'view'; // 表示モードを追加
 }
 
 /**
@@ -105,166 +112,169 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   open,
   onClose,
   employee,
+  mode = 'create', // デフォルトは新規作成モード
 }) => {
   const theme = useTheme();
-  const { addEmployee, updateEmployee } = useEmployeeStore();
-  const { toast, progress } = useTemporary();
-  const isEditing = !!employee;
-
-  // フォーム状態
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-    position: '',
-    joinDate: '',
-    skills: [] as string[],
-    notes: '',
-    isActive: true,
-  });
-
-  // バリデーションエラー
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // カスタムHookを使用して状態管理を分離
+  const {
+    formData,
+    errors,
+    customSkill,
+    isSubmitting,
+    isDirty,
+    isEditing,
+    isViewing,
+    isCreating,
+    initializeForm,
+    handleInputChange,
+    handleAddCustomSkill,
+    handleCustomSkillKeyPress,
+    validateForm,
+    handleSave,
+    setCustomSkill,
+  } = useEmployeeForm(employee, mode);
 
   /**
-   * フォームデータを初期化
+   * モーダルが開いた時にフォームを初期化
    */
   useEffect(() => {
-    if (open) {
-      if (employee) {
-        // 編集モードの場合、既存データをセット
-        setFormData({
-          name: employee.name,
-          email: employee.email,
-          phone: employee.phone || '',
-          department: employee.department,
-          position: employee.position,
-          joinDate: employee.joinDate,
-          skills: employee.skills,
-          notes: employee.notes || '',
-          isActive: employee.isActive,
-        });
-      } else {
-        // 新規登録の場合、フォームをリセット
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          department: '',
-          position: '',
-          joinDate: new Date().toISOString().split('T')[0],
-          skills: [],
-          notes: '',
-          isActive: true,
-        });
-      }
-      setErrors({});
-    }
-  }, [open, employee]);
+    initializeForm(open);
+  }, [open, employee, initializeForm]);
 
   /**
-   * 入力フィールドの変更ハンドラー
+   * 保存ボタンクリック時の処理
    */
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-    
-    // エラーをクリア
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
+  const onSaveClick = async () => {
+    const success = await handleSave(onClose);
+    // handleSave内でonCloseが呼ばれるため、ここでは何もしない
   };
 
   /**
-   * バリデーション
+   * 詳細表示用の情報表示コンポーネント
    */
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const renderViewOnlyContent = () => {
+    if (!employee) return null;
 
-    if (!formData.name.trim()) {
-      newErrors.name = '氏名は必須です';
-    }
+    return (
+      <Stack spacing={spacingTokens.md}>
+        {/* 基本情報 */}
+        <Box>
+          <Divider>
+            <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+              基本情報
+            </FormLabel>
+          </Divider>
+          <Stack spacing={spacingTokens.sm} sx={{ mt: spacingTokens.md }}>
+            <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">氏名</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {employee.name}
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">メールアドレス</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {employee.email}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">電話番号</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {employee.phone || '未設定'}
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">入社日</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {new Date(employee.joinDate).toLocaleDateString('ja-JP')}
+                </Typography>
+              </Box>
+            </Box>
+          </Stack>
+        </Box>
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'メールアドレスは必須です';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '有効なメールアドレスを入力してください';
-    }
+        {/* 組織情報 */}
+        <Box>
+          <Divider>
+            <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+              組織情報
+            </FormLabel>
+          </Divider>
+          <Stack spacing={spacingTokens.sm} sx={{ mt: spacingTokens.md }}>
+            <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">部署</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {employee.department}
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">役職</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                  {employee.position}
+                </Typography>
+              </Box>
+            </Box>
+          </Stack>
+        </Box>
 
-    if (!formData.department.trim()) {
-      newErrors.department = '部署は必須です';
-    }
-
-    if (!formData.position.trim()) {
-      newErrors.position = '役職は必須です';
-    }
-
-    if (!formData.joinDate) {
-      newErrors.joinDate = '入社日は必須です';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * 保存処理
-   */
-  const handleSave = async () => {
-    if (!validateForm()) {
-      toast.error('入力内容に不備があります');
-      return;
-    }
-
-    progress.start(isEditing ? '社員情報を更新中...' : '社員を登録中...', 1);
-
-    try {
-      // 擬似的な遅延
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (isEditing && employee) {
-        // 更新
-        const updatedEmployee: Employee = {
-          ...employee,
-          ...formData,
-          updatedAt: new Date().toISOString(),
-        };
-        updateEmployee(employee.id, formData);
-        toast.success(`${formData.name}さんの情報を更新しました`);
-      } else {
-        // 新規登録
-        const newEmployee: Employee = {
-          id: Date.now().toString(),
-          ...formData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        addEmployee(newEmployee);
-        toast.success(`${formData.name}さんを登録しました`);
-      }
-
-      progress.complete();
-      onClose();
-
-      // 1秒後に進行状況をクリア
-      setTimeout(() => {
-        progress.clear();
-      }, 1000);
-
-    } catch (err) {
-      progress.error();
-      toast.error(isEditing ? '更新に失敗しました' : '登録に失敗しました');
-      
-      setTimeout(() => {
-        progress.clear();
-      }, 2000);
-    }
+        {/* スキル情報 */}
+        <Box>
+          <Divider>
+            <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+              スキル・その他
+            </FormLabel>
+          </Divider>
+          <Stack spacing={spacingTokens.md} sx={{ mt: spacingTokens.md }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: spacingTokens.sm }}>
+                スキル ({employee.skills.length}個)
+              </Typography>
+              {employee.skills.length > 0 ? (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacingTokens.xs }}>
+                  {employee.skills.map((skill, index) => (
+                    <Chip
+                      key={skill}
+                      variant="filled"
+                      label={skill}
+                      size="small"
+                      color="primary"
+                      sx={{
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                      }}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  スキル情報が登録されていません
+                </Typography>
+              )}
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">備考</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, mt: spacingTokens.xs }}>
+                {employee.notes || '特記事項なし'}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">在籍状況</Typography>
+              <Chip
+                label={employee.isActive ? '在籍中' : '退職済み'}
+                color={employee.isActive ? 'success' : 'default'}
+                size="small"
+                sx={{ mt: spacingTokens.xs }}
+              />
+            </Box>
+          </Stack>
+        </Box>
+      </Stack>
+    );
   };
 
   return (
@@ -277,7 +287,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         paper: {
           sx: {
             ...surfaceStyles.elevated(3)(theme),
-            borderRadius: spacingTokens.sm,
             minHeight: '500px',
             maxWidth: '600px',
           }
@@ -295,9 +304,9 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: spacingTokens.sm }}>
-          {isEditing ? <EditIcon /> : <PersonAddIcon />}
+          {isViewing ? <VisibilityIcon /> : isEditing ? <EditIcon /> : <PersonAddIcon />}
           <Typography variant="h6" component="div">
-            {isEditing ? '社員情報編集' : '新規社員登録'}
+            {isViewing ? '社員情報詳細' : isEditing ? '社員情報編集' : '新規社員登録'}
           </Typography>
         </Box>
         <IconButton
@@ -311,19 +320,16 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ p: spacingTokens.md }}>
-        <Stack spacing={spacingTokens.md}>
-          {/* 基本情報 */}
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: spacingTokens.sm,
-                color: theme.palette.primary.main,
-                fontWeight: 600,
-              }}
-            >
-              基本情報
-            </Typography>
+        {isViewing ? renderViewOnlyContent() : (
+          <Stack spacing={spacingTokens.md}>
+            {/* 基本情報 */}
+            <Box>
+            <Divider>
+              <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+                基本情報
+              </FormLabel>
+            </Divider>
+
             <Stack spacing={spacingTokens.sm}>
               <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
                 <TextField
@@ -334,7 +340,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   helperText={errors.name}
                   required
                   size="small"
-                  sx={{ maxWidth: 200 }}
+                  sx={{ width: { xs: '100%', sm: 250 } }}
                 />
                 <TextField
                   label="メールアドレス"
@@ -345,7 +351,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   helperText={errors.email}
                   required
                   size="small"
-                  sx={{ maxWidth: 300 }}
+                  sx={{ width: { xs: '100%', sm: 300 } }}
                 />
               </Box>
               <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
@@ -354,7 +360,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   size="small"
-                  sx={{ maxWidth: 200 }}
+                  sx={{ width: { xs: '100%', sm: 250 } }}
                 />
                 <TextField
                   label="入社日"
@@ -365,7 +371,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   helperText={errors.joinDate}
                   required
                   size="small"
-                  sx={{ maxWidth: 200 }}
+                  sx={{ width: { xs: '100%', sm: 200 } }}
                   InputLabelProps={{ shrink: true }}
                 />
               </Box>
@@ -374,17 +380,11 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
           {/* 組織情報 */}
           <Box>
-            <Divider sx={{ my: spacingTokens.sm }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: spacingTokens.sm,
-                color: theme.palette.primary.main,
-                fontWeight: 600,
-              }}
-            >
-              組織情報
-            </Typography>
+            <Divider>
+              <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+                組織情報
+              </FormLabel>
+            </Divider>
             <Box sx={{ display: 'flex', gap: spacingTokens.md, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
               <Autocomplete
                 options={DEPARTMENTS}
@@ -401,7 +401,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   />
                 )}
                 freeSolo
-                sx={{ width: 150 }}
+                sx={{ width: { xs: '100%', sm: 200 } }}
               />
               <Autocomplete
                 options={POSITIONS}
@@ -418,69 +418,121 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                   />
                 )}
                 freeSolo
-                sx={{ width: 150 }}
+                sx={{ width: { xs: '100%', sm: 200 } }}
               />
             </Box>
           </Box>
 
           {/* スキル情報 */}
           <Box>
-            <Divider sx={{ my: spacingTokens.sm }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: spacingTokens.sm,
-                color: theme.palette.primary.main,
-                fontWeight: 600,
-              }}
-            >
-              スキル・その他
-            </Typography>
             <Stack spacing={spacingTokens.sm}>
               <Box>
-                <Autocomplete
-                  multiple
-                  options={AVAILABLE_SKILLS}
-                  value={formData.skills}
-                  onChange={(_, value) => handleInputChange('skills', value)}
-                  renderTags={() => null} // タグは下に別途表示するため非表示
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="スキル"
-                      placeholder="スキルを選択または入力..."
-                      size="small"
-                      sx={{ maxWidth: 300 }}
-                    />
-                  )}
-                  freeSolo
-                />
-                {/* スキルのChipを入力枠の下に表示 */}
+                <Divider>
+                  <FormLabel component="legend" sx={{ mt: spacingTokens.sm, mb: spacingTokens.sm, fontWeight: 600, color: theme.palette.text.primary }}>
+                    スキル
+                  </FormLabel>
+                </Divider>
+
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    maxHeight: 150,
+                    overflow: 'auto',
+                    width: { xs: '100%', sm: 500 }
+                  }}
+                >
+                  <FormGroup>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
+                      {AVAILABLE_SKILLS.map((skill) => (
+                        <FormControlLabel
+                          key={skill}
+                          control={
+                            <Checkbox
+                              checked={formData.skills.includes(skill)}
+                              onChange={(e) => {
+                                const newSkills = e.target.checked
+                                  ? [...formData.skills, skill]
+                                  : formData.skills.filter(s => s !== skill);
+                                handleInputChange('skills', newSkills);
+                              }}
+                              size="small"
+                            />
+                          }
+                          label={skill}
+                          sx={{
+                            margin: 0,
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.875rem',
+                            }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </FormGroup>
+                </Paper>
+
+                {/* カスタムスキル追加 */}
+                <Box sx={{ mt: 2 }}>
+                  <TextField
+                    label="カスタムスキルを追加"
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    onKeyPress={handleCustomSkillKeyPress}
+                    placeholder="リストにないスキルを入力"
+                    size="small"
+                    sx={{ width: { xs: '100%', sm: 300 } }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={handleAddCustomSkill}
+                            disabled={!customSkill.trim() || formData.skills.includes(customSkill.trim())}
+                            size="small"
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
+
+                {/* 選択されたスキルの概要表示 */}
                 {formData.skills.length > 0 && (
-                  <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {formData.skills.map((skill, index) => (
-                      <Chip
-                        key={skill}
-                        variant="filled"
-                        label={skill}
-                        size="small"
-                        color="primary"
-                        sx={{
-                          backgroundColor: theme.palette.primary.main,
-                          color: theme.palette.primary.contrastText,
-                          '&:hover': {
-                            backgroundColor: theme.palette.primary.dark,
-                          },
-                        }}
-                        onDelete={() => {
-                          const newSkills = formData.skills.filter((_, i) => i !== index);
-                          handleInputChange('skills', newSkills);
-                        }}
-                      />
-                    ))}
+                  <Box sx={{ mt: 2 }}>
+                    <Divider >
+                      <Typography variant="body2" sx={{ mb: 1, color: theme.palette.text.secondary }}>
+                        選択されたスキル ({formData.skills.length}個)
+                      </Typography>
+                    </Divider>
+
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {formData.skills.map((skill, index) => (
+                        <Chip
+                          key={skill}
+                          variant="filled"
+                          label={skill}
+                          size="small"
+                          color="primary"
+                          sx={{
+                            backgroundColor: theme.palette.primary.main,
+                            color: theme.palette.primary.contrastText,
+                            '&:hover': {
+                              backgroundColor: theme.palette.primary.dark,
+                            },
+                          }}
+                          onDelete={() => {
+                            const newSkills = formData.skills.filter((_, i) => i !== index);
+                            handleInputChange('skills', newSkills);
+                          }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
                 )}
               </Box>
+              <Divider sx={{ my: spacingTokens.sm }} />
               <TextField
                 label="備考"
                 multiline
@@ -489,7 +541,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="その他の情報や特記事項があれば記入してください"
                 size="small"
-                sx={{ maxWidth: 400 }}
+                sx={{ width: { xs: '100%', sm: 500 } }}
               />
               <FormControlLabel
                 control={
@@ -504,29 +556,43 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             </Stack>
           </Box>
         </Stack>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ p: spacingTokens.md, gap: spacingTokens.sm, justifyContent: 'center' }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          size="medium"
-          sx={{ minWidth: 100 }}
-        >
-          キャンセル
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          size="medium"
-          startIcon={<SaveIcon />}
-          sx={{
-            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-            minWidth: 120,
-          }}
-        >
-          {isEditing ? '更新' : '登録'}
-        </Button>
+        {isViewing ? (
+          <Button
+            onClick={onClose}
+            variant="contained"
+            size="medium"
+            sx={{ minWidth: 100 }}
+          >
+            閉じる
+          </Button>
+        ) : (
+          <>
+            <Button
+              onClick={onClose}
+              variant="outlined"
+              size="medium"
+              sx={{ minWidth: 100 }}
+            >
+              キャンセル
+            </Button>
+            <Button
+              onClick={onSaveClick}
+              variant="contained"
+              size="medium"
+              startIcon={<SaveIcon />}
+              sx={{
+                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+                minWidth: 120,
+              }}
+            >
+              {isEditing ? '更新' : '登録'}
+            </Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );

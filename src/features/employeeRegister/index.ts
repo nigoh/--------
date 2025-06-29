@@ -6,27 +6,25 @@
 
 // メインコンポーネント
 export { EmployeeRegister } from './EmployeeRegister';
-export { EmployeeRegisterForm } from './EmployeeRegisterForm';
-export { EmployeeList } from './EmployeeList';
 export { EnhancedEmployeeList } from './EnhancedEmployeeList';
 export { EmployeeModal } from './components/EmployeeDialogs';
 
-// UIコンポーネント
-export { EmployeeRegisterFormUI } from './components/EmployeeRegisterFormUI';
-
 // カスタムフック
 export { useEmployeeForm } from './hooks/useEmployeeForm';
-export { useEmployeeFormValidation } from './hooks/useEmployeeFormValidation';
-export { useEmployeeListFilter } from './hooks/useEmployeeListFilter';
-export { useEmployeeListActions } from './hooks/useEmployeeListActions';
 
 // ストア
 export { useEmployeeStore } from './useEmployeeStore';
 export type { Employee, EmployeeState, EmployeeActions, EmployeeStore } from './useEmployeeStore';
 
+export { useEmployeeFormStore } from './stores/useEmployeeFormStore';
+export type { 
+  EmployeeFormState, 
+  EmployeeFormActions, 
+  EmployeeFormStore,
+  EmployeeFormData,
+  ValidationErrors 
+} from './stores/useEmployeeFormStore';
+
 // 定数
 export { DEPARTMENTS, POSITIONS, SKILL_OPTIONS } from './constants/employeeFormConstants';
 export type { Department, Position, Skill } from './constants/employeeFormConstants';
-
-// 型定義
-export type { ValidationErrors, EmployeeFormData } from './hooks/useEmployeeFormValidation';
