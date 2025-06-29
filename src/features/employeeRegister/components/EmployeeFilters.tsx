@@ -15,11 +15,12 @@ import {
 } from '@mui/icons-material';
 import { EmployeeFilterDialog } from './EmployeeFilterDialog';
 import { spacingTokens } from '../../../theme/designSystem';
+import { Department } from '../constants/employeeFormConstants';
 
 interface EmployeeFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  departments: string[];
+  departments: readonly Department[];
   departmentFilter: string;
   statusFilter: string;
   onDepartmentChange: (value: string) => void;

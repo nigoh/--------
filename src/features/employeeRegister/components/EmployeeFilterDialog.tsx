@@ -21,11 +21,12 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { spacingTokens } from '../../../theme/designSystem';
+import { Department } from '../constants/employeeFormConstants';
 
 interface EmployeeFilterDialogProps {
   open: boolean;
   onClose: () => void;
-  departments: string[];
+  departments: readonly Department[];
   departmentFilter: string;
   statusFilter: string;
   onDepartmentChange: (value: string) => void;

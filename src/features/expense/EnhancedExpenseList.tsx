@@ -30,11 +30,10 @@ import { useExpenseStore, ExpenseEntry } from './useExpenseStore';
 import { ExpenseModal } from './ExpenseModal';
 import ExpenseDialogs from './components/ExpenseDialogs';
 import ExpenseListTable from './components/ExpenseListTable';
-import SearchField from './components/SearchField';
 import ExpenseFilters from './components/ExpenseFilters';
 import { surfaceStyles, animations } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
-import { EXPENSE_CATEGORIES, STATUS_CONFIG } from './constants/expenseConstants';
+import { STATUS_CONFIG } from './constants/expenseConstants';
 
 interface ExpenseListFilters {
   search: string;

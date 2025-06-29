@@ -8,6 +8,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { useEmployeeStore, Employee } from './useEmployeeStore';
 import { useTemporary } from '../../hooks/useTemporary';
+import { DEPARTMENTS, Department } from './constants/employeeFormConstants';
 import { EmployeeModal } from './components/EmployeeDialogs';
 import { spacingTokens } from '../../theme/designSystem';
 import EmployeeListHeader from './components/EmployeeListHeader';
@@ -45,11 +46,10 @@ export const EnhancedEmployeeList: React.FC = () => {
     direction: 'asc',
   });
 
-  // 部署の一覧を取得
+  // 部署の一覧を定数から取得
   const departments = useMemo(() => {
-    const deptSet = new Set(employees.map(emp => emp.department));
-    return Array.from(deptSet).sort();
-  }, [employees]);
+    return DEPARTMENTS as readonly Department[];
+  }, []);
 
   // フィルタリングとソート
   const filteredAndSortedEmployees = useMemo(() => {

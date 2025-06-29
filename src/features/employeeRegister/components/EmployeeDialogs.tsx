@@ -40,6 +40,7 @@ import { Employee } from '../useEmployeeStore';
 import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { surfaceStyles } from '../../../theme/componentStyles';
 import { spacingTokens } from '../../../theme/designSystem';
+import { DEPARTMENTS, POSITIONS, SKILL_OPTIONS } from '../constants/employeeFormConstants';
 
 interface EmployeeModalProps {
   open: boolean;
@@ -47,66 +48,6 @@ interface EmployeeModalProps {
   employee?: Employee | null; // nullの場合は新規登録
   mode?: 'create' | 'edit' | 'view'; // 表示モードを追加
 }
-
-/**
- * 部署の選択肢（実際のアプリケーションではAPIから取得）
- */
-const DEPARTMENTS = [
-  '営業部',
-  '開発部',
-  'マーケティング部',
-  '人事部',
-  '経理部',
-  '企画部',
-  '総務部',
-  'デザイン部',
-];
-
-/**
- * 役職の選択肢
- */
-const POSITIONS = [
-  '部長',
-  '課長',
-  '主任',
-  'リーダー',
-  '主査',
-  '一般職',
-  'インターン',
-];
-
-/**
- * スキルの選択肢
- */
-const AVAILABLE_SKILLS = [
-  'JavaScript',
-  'TypeScript',
-  'React',
-  'Vue.js',
-  'Angular',
-  'Node.js',
-  'Python',
-  'Java',
-  'PHP',
-  'C#',
-  'Go',
-  'Rust',
-  'SQL',
-  'MongoDB',
-  'AWS',
-  'Azure',
-  'Docker',
-  'Kubernetes',
-  'Git',
-  'Figma',
-  'Photoshop',
-  'Illustrator',
-  'UI/UX',
-  'プロジェクト管理',
-  '英語',
-  '中国語',
-  '韓国語',
-];
 
 export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   open,
@@ -444,7 +385,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                 >
                   <FormGroup>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
-                      {AVAILABLE_SKILLS.map((skill) => (
+                      {SKILL_OPTIONS.map((skill) => (
                         <FormControlLabel
                           key={skill}
                           control={
