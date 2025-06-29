@@ -120,8 +120,10 @@ export const ExpenseForm: React.FC = () => {
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            InputProps={{
-              startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
+            slotProps={{
+              input: {
+                startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
+              }
             }}
             required
           />

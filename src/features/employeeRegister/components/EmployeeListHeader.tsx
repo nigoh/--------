@@ -50,15 +50,6 @@ export const EmployeeListHeader: React.FC<EmployeeListHeaderProps> = ({
           
           <Stack direction="row" spacing={spacingTokens.sm}>
             <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={onExport}
-              size="small"
-              disabled={disableExport}
-            >
-              CSV出力
-            </Button>
-            <Button
               variant="contained"
               startIcon={<PersonAddIcon />}
               onClick={onAdd}
@@ -66,6 +57,15 @@ export const EmployeeListHeader: React.FC<EmployeeListHeaderProps> = ({
               sx={{ background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)` }}
             >
               社員登録
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onExport}
+              size="small"
+              disabled={disableExport}
+            >
+              CSV出力
             </Button>
           </Stack>
         </Stack>

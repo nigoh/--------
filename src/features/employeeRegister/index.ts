@@ -9,7 +9,7 @@ export { EmployeeRegister } from './EmployeeRegister';
 export { EmployeeRegisterForm } from './EmployeeRegisterForm';
 export { EmployeeList } from './EmployeeList';
 export { EnhancedEmployeeList } from './EnhancedEmployeeList';
-export { EmployeeModal } from './EmployeeModal';
+export { EmployeeModal } from './components/EmployeeDialogs';
 
 // UIコンポーネント
 export { EmployeeRegisterFormUI } from './components/EmployeeRegisterFormUI';

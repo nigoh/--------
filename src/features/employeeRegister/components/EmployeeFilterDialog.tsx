@@ -12,11 +12,13 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
+  IconButton,
 } from '@mui/material';
 import {
   Clear as ClearIcon,
   Check as CheckIcon,
   FilterList as FilterIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { spacingTokens } from '../../../theme/designSystem';
 
@@ -46,16 +48,10 @@ export const EmployeeFilterDialog: React.FC<EmployeeFilterDialogProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleApply = () => {
-    onApplyFilters();
+  const handleClearAllFilters = () => {
+    onClearFilters();
     onClose();
   };
-
-  const handleClear = () => {
-    onClearFilters();
-  };
-
-  const hasActiveFilters = departmentFilter || statusFilter;
 
   return (
     <Dialog 
@@ -63,27 +59,33 @@ export const EmployeeFilterDialog: React.FC<EmployeeFilterDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          borderRadius: isMobile ? 0 : 2,
-          maxHeight: isMobile ? '100vh' : '80vh',
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+          }
         }
       }}
     >
       <DialogTitle sx={{ 
         display: 'flex', 
-        alignItems: 'center', 
-        gap: 1,
-        pb: spacingTokens.md 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        pb: 1,
       }}>
-        <FilterIcon />
         詳細フィルター
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ color: theme.palette.text.secondary }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       
-      <DialogContent sx={{ pt: spacingTokens.md }}>
+      <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={spacingTokens.lg}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size="small">
             <InputLabel>部署</InputLabel>
             <Select
               value={departmentFilter}
@@ -98,8 +100,8 @@ export const EmployeeFilterDialog: React.FC<EmployeeFilterDialogProps> = ({
               ))}
             </Select>
           </FormControl>
-
-          <FormControl fullWidth>
+          
+          <FormControl fullWidth size="small">
             <InputLabel>ステータス</InputLabel>
             <Select
               value={statusFilter}
@@ -111,32 +113,20 @@ export const EmployeeFilterDialog: React.FC<EmployeeFilterDialogProps> = ({
               <MenuItem value="inactive">退職済み</MenuItem>
             </Select>
           </FormControl>
-
-          {hasActiveFilters && (
-            <Button
-              variant="outlined"
-              startIcon={<ClearIcon />}
-              onClick={handleClear}
-              color="warning"
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              フィルタークリア
-            </Button>
-          )}
         </Stack>
       </DialogContent>
-
-      <DialogActions sx={{ 
-        p: spacingTokens.lg,
-        gap: spacingTokens.sm 
-      }}>
-        <Button onClick={onClose} color="inherit">
-          キャンセル
+      
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button
+          onClick={handleClearAllFilters}
+          color="warning"
+          startIcon={<ClearIcon />}
+        >
+          すべてクリア
         </Button>
-        <Button 
-          onClick={handleApply} 
+        <Button
+          onClick={onClose}
           variant="contained"
-          startIcon={<CheckIcon />}
         >
           適用
         </Button>

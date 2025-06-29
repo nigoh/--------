@@ -29,11 +29,13 @@ const ExpenseDialogs: React.FC<Props> = ({
       onClose={onCloseDetail} 
       maxWidth="md" 
       fullWidth 
-      PaperProps={{ 
-        sx: { 
-          borderRadius: 2, 
-          background: 'linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%)' 
-        } 
+      slotProps={{ 
+        paper: {
+          sx: { 
+            borderRadius: 2, 
+            background: 'linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%)' 
+          } 
+        }
       }}
     >
       {selected && (
@@ -120,11 +122,13 @@ const ExpenseDialogs: React.FC<Props> = ({
     <Dialog 
       open={deleteOpen} 
       onClose={onCancelDelete} 
-      PaperProps={{ 
-        sx: { 
-          borderRadius: 2, 
-          background: 'linear-gradient(135deg,#ffebee 0%,#ffcdd2 100%)' 
-        } 
+      slotProps={{ 
+        paper: {
+          sx: { 
+            borderRadius: 2, 
+            background: 'linear-gradient(135deg,#ffebee 0%,#ffcdd2 100%)' 
+          } 
+        }
       }}
     >
       <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>

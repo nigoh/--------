@@ -256,12 +256,14 @@ export const ExpenseList: React.FC = () => {
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               select
-              SelectProps={{
-                MenuProps: {
-                  TransitionProps: {
-                    timeout: 150,
+              slotProps={{
+                select: {
+                  MenuProps: {
+                    TransitionProps: {
+                      timeout: 150,
+                    },
                   },
-                },
+                }
               }}
             >
               {['交通費', '宿泊費', '会議費', '接待費', '通信費', '消耗品費', 'その他'].map((cat) => (

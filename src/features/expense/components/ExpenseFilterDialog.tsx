@@ -80,10 +80,12 @@ export const ExpenseFilterDialog: React.FC<ExpenseFilterDialogProps> = ({
       maxWidth="sm"
       fullWidth
       fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          borderRadius: isMobile ? 0 : 2,
-          maxHeight: isMobile ? '100vh' : '80vh',
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: isMobile ? 0 : 2,
+            maxHeight: isMobile ? '100vh' : '80vh',
+          }
         }
       }}
     >
@@ -136,8 +138,10 @@ export const ExpenseFilterDialog: React.FC<ExpenseFilterDialogProps> = ({
               type="number"
               value={minAmount}
               onChange={(e) => onMinAmountChange(e.target.value)}
-              InputProps={{
-                startAdornment: <span style={{ marginRight: 4 }}>¥</span>,
+              slotProps={{
+                input: {
+                  startAdornment: <span style={{ marginRight: 4 }}>¥</span>,
+                }
               }}
               fullWidth
             />
@@ -146,8 +150,10 @@ export const ExpenseFilterDialog: React.FC<ExpenseFilterDialogProps> = ({
               type="number"
               value={maxAmount}
               onChange={(e) => onMaxAmountChange(e.target.value)}
-              InputProps={{
-                startAdornment: <span style={{ marginRight: 4 }}>¥</span>,
+              slotProps={{
+                input: {
+                  startAdornment: <span style={{ marginRight: 4 }}>¥</span>,
+                }
               }}
               fullWidth
             />

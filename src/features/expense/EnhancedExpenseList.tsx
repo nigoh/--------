@@ -31,7 +31,7 @@ import { ExpenseModal } from './ExpenseModal';
 import ExpenseDialogs from './components/ExpenseDialogs';
 import ExpenseListTable from './components/ExpenseListTable';
 import SearchField from './components/SearchField';
-import ExpenseFilterDialog from './components/ExpenseFilterDialog';
+import ExpenseFilters from './components/ExpenseFilters';
 import { surfaceStyles, animations } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
 import { EXPENSE_CATEGORIES, STATUS_CONFIG } from './constants/expenseConstants';
@@ -55,7 +55,6 @@ export const EnhancedExpenseList: React.FC = () => {
   
   // モーダル・ダイアログの状態
   const [modalOpen, setModalOpen] = useState(false);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<ExpenseEntry | null>(null);
   const [expenseToEdit, setExpenseToEdit] = useState<ExpenseEntry | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -306,41 +305,15 @@ export const EnhancedExpenseList: React.FC = () => {
 
       {/* 検索・フィルターセクション */}
       <Paper sx={{ ...surfaceStyles.surface(theme), p: spacingTokens.lg, mb: spacingTokens.lg }}>
-        <Stack spacing={spacingTokens.md}>
-          <Stack direction="row" spacing={spacingTokens.md} alignItems="center" flexWrap="wrap">
-            <SearchField value={filters.search} onChange={handleSearchChange} />
-            
-            <Button
-              variant="outlined"
-              startIcon={<FilterIcon />}
-              onClick={() => setFilterDialogOpen(true)}
-              color={activeFilterCount > 0 ? 'primary' : 'inherit'}
-            >
-              詳細フィルター {activeFilterCount > 0 && `(${activeFilterCount})`}
-            </Button>
-          </Stack>
-          
-          {activeFilterCount > 0 && (
-            <Stack direction="row" spacing={spacingTokens.sm} alignItems="center" flexWrap="wrap">
-              <Typography variant="body2" color="text.secondary">
-                フィルター適用中:
-              </Typography>
-              {filters.category && (
-                <Typography variant="caption" sx={{ px: 1, py: 0.5, backgroundColor: 'primary.main', color: 'white', borderRadius: 1 }}>
-                  カテゴリ: {filters.category}
-                </Typography>
-              )}
-              {filters.status && (
-                <Typography variant="caption" sx={{ px: 1, py: 0.5, backgroundColor: 'secondary.main', color: 'white', borderRadius: 1 }}>
-                  ステータス: {STATUS_CONFIG[filters.status as keyof typeof STATUS_CONFIG]?.label || filters.status}
-                </Typography>
-              )}
-              <Button size="small" onClick={handleClearFilters}>
-                すべてクリア
-              </Button>
-            </Stack>
-          )}
-        </Stack>
+        <ExpenseFilters
+          searchQuery={filters.search}
+          onSearchChange={handleSearchChange}
+          categoryFilter={filters.category}
+          statusFilter={filters.status}
+          onCategoryChange={(value: string) => handleFilterChange('category', value)}
+          onStatusChange={(value: string) => handleFilterChange('status', value)}
+          onClearFilters={handleClearFilters}
+        />
       </Paper>
 
       {/* メインコンテンツ */}
@@ -382,25 +355,6 @@ export const EnhancedExpenseList: React.FC = () => {
         open={modalOpen}
         onClose={handleCloseModal}
         expense={expenseToEdit}
-      />
-
-      <ExpenseFilterDialog
-        open={filterDialogOpen}
-        onClose={() => setFilterDialogOpen(false)}
-        categoryFilter={filters.category}
-        statusFilter={filters.status}
-        minAmount={filters.minAmount}
-        maxAmount={filters.maxAmount}
-        dateFrom={filters.dateFrom}
-        dateTo={filters.dateTo}
-        onCategoryChange={(value) => handleFilterChange('category', value)}
-        onStatusChange={(value) => handleFilterChange('status', value)}
-        onMinAmountChange={(value) => handleFilterChange('minAmount', value)}
-        onMaxAmountChange={(value) => handleFilterChange('maxAmount', value)}
-        onDateFromChange={(value) => handleFilterChange('dateFrom', value)}
-        onDateToChange={(value) => handleFilterChange('dateTo', value)}
-        onClearFilters={handleClearFilters}
-        onApplyFilters={() => {}}
       />
 
       <ExpenseDialogs

@@ -26,8 +26,9 @@ import {
   Edit as EditIcon,
   Save as SaveIcon,
 } from '@mui/icons-material';
-import { useExpenseStore, ExpenseEntry } from './useExpenseStore';
+import { useExpenseStore, ExpenseEntry, ExpenseReceipt } from './useExpenseStore';
 import { useTemporary } from '../../hooks/useTemporary';
+import { ReceiptUpload } from './ReceiptUpload';
 import { surfaceStyles } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
 import { EXPENSE_CATEGORIES, VALIDATION_MESSAGES, AMOUNT_LIMITS, TEXT_LIMITS } from './constants/expenseConstants';
@@ -44,7 +45,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   expense,
 }) => {
   const theme = useTheme();
-  const { addExpense, updateExpense } = useExpenseStore();
+  const { addExpense, updateExpense, addReceipt } = useExpenseStore();
   const { toast, progress } = useTemporary();
   const isEditing = !!expense;
 
@@ -55,6 +56,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     amount: '',
     note: '',
   });
+
+  // 領収書状態
+  const [tempReceipts, setTempReceipts] = useState<ExpenseReceipt[]>([]);
 
   // バリデーションエラー
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -72,6 +76,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           amount: expense.amount.toString(),
           note: expense.note || '',
         });
+        setTempReceipts(expense.receipts || []);
       } else {
         // 新規登録の場合、フォームをリセット
         setFormData({
@@ -80,6 +85,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           amount: '',
           note: '',
         });
+        setTempReceipts([]);
       }
       setErrors({});
     }
@@ -101,6 +107,20 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         [field]: '',
       }));
     }
+  };
+
+  /**
+   * 領収書の追加ハンドラー
+   */
+  const handleReceiptAdd = (receipts: ExpenseReceipt[]) => {
+    setTempReceipts(prev => [...prev, ...receipts]);
+  };
+
+  /**
+   * 領収書の削除ハンドラー
+   */
+  const handleReceiptRemove = (receiptId: string) => {
+    setTempReceipts(prev => prev.filter(receipt => receipt.id !== receiptId));
   };
 
   /**
@@ -164,8 +184,16 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         toast.success(`経費情報を更新しました`);
       } else {
         // 新規登録
-        addExpense(expenseData);
-        toast.success(`経費を登録しました`);
+        const newExpenseId = addExpense(expenseData);
+        
+        // 領収書がある場合は関連付ける
+        if (tempReceipts.length > 0 && newExpenseId) {
+          tempReceipts.forEach(receipt => {
+            addReceipt(newExpenseId, receipt);
+          });
+        }
+        
+        toast.success(`経費を登録しました (領収書 ${tempReceipts.length}件)`);
       }
 
       progress.complete();
@@ -192,12 +220,14 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          ...surfaceStyles.elevated(3)(theme),
-          borderRadius: spacingTokens.sm,
-          minHeight: '400px',
-          maxWidth: '500px',
+      slotProps={{
+        paper: {
+          sx: {
+            ...surfaceStyles.elevated(3)(theme),
+            borderRadius: spacingTokens.sm,
+            minHeight: '400px',
+            maxWidth: '500px',
+          }
         }
       }}
     >
@@ -284,8 +314,10 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   required
                   size="small"
                   sx={{ maxWidth: 200 }}
-                  InputProps={{
-                    startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
+                  slotProps={{
+                    input: {
+                      startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
+                    }
                   }}
                 />
               </Box>
@@ -315,9 +347,36 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               helperText={errors.note}
               placeholder="経費の詳細や目的を記入してください"
               size="small"
-              sx={{ width: '100%' }}
+              sx={{ width: '100%', mb: spacingTokens.md }}
             />
           </Box>
+
+          {/* 領収書アップロード */}
+          <Box>
+            <Divider sx={{ my: spacingTokens.sm }} />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: spacingTokens.sm,
+                color: theme.palette.primary.main,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <ReceiptIcon fontSize="small" />
+              領収書添付（任意）
+            </Typography>
+            <ReceiptUpload
+              expenseId={expense?.id || "temp-modal-upload"}
+              receipts={tempReceipts}
+              disabled={false}
+              onReceiptsAdd={handleReceiptAdd}
+              onReceiptRemove={handleReceiptRemove}
+            />
+          </Box>
+          
         </Stack>
       </DialogContent>
 
@@ -341,6 +400,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           }}
         >
           {isEditing ? '更新' : '登録'}
+          {tempReceipts.length > 0 && ` (領収書 ${tempReceipts.length}件)`}
         </Button>
       </DialogActions>
     </Dialog>

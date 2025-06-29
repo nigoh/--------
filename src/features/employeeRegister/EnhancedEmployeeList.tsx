@@ -9,7 +9,7 @@ import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { PersonOff as PersonOffIcon, Person as PersonIcon } from '@mui/icons-material';
 import { useEmployeeStore, Employee } from './useEmployeeStore';
 import { useTemporary } from '../../hooks/useTemporary';
-import { EmployeeModal } from './EmployeeModal';
+import { EmployeeModal } from './components/EmployeeDialogs';
 import { surfaceStyles } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
 import EmployeeListHeader from './components/EmployeeListHeader';

@@ -5,15 +5,6 @@ import {
   InputAdornment,
   IconButton,
   Button,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
   Badge,
 } from '@mui/material';
@@ -21,9 +12,8 @@ import {
   Search as SearchIcon,
   Clear as ClearIcon,
   FilterList as FilterListIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
-import { surfaceStyles } from '../../../theme/componentStyles';
+import { EmployeeFilterDialog } from './EmployeeFilterDialog';
 import { spacingTokens } from '../../../theme/designSystem';
 
 interface EmployeeFiltersProps {
@@ -62,11 +52,6 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
     setFilterDialogOpen(false);
   };
 
-  const handleClearAllFilters = () => {
-    onClearFilters();
-    setFilterDialogOpen(false);
-  };
-
   return (
     <>
       <Box>
@@ -77,20 +62,22 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
             placeholder="社員名、部署、役職、メール、スキルで検索..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-              endAdornment:
-                searchQuery && (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => onSearchChange('')}>
-                      <ClearIcon />
-                    </IconButton>
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
                   </InputAdornment>
                 ),
+                endAdornment:
+                  searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => onSearchChange('')}>
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+              }
             }}
             size="small"
             sx={{ 
@@ -152,82 +139,17 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
       </Box>
 
       {/* フィルターダイアログ */}
-      <Dialog 
-        open={filterDialogOpen} 
+      <EmployeeFilterDialog
+        open={filterDialogOpen}
         onClose={handleCloseFilterDialog}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          pb: 1,
-        }}>
-          詳細フィルター
-          <IconButton
-            onClick={handleCloseFilterDialog}
-            size="small"
-            sx={{ color: theme.palette.text.secondary }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={spacingTokens.lg}>
-            <FormControl fullWidth size="small">
-              <InputLabel>部署</InputLabel>
-              <Select
-                value={departmentFilter}
-                onChange={(e) => onDepartmentChange(e.target.value)}
-                label="部署"
-              >
-                <MenuItem value="">すべて</MenuItem>
-                {departments.map((dept) => (
-                  <MenuItem key={dept} value={dept}>
-                    {dept}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <FormControl fullWidth size="small">
-              <InputLabel>ステータス</InputLabel>
-              <Select
-                value={statusFilter}
-                onChange={(e) => onStatusChange(e.target.value)}
-                label="ステータス"
-              >
-                <MenuItem value="">すべて</MenuItem>
-                <MenuItem value="active">在籍中</MenuItem>
-                <MenuItem value="inactive">退職済み</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-        </DialogContent>
-        
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={handleClearAllFilters}
-            color="warning"
-            startIcon={<ClearIcon />}
-          >
-            すべてクリア
-          </Button>
-          <Button
-            onClick={handleCloseFilterDialog}
-            variant="contained"
-          >
-            適用
-          </Button>
-        </DialogActions>
-      </Dialog>
+        departments={departments}
+        departmentFilter={departmentFilter}
+        statusFilter={statusFilter}
+        onDepartmentChange={onDepartmentChange}
+        onStatusChange={onStatusChange}
+        onClearFilters={onClearFilters}
+        onApplyFilters={() => {}}
+      />
     </>
   );
 };

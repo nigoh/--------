@@ -94,17 +94,19 @@ export const EnterpriseSettingsPanel: React.FC<EnterpriseSettingsPanelProps> = (
         anchor="right"
         open={open}
         onClose={toggleDrawer}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 380 }, // 幅を少し縮小
-            // メインカラー70% - 背景全体
-            backgroundColor: theme.palette.background.paper,
-            border: 'none',
-            height: '100vh',
-            overflow: 'hidden', // 外側のスクロールを無効化
-            display: 'flex',
-            flexDirection: 'column',
-          },
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100%', sm: 380 }, // 幅を少し縮小
+              // メインカラー70% - 背景全体
+              backgroundColor: theme.palette.background.paper,
+              border: 'none',
+              height: '100vh',
+              overflow: 'hidden', // 外側のスクロールを無効化
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }
         }}
       >
         {/* ヘッダー - セカンダリカラー25% */}

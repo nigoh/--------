@@ -348,8 +348,10 @@ export const EnhancedEquipmentList: React.FC = () => {
               placeholder="名前・カテゴリ・備考で検索"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon />,
+              slotProps={{
+                input: {
+                  startAdornment: <SearchIcon />,
+                }
               }}
               size="small"
               sx={{ flex: 1 }}

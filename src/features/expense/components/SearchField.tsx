@@ -13,12 +13,14 @@ const SearchField: React.FC<SearchFieldProps> = ({ value, onChange }) => (
     placeholder="カテゴリ、金額、備考で検索..."
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <SearchIcon />
-        </InputAdornment>
-      ),
+    slotProps={{
+      input: {
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }
     }}
     size="small"
     sx={{

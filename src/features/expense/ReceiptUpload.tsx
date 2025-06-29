@@ -301,11 +301,13 @@ export const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
         maxWidth="lg"
         fullWidth
         TransitionComponent={Fade}
-        PaperProps={{
-          sx: {
-            height: '90vh',
-            display: 'flex',
-            flexDirection: 'column',
+        slotProps={{
+          paper: {
+            sx: {
+              height: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+            }
           }
         }}
       >

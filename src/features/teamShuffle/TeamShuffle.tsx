@@ -146,8 +146,10 @@ const TeamShuffle = ({ onShowMeeting, members, setMembers, teams, setTeams }: Te
                   value={teamCount}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamCount(Number(e.target.value))}
                   size="medium"
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">個</InputAdornment>,
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">個</InputAdornment>,
+                    }
                   }}
                   sx={{ 
                     width: { xs: '100%', sm: 200 },

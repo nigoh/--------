@@ -59,11 +59,13 @@ export const ProgressOverlay: React.FC = () => {
       open={true}
       disableEscapeKeyDown={!canClose}
       maxWidth={false}
-      PaperProps={{
-        sx: dialogStyles,
-        role: 'dialog',
-        'aria-labelledby': 'progress-title',
-        'aria-describedby': 'progress-description',
+      slotProps={{
+        paper: {
+          sx: dialogStyles,
+          role: 'dialog',
+          'aria-labelledby': 'progress-title',
+          'aria-describedby': 'progress-description',
+        }
       }}
     >
       <DialogContent sx={{ textAlign: 'center', padding: 0 }}>

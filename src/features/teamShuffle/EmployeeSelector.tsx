@@ -136,11 +136,13 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
       onClose={handleCancel}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          maxHeight: '80vh',
-        },
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+            maxHeight: '80vh',
+          },
+        }
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
@@ -159,12 +161,14 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
           placeholder="名前、部署、役職、スキルで検索..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }
           }}
           sx={{ mb: 2 }}
         />

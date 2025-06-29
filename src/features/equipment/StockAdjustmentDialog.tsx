@@ -114,9 +114,11 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
       maxWidth="sm"
       fullWidth
       TransitionComponent={Fade}
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+          }
         }
       }}
     >
