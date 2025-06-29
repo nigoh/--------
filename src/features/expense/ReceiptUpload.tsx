@@ -207,19 +207,6 @@ export const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
           </Box>
         ) : (
           <>
-            <UploadIcon 
-              sx={{ 
-                fontSize: 48, 
-                color: disabled ? 'action.disabled' : 'primary.main',
-                mb: 2 
-              }} 
-            />
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              PDFファイルをアップロード
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              クリックまたはドラッグ&ドロップでファイルを選択
-            </Typography>
             <input
               accept="application/pdf"
               style={{ display: 'none' }}
@@ -241,6 +228,9 @@ export const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
                 ファイルを選択
               </Button>
             </label>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              PDFファイルをアップロード
+            </Typography>
             <Typography variant="caption" display="block" sx={{ mt: 1 }}>
               最大ファイルサイズ: 10MB
             </Typography>
