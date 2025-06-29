@@ -1,184 +1,171 @@
 /**
  * 拡張経費一覧コンポーネント
  * 
- * ソート、フィルタリング、CSV出力、ステータス管理機能を含む経費一覧
- * Material Design 3準拠のコンパクトデザイン
+ * employeeRegisterと同様の画面構成
+ * - 検索・フィルタリング機能
+ * - 詳細表示・編集・削除機能
+ * - ページネーション
+ * - レスポンシブ対応
  */
 import React, { useState, useMemo } from 'react';
 import {
   Box,
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  IconButton,
-  Chip,
+  Container,
   Typography,
-  Stack,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Toolbar,
   Paper,
-  Tooltip,
-  Menu,
-  ListItemIcon,
-  ListItemText,
+  Button,
+  Stack,
+  Alert,
   useTheme,
   useMediaQuery,
-  Collapse,
-  alpha,
+  Fade,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   FilterList as FilterIcon,
-  GetApp as ExportIcon,
-  MoreVert as MoreIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
+  CloudDownload as ExportIcon,
   Receipt as ReceiptIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
-import { useExpenseStore, ExpenseEntry, ExpenseStatus } from './useExpenseStore';
+import { useExpenseStore, ExpenseEntry } from './useExpenseStore';
 import { ExpenseModal } from './ExpenseModal';
-import { StatusManager } from './StatusManager';
-import { ReceiptUpload } from './ReceiptUpload';
-import { surfaceStyles } from '../../theme/componentStyles';
+import ExpenseDialogs from './components/ExpenseDialogs';
+import ExpenseListTable from './components/ExpenseListTable';
+import SearchField from './components/SearchField';
+import ExpenseFilterDialog from './components/ExpenseFilterDialog';
+import { surfaceStyles, animations } from '../../theme/componentStyles';
 import { spacingTokens } from '../../theme/designSystem';
+import { EXPENSE_CATEGORIES, STATUS_CONFIG } from './constants/expenseConstants';
 
-// ソート関連の型定義
-type SortField = 'date' | 'category' | 'amount' | 'status' | 'submittedDate';
-type SortDirection = 'asc' | 'desc';
-
-interface SortConfig {
-  field: SortField;
-  direction: SortDirection;
+interface ExpenseListFilters {
+  search: string;
+  category: string;
+  status: string;
+  minAmount: string;
+  maxAmount: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
-// ステータス表示設定
-const statusConfig = {
-  pending: { label: '申請中', color: 'warning' as const },
-  approved: { label: '承認済み', color: 'success' as const },
-  rejected: { label: '却下', color: 'error' as const },
-  settled: { label: '清算済み', color: 'info' as const },
-};
-
-/**
- * 拡張経費一覧コンポーネント
- */
 export const EnhancedExpenseList: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Zustandストア
   const { expenses, deleteExpense } = useExpenseStore();
-
-  // 状態管理
+  
+  // モーダル・ダイアログの状態
+  const [modalOpen, setModalOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<ExpenseEntry | null>(null);
   const [expenseToEdit, setExpenseToEdit] = useState<ExpenseEntry | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<ExpenseEntry | null>(null);
+  
+  // フィルター状態
+  const [filters, setFilters] = useState<ExpenseListFilters>({
+    search: '',
+    category: '',
+    status: '',
+    minAmount: '',
+    maxAmount: '',
+    dateFrom: '',
+    dateTo: '',
+  });
+  
+  // ページネーション状態
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    field: 'date',
-    direction: 'desc',
-  });
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  
+  // 成功メッセージ
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // メニュー関連
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [menuExpenseId, setMenuExpenseId] = useState<string | null>(null);
-
-  // カテゴリの一覧を取得
-  const categories = useMemo(() => {
-    const categorySet = new Set(expenses.map(expense => expense.category));
-    return Array.from(categorySet).sort();
-  }, [expenses]);
-
-  // フィルタリングとソート処理
-  const filteredAndSortedExpenses = useMemo(() => {
-    let filtered = expenses.filter(expense => {
-      const matchesSearch = searchQuery === '' || 
-        (expense.note || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.category.toLowerCase().includes(searchQuery.toLowerCase());
+  // フィルタリングされた経費データ
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
+      // 検索フィルター
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        const matchesSearch = 
+          expense.category.toLowerCase().includes(searchTerm) ||
+          (expense.note && expense.note.toLowerCase().includes(searchTerm)) ||
+          expense.amount.toString().includes(searchTerm);
+        if (!matchesSearch) return false;
+      }
       
-      const matchesCategory = categoryFilter === '' || expense.category === categoryFilter;
-      const matchesStatus = statusFilter === '' || expense.status === statusFilter;
+      // カテゴリフィルター
+      if (filters.category && expense.category !== filters.category) {
+        return false;
+      }
       
-      return matchesSearch && matchesCategory && matchesStatus;
+      // ステータスフィルター
+      if (filters.status && expense.status !== filters.status) {
+        return false;
+      }
+      
+      // 金額フィルター
+      if (filters.minAmount && expense.amount < Number(filters.minAmount)) {
+        return false;
+      }
+      if (filters.maxAmount && expense.amount > Number(filters.maxAmount)) {
+        return false;
+      }
+      
+      // 日付フィルター
+      if (filters.dateFrom && expense.date < filters.dateFrom) {
+        return false;
+      }
+      if (filters.dateTo && expense.date > filters.dateTo) {
+        return false;
+      }
+      
+      return true;
     });
+  }, [expenses, filters]);
 
-    // ソート処理
-    filtered.sort((a, b) => {
-      let aValue: any = a[sortConfig.field];
-      let bValue: any = b[sortConfig.field];
-
-      if (sortConfig.field === 'amount') {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
-      } else if (sortConfig.field === 'date' || sortConfig.field === 'submittedDate') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
-      }
-
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-
-    return filtered;
-  }, [expenses, searchQuery, categoryFilter, statusFilter, sortConfig]);
-
-  // ページネーション処理
+  // ページネーション用データ
   const paginatedExpenses = useMemo(() => {
     const startIndex = page * rowsPerPage;
-    return filteredAndSortedExpenses.slice(startIndex, startIndex + rowsPerPage);
-  }, [filteredAndSortedExpenses, page, rowsPerPage]);
+    return filteredExpenses.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredExpenses, page, rowsPerPage]);
 
-  // ソート処理
-  const handleSort = (field: SortField) => {
-    setSortConfig(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
+  // ユーティリティ関数
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ja-JP');
   };
 
-  // 行の展開/折りたたみ
-  const toggleRowExpansion = (expenseId: string) => {
-    setExpandedRows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(expenseId)) {
-        newSet.delete(expenseId);
-      } else {
-        newSet.add(expenseId);
-      }
-      return newSet;
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: 'JPY',
+    }).format(amount);
+  };
+
+  // イベントハンドラー
+  const handleSearchChange = (value: string) => {
+    setFilters(prev => ({ ...prev, search: value }));
+    setPage(0);
+  };
+
+  const handleFilterChange = (key: keyof ExpenseListFilters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(0);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      category: '',
+      status: '',
+      minAmount: '',
+      maxAmount: '',
+      dateFrom: '',
+      dateTo: '',
     });
+    setPage(0);
   };
 
-  // モーダル操作
-  const handleOpenModal = (expense?: ExpenseEntry) => {
-    if (expense) {
-      setExpenseToEdit(expense);
-    } else {
-      setExpenseToEdit(null);
-    }
+  const handleOpenModal = (expense: ExpenseEntry | null = null) => {
+    setExpenseToEdit(expense);
     setModalOpen(true);
   };
 
@@ -187,356 +174,245 @@ export const EnhancedExpenseList: React.FC = () => {
     setExpenseToEdit(null);
   };
 
-  // 詳細表示
-  const handleViewDetail = (expense: ExpenseEntry) => {
+  const handleViewExpense = (expense: ExpenseEntry) => {
     setSelectedExpense(expense);
-    setDetailModalOpen(true);
   };
 
-  // メニュー操作
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, expenseId: string) => {
-    setAnchorEl(event.currentTarget);
-    setMenuExpenseId(expenseId);
+  const handleCloseDetail = () => {
+    setSelectedExpense(null);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setMenuExpenseId(null);
+  const handleDeleteExpense = (expense: ExpenseEntry) => {
+    setExpenseToDelete(expense);
+    setDeleteDialogOpen(true);
   };
 
-  // CSV出力
+  const handleConfirmDelete = () => {
+    if (expenseToDelete) {
+      deleteExpense(expenseToDelete.id);
+      setSuccessMessage('経費を削除しました');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
+    setDeleteDialogOpen(false);
+    setExpenseToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setExpenseToDelete(null);
+  };
+
+  const handlePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // CSVエクスポート
   const handleExportCSV = () => {
-    const csvData = filteredAndSortedExpenses.map(expense => ({
-      日付: expense.date,
+    const csvData = filteredExpenses.map(expense => ({
+      日付: formatDate(expense.date),
       カテゴリ: expense.category,
       金額: expense.amount,
-      備考: expense.note,
-      ステータス: statusConfig[expense.status].label,
-      申請日: expense.submittedDate ? new Date(expense.submittedDate).toLocaleDateString() : '',
-      承認日: expense.approvedDate ? new Date(expense.approvedDate).toLocaleDateString() : '',
-      清算日: expense.settledDate ? new Date(expense.settledDate).toLocaleDateString() : '',
+      備考: expense.note || '',
+      ステータス: STATUS_CONFIG[expense.status]?.label || expense.status,
+      領収書件数: expense.receipts.length,
     }));
 
-    const csv = [
+    const csvContent = [
       Object.keys(csvData[0]).join(','),
       ...csvData.map(row => Object.values(row).join(','))
     ].join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `expenses_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
+  // アクティブフィルターの数
+  const activeFilterCount = Object.values(filters).filter(value => value !== '').length;
+
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* ヘッダーツールバー */}
+    <Container maxWidth="xl" sx={{ py: spacingTokens.lg }}>
+      {/* ヘッダーセクション */}
       <Paper
-        elevation={1}
         sx={{
-          ...surfaceStyles.surface(theme),
-          mb: spacingTokens.md,
-          flexShrink: 0,
+          ...surfaceStyles.elevated(1)(theme),
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          p: spacingTokens.lg,
+          mb: spacingTokens.lg,
+          ...animations.fadeIn,
         }}
       >
-        <Toolbar sx={{ py: spacingTokens.sm }}>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-            経費一覧 ({filteredAndSortedExpenses.length}件)
-          </Typography>
-          <Stack direction="row" spacing={1}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={spacingTokens.md}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+              💰 経費管理
+            </Typography>
+            <Typography variant="body1" sx={{ opacity: 0.9, mt: 0.5 }}>
+              経費の登録・管理・承認をまとめて行えます
+            </Typography>
+          </Box>
+          
+          <Stack direction="row" spacing={spacingTokens.sm} flexWrap="wrap">
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenModal()}
-              size="small"
+              sx={{
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' },
+              }}
             >
               新規登録
             </Button>
+            
+            {filteredExpenses.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<ExportIcon />}
+                onClick={handleExportCSV}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  color: 'white',
+                  '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' },
+                }}
+              >
+                CSV出力
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+
+      {/* 成功メッセージ */}
+      {successMessage && (
+        <Fade in={!!successMessage}>
+          <Alert severity="success" sx={{ mb: spacingTokens.lg }}>
+            {successMessage}
+          </Alert>
+        </Fade>
+      )}
+
+      {/* 検索・フィルターセクション */}
+      <Paper sx={{ ...surfaceStyles.surface(theme), p: spacingTokens.lg, mb: spacingTokens.lg }}>
+        <Stack spacing={spacingTokens.md}>
+          <Stack direction="row" spacing={spacingTokens.md} alignItems="center" flexWrap="wrap">
+            <SearchField value={filters.search} onChange={handleSearchChange} />
+            
             <Button
               variant="outlined"
-              startIcon={<ExportIcon />}
-              onClick={handleExportCSV}
-              size="small"
+              startIcon={<FilterIcon />}
+              onClick={() => setFilterDialogOpen(true)}
+              color={activeFilterCount > 0 ? 'primary' : 'inherit'}
             >
-              CSV出力
+              詳細フィルター {activeFilterCount > 0 && `(${activeFilterCount})`}
             </Button>
           </Stack>
-        </Toolbar>
+          
+          {activeFilterCount > 0 && (
+            <Stack direction="row" spacing={spacingTokens.sm} alignItems="center" flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary">
+                フィルター適用中:
+              </Typography>
+              {filters.category && (
+                <Typography variant="caption" sx={{ px: 1, py: 0.5, backgroundColor: 'primary.main', color: 'white', borderRadius: 1 }}>
+                  カテゴリ: {filters.category}
+                </Typography>
+              )}
+              {filters.status && (
+                <Typography variant="caption" sx={{ px: 1, py: 0.5, backgroundColor: 'secondary.main', color: 'white', borderRadius: 1 }}>
+                  ステータス: {STATUS_CONFIG[filters.status as keyof typeof STATUS_CONFIG]?.label || filters.status}
+                </Typography>
+              )}
+              <Button size="small" onClick={handleClearFilters}>
+                すべてクリア
+              </Button>
+            </Stack>
+          )}
+        </Stack>
       </Paper>
 
-      {/* フィルターエリア */}
-      <Paper
-        elevation={1}
-        sx={{
-          ...surfaceStyles.surface(theme),
-          mb: spacingTokens.md,
-          flexShrink: 0,
-        }}
-      >
-        <Box sx={{ p: spacingTokens.md }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              placeholder="備考・カテゴリで検索"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon />,
-              }}
-              size="small"
-              sx={{ flex: 1 }}
-            />
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>カテゴリ</InputLabel>
-              <Select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                label="カテゴリ"
-              >
-                <MenuItem value="">すべて</MenuItem>
-                {categories.map(category => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>ステータス</InputLabel>
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                label="ステータス"
-              >
-                <MenuItem value="">すべて</MenuItem>
-                {Object.entries(statusConfig).map(([status, config]) => (
-                  <MenuItem key={status} value={status}>
-                    {config.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-        </Box>
-      </Paper>
+      {/* メインコンテンツ */}
+      <Box sx={animations.slideUp}>
+        {filteredExpenses.length === 0 ? (
+          <Paper sx={{ ...surfaceStyles.surface(theme), p: spacingTokens.xxxl, textAlign: 'center' }}>
+            <ReceiptIcon sx={{ fontSize: 64, color: 'text.secondary', mb: spacingTokens.md }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              {expenses.length === 0 ? 'まだ経費が登録されていません' : 'フィルター条件に一致する経費がありません'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: spacingTokens.lg }}>
+              {expenses.length === 0 ? '「新規登録」ボタンから最初の経費を登録してみましょう' : '検索条件を変更してお試しください'}
+            </Typography>
+            {expenses.length === 0 && (
+              <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()}>
+                経費を登録する
+              </Button>
+            )}
+          </Paper>
+        ) : (
+          <ExpenseListTable
+            expenses={filteredExpenses}
+            paginated={paginatedExpenses}
+            page={page}
+            rows={rowsPerPage}
+            onPage={handlePageChange}
+            onRows={handleRowsPerPageChange}
+            onView={handleViewExpense}
+            onEdit={handleOpenModal}
+            onDelete={handleDeleteExpense}
+            formatDate={formatDate}
+            formatCurrency={formatCurrency}
+          />
+        )}
+      </Box>
 
-      {/* テーブル */}
-      <Paper
-        elevation={1}
-        sx={{
-          ...surfaceStyles.surface(theme),
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
-        <TableContainer sx={{ flex: 1 }}>
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell width={40}></TableCell>
-                <TableCell
-                  sortDirection={sortConfig.field === 'date' ? sortConfig.direction : false}
-                  onClick={() => handleSort('date')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                >
-                  日付
-                </TableCell>
-                <TableCell
-                  sortDirection={sortConfig.field === 'category' ? sortConfig.direction : false}
-                  onClick={() => handleSort('category')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                >
-                  カテゴリ
-                </TableCell>
-                <TableCell
-                  sortDirection={sortConfig.field === 'amount' ? sortConfig.direction : false}
-                  onClick={() => handleSort('amount')}
-                  sx={{ cursor: 'pointer', fontWeight: 600, textAlign: 'right' }}
-                >
-                  金額
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>備考</TableCell>
-                <TableCell
-                  sortDirection={sortConfig.field === 'status' ? sortConfig.direction : false}
-                  onClick={() => handleSort('status')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                >
-                  ステータス
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>領収書</TableCell>
-                <TableCell width={60}></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedExpenses.map((expense) => (
-                <React.Fragment key={expense.id}>
-                  <TableRow hover>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => toggleRowExpansion(expense.id)}
-                      >
-                        {expandedRows.has(expense.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      </IconButton>
-                    </TableCell>
-                    <TableCell>{expense.date}</TableCell>
-                    <TableCell>{expense.category}</TableCell>
-                    <TableCell align="right">
-                      ¥{expense.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                        {expense.note || '-'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={statusConfig[expense.status].label}
-                        color={statusConfig[expense.status].color}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {expense.receipts.length > 0 && (
-                        <Chip
-                          icon={<ReceiptIcon />}
-                          label={expense.receipts.length}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, expense.id)}
-                      >
-                        <MoreIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                  
-                  {/* 展開可能な詳細行 */}
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      sx={{ py: 0, border: 0 }}
-                    >
-                      <Collapse in={expandedRows.has(expense.id)}>
-                        <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-                          <Stack spacing={2}>
-                            {/* ステータス管理 */}
-                            <Box>
-                              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                                ステータス管理
-                              </Typography>
-                              <StatusManager
-                                expenseId={expense.id}
-                                currentStatus={expense.status}
-                              />
-                            </Box>
-                            
-                            {/* 領収書管理 */}
-                            {expense.receipts.length > 0 && (
-                              <Box>
-                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                                  領収書 ({expense.receipts.length}件)
-                                </Typography>
-                                <ReceiptUpload
-                                  expenseId={expense.id}
-                                  receipts={expense.receipts}
-                                  disabled={expense.status === 'settled'}
-                                />
-                              </Box>
-                            )}
-                          </Stack>
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* ページネーション */}
-        <TablePagination
-          component="div"
-          count={filteredAndSortedExpenses.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          labelRowsPerPage="表示件数:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}件`}
-        />
-      </Paper>
-
-      {/* コンテキストメニュー */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => {
-            const expense = expenses.find(e => e.id === menuExpenseId);
-            if (expense) {
-              handleViewDetail(expense);
-            }
-            handleMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <ViewIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>詳細表示</ListItemText>
-        </MenuItem>
-        
-        <MenuItem
-          onClick={() => {
-            const expense = expenses.find(e => e.id === menuExpenseId);
-            if (expense) {
-              handleOpenModal(expense);
-            }
-            handleMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>編集</ListItemText>
-        </MenuItem>
-        
-        <MenuItem
-          onClick={() => {
-            if (menuExpenseId) {
-              deleteExpense(menuExpenseId);
-            }
-            handleMenuClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>削除</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      {/* 経費登録・編集モーダル */}
+      {/* モーダル・ダイアログ */}
       <ExpenseModal
         open={modalOpen}
         onClose={handleCloseModal}
         expense={expenseToEdit}
       />
-    </Box>
+
+      <ExpenseFilterDialog
+        open={filterDialogOpen}
+        onClose={() => setFilterDialogOpen(false)}
+        categoryFilter={filters.category}
+        statusFilter={filters.status}
+        minAmount={filters.minAmount}
+        maxAmount={filters.maxAmount}
+        dateFrom={filters.dateFrom}
+        dateTo={filters.dateTo}
+        onCategoryChange={(value) => handleFilterChange('category', value)}
+        onStatusChange={(value) => handleFilterChange('status', value)}
+        onMinAmountChange={(value) => handleFilterChange('minAmount', value)}
+        onMaxAmountChange={(value) => handleFilterChange('maxAmount', value)}
+        onDateFromChange={(value) => handleFilterChange('dateFrom', value)}
+        onDateToChange={(value) => handleFilterChange('dateTo', value)}
+        onClearFilters={handleClearFilters}
+        onApplyFilters={() => {}}
+      />
+
+      <ExpenseDialogs
+        selected={selectedExpense}
+        onCloseDetail={handleCloseDetail}
+        deleteOpen={deleteDialogOpen}
+        deleting={expenseToDelete}
+        onCancelDelete={handleCancelDelete}
+        onConfirmDelete={handleConfirmDelete}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+      />
+    </Container>
   );
 };

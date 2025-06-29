@@ -42,7 +42,44 @@ export interface ExpenseActions {
 export type ExpenseStore = ExpenseState & ExpenseActions;
 
 const initialState: ExpenseState = {
-  expenses: [],
+  expenses: [
+    // サンプルデータ（テスト用）
+    {
+      id: '1',
+      date: '2024-12-15',
+      category: '交通費',
+      amount: 1500,
+      note: '客先訪問のための電車代',
+      status: 'pending',
+      receipts: [],
+      submittedDate: '2024-12-15T09:30:00.000Z',
+    },
+    {
+      id: '2', 
+      date: '2024-12-14',
+      category: '宿泊費',
+      amount: 8500,
+      note: '出張時のホテル代',
+      status: 'approved',
+      receipts: [],
+      submittedDate: '2024-12-14T10:15:00.000Z',
+      approvedDate: '2024-12-15T14:20:00.000Z',
+      approvedBy: '田中課長',
+    },
+    {
+      id: '3',
+      date: '2024-12-13',
+      category: '飲食費',
+      amount: 3200,
+      note: 'クライアントとの打ち合わせ会食',
+      status: 'settled',
+      receipts: [],
+      submittedDate: '2024-12-13T11:00:00.000Z',
+      approvedDate: '2024-12-14T09:30:00.000Z',
+      settledDate: '2024-12-16T16:45:00.000Z',
+      approvedBy: '佐藤部長',
+    },
+  ],
 };
 
 export const useExpenseStore = create<ExpenseStore>((set) => ({

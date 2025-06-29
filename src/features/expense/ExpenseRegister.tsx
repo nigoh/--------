@@ -11,7 +11,7 @@ import {
   StaggerContainer, 
   StaggerItem,
 } from '../../components/ui/Animation/MotionComponents';
-import { PageTitle } from '../../components/ui/Typography';
+import { PageTitle, BodyText } from '../../components/ui/Typography';
 import { spacingTokens } from '../../theme/designSystem';
 
 /**

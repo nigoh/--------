@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useExpenseStore, ExpenseReceipt } from './useExpenseStore';
 import { ReceiptUpload } from './ReceiptUpload';
+import { ExpenseModal } from './ExpenseModal';
 
 const expenseCategories = [
   '交通費',
@@ -30,6 +31,9 @@ export const ExpenseForm: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   
+  // モーダル状態管理
+  const [modalOpen, setModalOpen] = useState(false);
+  
   // フォーム用の一時的な領収書状態
   const [tempReceipts, setTempReceipts] = useState<ExpenseReceipt[]>([]);
   const [successAlert, setSuccessAlert] = useState(false);
@@ -37,26 +41,18 @@ export const ExpenseForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // バリデーション（必要最小限）
     if (!category || !amount) {
       return;
     }
 
-    const expense = {
-      date,
-      category,
-      amount: Number(amount),
-      note,
-    };
+    // モーダルを開く
+    setModalOpen(true);
+  };
 
-    // 経費を登録
-    const expenseId = addExpense(expense);
-    
-    // 一時的な領収書があれば、新しい経費に関連付ける
-    if (tempReceipts.length > 0 && expenseId) {
-      tempReceipts.forEach(receipt => {
-        addReceipt(expenseId, receipt);
-      });
-    }
+  // モーダルが閉じられたときの処理
+  const handleModalClose = () => {
+    setModalOpen(false);
     
     // フォームをリセット
     setCategory('');
@@ -83,100 +79,90 @@ export const ExpenseForm: React.FC = () => {
   const latestExpense = expenses.length > 0 ? expenses[expenses.length - 1] : null;
 
   return (
-    <Paper elevation={3} sx={{ p: 3, borderRadius: 2, maxWidth: 600, mx: 'auto' }}>
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-        経費登録
-      </Typography>
-      
-      {successAlert && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          経費が正常に登録されました！
-        </Alert>
-      )}
+    <>
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2, maxWidth: 600, mx: 'auto' }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+          経費登録
+        </Typography>
+        
+        {successAlert && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            経費が正常に登録されました！
+          </Alert>
+        )}
 
-      <Stack component="form" onSubmit={handleSubmit} spacing={3}>
-        <TextField
-          label="日付"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          required
-        />
-        
-        <TextField
-          label="カテゴリ"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          select
-          required
-        >
-          {expenseCategories.map((cat) => (
-            <MenuItem key={cat} value={cat}>
-              {cat}
-            </MenuItem>
-          ))}
-        </TextField>
-        
-        <TextField
-          label="金額"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          InputProps={{
-            startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
-          }}
-          required
-        />
-        
-        <TextField
-          label="備考"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          multiline
-          rows={2}
-          placeholder="経費の詳細説明を入力してください"
-        />
-
-        {/* 領収書アップロード */}
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-            領収書添付（任意）
-          </Typography>
-          <ReceiptUpload
-            expenseId="temp-form-upload"
-            receipts={tempReceipts}
-            disabled={false}
-            onReceiptsAdd={handleReceiptAdd}
-            onReceiptRemove={handleReceiptRemove}
+        <Stack component="form" onSubmit={handleSubmit} spacing={3}>
+          <TextField
+            label="日付"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            required
           />
-        </Box>
+          
+          <TextField
+            label="カテゴリ"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            select
+            required
+          >
+            {expenseCategories.map((cat) => (
+              <MenuItem key={cat} value={cat}>
+                {cat}
+              </MenuItem>
+            ))}
+          </TextField>
+          
+          <TextField
+            label="金額"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            InputProps={{
+              startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
+            }}
+            required
+          />
+          
+          <TextField
+            label="備考"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            multiline
+            rows={2}
+            placeholder="経費の詳細説明を入力してください"
+          />
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button type="submit" variant="contained" sx={{ flex: 1 }}>
-            経費を登録{tempReceipts.length > 0 && ` (領収書 ${tempReceipts.length}件)`}
-          </Button>
-        </Box>
-      </Stack>
-
-      {/* 最新登録経費の領収書アップロード */}
-      {latestExpense && (
-        <Box sx={{ mt: 3 }}>
-          <Divider sx={{ mb: 2 }} />
-          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-            最新登録経費の領収書アップロード
-          </Typography>
-          <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {latestExpense.date} • {latestExpense.category} • ¥{latestExpense.amount.toLocaleString()}
+          {/* 領収書アップロード */}
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+              領収書添付（任意）
             </Typography>
+            <ReceiptUpload
+              expenseId="temp-form-upload"
+              receipts={tempReceipts}
+              disabled={false}
+              onReceiptsAdd={handleReceiptAdd}
+              onReceiptRemove={handleReceiptRemove}
+            />
           </Box>
-          <ReceiptUpload
-            expenseId={latestExpense.id}
-            receipts={latestExpense.receipts}
-          />
-        </Box>
-      )}
-    </Paper>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button type="submit" variant="contained" sx={{ flex: 1 }}>
+              経費を登録{tempReceipts.length > 0 && ` (領収書 ${tempReceipts.length}件)`}
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
+
+      {/* ExpenseModal */}
+      <ExpenseModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        expense={null}
+      />
+    </>
   );
 };
