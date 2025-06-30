@@ -6,11 +6,6 @@ import {
   useTheme,
 } from '@mui/material';
 import { EnhancedEquipmentList } from './EnhancedEquipmentList';
-import { 
-  FadeIn, 
-  StaggerContainer, 
-  StaggerItem,
-} from '../../components/ui/Animation/MotionComponents';
 import { PageTitle } from '../../components/ui/Typography';
 import { spacingTokens } from '../../theme/designSystem';
 
@@ -34,35 +29,25 @@ export const EquipmentRegister: React.FC = () => {
         py: spacingTokens.sm,
       }}>
         <Container maxWidth="xl" sx={{ height: '100%', py: 0 }}>
-          <StaggerContainer>
-            {/* コンパクトなヘッダー */}
-            <StaggerItem>
-              <FadeIn>
-                <Box sx={{ mb: spacingTokens.md, textAlign: 'center' }}>
-                  <PageTitle 
-                    sx={{ 
-                      mb: spacingTokens.xs,
-                      color: theme.palette.text.primary,
-                      fontWeight: 600,
-                      fontSize: { xs: '1.75rem', sm: '2rem' }
-                    }}
-                  >
-                    備品管理
-                  </PageTitle>
-                  <Divider sx={{ my: spacingTokens.sm }} />
-                </Box>
-              </FadeIn>
-            </StaggerItem>
+          {/* コンパクトなヘッダー */}
+          <Box sx={{ mb: spacingTokens.md, textAlign: 'center' }}>
+            <PageTitle 
+              sx={{ 
+                mb: spacingTokens.xs,
+                color: theme.palette.text.primary,
+                fontWeight: 600,
+                fontSize: { xs: '1.75rem', sm: '2rem' }
+              }}
+            >
+              備品管理
+            </PageTitle>
+            <Divider sx={{ my: spacingTokens.sm }} />
+          </Box>
 
-            {/* 拡張備品一覧 */}
-            <StaggerItem>
-              <FadeIn>
-                <Box sx={{ height: 'calc(100vh - 160px)' }}>
-                  <EnhancedEquipmentList />
-                </Box>
-              </FadeIn>
-            </StaggerItem>
-          </StaggerContainer>
+          {/* 拡張備品一覧 */}
+          <Box sx={{ height: 'calc(100vh - 160px)' }}>
+            <EnhancedEquipmentList />
+          </Box>
         </Container>
       </Box>
     </Box>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, useTheme } from '@mui/material';
 import { spacingTokens, shapeTokens } from '../../theme/designSystem';
+import { FadeIn, StaggerContainer, StaggerItem } from '../ui';
 
 interface FeatureContentProps {
   children: React.ReactNode;
@@ -39,7 +40,13 @@ export const FeatureContent: React.FC<FeatureContentProps> = ({
         ...baseStyles,
         backgroundColor: backgroundColor || 'transparent',
       }}>
-        {children}
+        <StaggerContainer>
+          <StaggerItem>
+            <FadeIn>
+              {children}
+            </FadeIn>
+          </StaggerItem>
+        </StaggerContainer>
       </Box>
     );
   }
@@ -53,7 +60,13 @@ export const FeatureContent: React.FC<FeatureContentProps> = ({
         border: `1px solid ${theme.palette.divider}`,
       }}
     >
-      {children}
+      <StaggerContainer>
+        <StaggerItem>
+          <FadeIn>
+            {children}
+          </FadeIn>
+        </StaggerItem>
+      </StaggerContainer>
     </Paper>
   );
 };

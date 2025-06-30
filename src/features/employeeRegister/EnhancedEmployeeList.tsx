@@ -26,6 +26,12 @@ interface EnhancedEmployeeListProps {
   externalSearchQuery?: string;
   onExternalSearchChange?: (query: string) => void;
   triggerAddEmployee?: boolean;
+  externalDepartmentFilter?: string;
+  externalStatusFilter?: string;
+  onExternalDepartmentChange?: (value: string) => void;
+  onExternalStatusChange?: (value: string) => void;
+  onExternalClearFilters?: () => void;
+  hideFilters?: boolean;
 }
 
 /**
@@ -35,6 +41,12 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
   externalSearchQuery,
   onExternalSearchChange,
   triggerAddEmployee = false,
+  externalDepartmentFilter,
+  externalStatusFilter,
+  onExternalDepartmentChange,
+  onExternalStatusChange,
+  onExternalClearFilters,
+  hideFilters = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -47,8 +59,8 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(externalSearchQuery || '');
-  const [departmentFilter, setDepartmentFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState(externalDepartmentFilter || '');
+  const [statusFilter, setStatusFilter] = useState(externalStatusFilter || '');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -76,6 +88,19 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
     }
   }, [externalSearchQuery]);
 
+  // 外部フィルターとの同期
+  useEffect(() => {
+    if (externalDepartmentFilter !== undefined) {
+      setDepartmentFilter(externalDepartmentFilter);
+    }
+  }, [externalDepartmentFilter]);
+
+  useEffect(() => {
+    if (externalStatusFilter !== undefined) {
+      setStatusFilter(externalStatusFilter);
+    }
+  }, [externalStatusFilter]);
+
   // 外部からの新規追加トリガー
   useEffect(() => {
     if (triggerAddEmployee) {
@@ -88,6 +113,32 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
     setSearchQuery(newQuery);
     if (onExternalSearchChange) {
       onExternalSearchChange(newQuery);
+    }
+  };
+
+  // 部署フィルター変更の通知
+  const handleDepartmentChange = (newDepartment: string) => {
+    setDepartmentFilter(newDepartment);
+    if (onExternalDepartmentChange) {
+      onExternalDepartmentChange(newDepartment);
+    }
+  };
+
+  // ステータスフィルター変更の通知
+  const handleStatusChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    if (onExternalStatusChange) {
+      onExternalStatusChange(newStatus);
+    }
+  };
+
+  // フィルタークリアの通知
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setDepartmentFilter('');
+    setStatusFilter('');
+    if (onExternalClearFilters) {
+      onExternalClearFilters();
     }
   };
 
@@ -143,15 +194,6 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
       field,
       direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
-  };
-
-  /**
-   * フィルターをクリア
-   */
-  const clearFilters = () => {
-    setSearchQuery('');
-    setDepartmentFilter('');
-    setStatusFilter('');
   };
 
   /**
@@ -268,18 +310,20 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
         alignItems: { xs: 'stretch', lg: 'flex-start' }
       }}>
         {/* 左側: フィルターエリア */}
-        <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: '400px' } }}>
-          <EmployeeFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            departments={departments}
-            departmentFilter={departmentFilter}
-            statusFilter={statusFilter}
-            onDepartmentChange={setDepartmentFilter}
-            onStatusChange={setStatusFilter}
-            onClearFilters={clearFilters}
-          />
-        </Box>
+        {!hideFilters && (
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: '400px' } }}>
+            <EmployeeFilters
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              departments={departments}
+              departmentFilter={departmentFilter}
+              statusFilter={statusFilter}
+              onDepartmentChange={handleDepartmentChange}
+              onStatusChange={handleStatusChange}
+              onClearFilters={handleClearFilters}
+            />
+          </Box>
+        )}
         
         {/* 右側: ヘッダーエリア */}
         <Box sx={{ 

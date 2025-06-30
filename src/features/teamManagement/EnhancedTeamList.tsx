@@ -61,7 +61,7 @@ export const EnhancedTeamList: React.FC = () => {
         <Chip
           icon={<GroupIcon />}
           label={`総チーム数: ${filteredTeams.length}`}
-          variant="filled"
+          variant="outlined"
           color="primary"
           size="medium"
           sx={{ px: 1 }}
@@ -69,7 +69,7 @@ export const EnhancedTeamList: React.FC = () => {
         <Chip
           icon={<PeopleIcon />}
           label={`総メンバー数: ${filteredTeams.reduce((sum, team) => sum + team.members.length, 0)}`}
-          variant="filled"
+          variant="outlined"
           color="info"
           size="medium"
           sx={{ px: 1 }}
@@ -77,13 +77,13 @@ export const EnhancedTeamList: React.FC = () => {
         <Chip
           icon={<CheckCircleIcon />}
           label={`アクティブチーム: ${filteredTeams.filter(team => team.status === 'アクティブ').length}`}
-          variant="filled"
+          variant="outlined"
           color="success"
           size="medium"
           sx={{ px: 1 }}
         />
         <Button
-          variant="outlined"
+          variant="text"
           startIcon={<FileDownloadIcon />}
           onClick={handleExportCSV}
           disabled={filteredTeams.length === 0}

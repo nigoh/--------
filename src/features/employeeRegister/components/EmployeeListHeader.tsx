@@ -1,11 +1,8 @@
 import React from 'react';
-import { Box, Button, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { surfaceStyles } from '../../../theme/componentStyles';
 import { spacingTokens } from '../../../theme/designSystem';
-import { SectionTitle } from '../../../components/ui/Typography';
-
+import GroupIcon from '@mui/icons-material/Group';
 interface EmployeeListHeaderProps {
   count: number;
   onExport: () => void;
@@ -31,35 +28,23 @@ export const EmployeeListHeader: React.FC<EmployeeListHeaderProps> = ({
           gap: spacingTokens.sm,
         }}
       >
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          alignItems={{ xs: 'stretch', sm: 'center' }} 
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
           spacing={spacingTokens.sm}
           sx={{ width: { xs: '100%', lg: 'auto' } }}
         >
-          <Typography
-            variant="body2"
-            sx={{ 
-              color: theme.palette.text.secondary,
-              textAlign: { xs: 'center', lg: 'right' },
-              whiteSpace: 'nowrap'
-            }}
-          >
-            登録社員 ({count}人)
-          </Typography>
-          
           <Stack direction="row" spacing={spacingTokens.sm}>
-            <Button
-              variant="contained"
-              startIcon={<PersonAddIcon />}
-              onClick={onAdd}
-              size="small"
-              sx={{ background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)` }}
-            >
-              社員登録
-            </Button>
-            <Button
+            <Chip
+              icon={<GroupIcon />}
+              label={`登録社員 (${count}人)`}
               variant="outlined"
+              color="primary"
+              size="medium"
+              sx={{ px: 1 }}
+            />
+            <Button
+              variant="text"
               startIcon={<DownloadIcon />}
               onClick={onExport}
               size="small"

@@ -4,12 +4,6 @@ import { FeatureLayout, FeatureHeader, FeatureContent } from '../../components/l
 import { TimecardForm } from './TimecardForm';
 import { TimecardList } from './TimecardList';
 import TimecardSummary from './TimecardSummary';
-import { 
-  FadeIn, 
-  SlideUp, 
-  StaggerContainer, 
-  StaggerItem 
-} from '../../components/ui/Animation/MotionComponents';
 
 const Timecard: React.FC = () => {
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
@@ -39,28 +33,16 @@ const Timecard: React.FC = () => {
       />
       
       <FeatureContent variant="transparent" padding={0}>
-        <StaggerContainer>
+        <Stack spacing={3} sx={{ p: 2 }}>
           {/* 勤怠登録フォーム */}
-          <StaggerItem>
-            <FadeIn>
-              <TimecardForm />
-            </FadeIn>
-          </StaggerItem>
+          <TimecardForm />
 
           {/* 勤怠サマリー */}
-          <StaggerItem>
-            <SlideUp>
-              <TimecardSummary month={month} />
-            </SlideUp>
-          </StaggerItem>
+          <TimecardSummary month={month} />
 
           {/* 勤怠履歴リスト */}
-          <StaggerItem>
-            <SlideUp>
-              <TimecardList />
-            </SlideUp>
-          </StaggerItem>
-        </StaggerContainer>
+          <TimecardList />
+        </Stack>
       </FeatureContent>
     </FeatureLayout>
   );
