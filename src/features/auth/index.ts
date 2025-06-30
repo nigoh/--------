@@ -11,14 +11,20 @@ export { ProtectedRoute } from './components/ProtectedRoute';
 export { LoginForm } from './components/LoginForm';
 export { RegisterForm } from './components/RegisterForm';
 export { SocialButtons } from './components/SocialButtons';
+export { PasskeyButton } from './components/PasskeyButton';
+export { OtpInput } from './components/OtpInput';
 
 // Hooks
 export { useAuth } from './hooks/useAuth';
 export { useLogin } from './hooks/useLogin';
 export { useRegister } from './hooks/useRegister';
+export { useMFA } from './hooks/useMFA';
+export { usePasskey } from './hooks/usePasskey';
 
 // Services
 export * from './services/authService';
+export * from './services/mfaService';
+export * from './services/passkeyService';
 export { auth, firestore, functions } from './services/firebase';
 
 // Stores

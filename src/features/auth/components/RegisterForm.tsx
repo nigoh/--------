@@ -17,6 +17,7 @@ import {
   Alert,
   LinearProgress,
   Chip,
+  Divider,
   useTheme,
 } from '@mui/material';
 import {
@@ -28,6 +29,7 @@ import {
   PersonAdd,
 } from '@mui/icons-material';
 import { useRegister } from '../hooks/useRegister';
+import { PasskeyButton } from './PasskeyButton';
 import { useThemeContext } from '../../../contexts/ThemeContext';
 
 interface RegisterFormProps {
@@ -320,13 +322,37 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         sx={{
           py: 1.5,
           mt: 3,
-          mb: 3,
+          mb: 2,
           borderRadius: isHighContrast ? 0 : 2,
           fontWeight: 600,
         }}
       >
         {loading ? 'アカウント作成中...' : 'アカウントを作成'}
       </Button>
+
+      {/* パスキーオプション */}
+      <Box sx={{ mb: 3 }}>
+        <Divider sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            または
+          </Typography>
+        </Divider>
+        
+        <PasskeyButton
+          mode="register"
+          loading={loading}
+          userId={email} // 実際の実装ではUUIDなどを使用
+          userName={email}
+          userDisplayName={displayName}
+          onSuccess={(credential) => {
+            console.log('Passkey registration success:', credential);
+            // TODO: パスキー登録の後続処理
+          }}
+          onError={(error) => {
+            console.error('Passkey registration error:', error);
+          }}
+        />
+      </Box>
 
       {/* ログインリンク */}
       {onSwitchToLogin && (

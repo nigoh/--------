@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useLogin } from '../hooks/useLogin';
 import { SocialButtons } from './SocialButtons';
+import { PasskeyButton } from './PasskeyButton';
 import { useThemeContext } from '../../../contexts/ThemeContext';
 
 interface LoginFormProps {
@@ -199,6 +200,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </Typography>
         </Divider>
         <SocialButtons loading={loading} />
+        
+        {/* パスキーログイン */}
+        <Box sx={{ mt: 2 }}>
+          <PasskeyButton
+            mode="login"
+            loading={loading}
+            onSuccess={(credential) => {
+              console.log('Passkey login success:', credential);
+              // TODO: パスキー認証の後続処理
+            }}
+            onError={(error) => {
+              console.error('Passkey login error:', error);
+            }}
+          />
+        </Box>
       </Box>
 
       {/* 新規登録リンク */}
