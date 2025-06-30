@@ -4,7 +4,7 @@
  * ソート、フィルタリング、CSVエクスポート機能を含む社員一覧
  * Material Design 3準拠のコンパクトデザイン
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { useEmployeeStore, Employee } from './useEmployeeStore';
 import { useTemporary } from '../../hooks/useTemporary';
@@ -22,10 +22,32 @@ interface SortConfig {
   direction: SortDirection;
 }
 
+interface EnhancedEmployeeListProps {
+  externalSearchQuery?: string;
+  onExternalSearchChange?: (query: string) => void;
+  triggerAddEmployee?: boolean;
+  externalDepartmentFilter?: string;
+  externalStatusFilter?: string;
+  onExternalDepartmentChange?: (value: string) => void;
+  onExternalStatusChange?: (value: string) => void;
+  onExternalClearFilters?: () => void;
+  hideFilters?: boolean;
+}
+
 /**
  * 拡張社員一覧コンポーネント
  */
-export const EnhancedEmployeeList: React.FC = () => {
+export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
+  externalSearchQuery,
+  onExternalSearchChange,
+  triggerAddEmployee = false,
+  externalDepartmentFilter,
+  externalStatusFilter,
+  onExternalDepartmentChange,
+  onExternalStatusChange,
+  onExternalClearFilters,
+  hideFilters = false,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployeeStore();
@@ -36,9 +58,9 @@ export const EnhancedEmployeeList: React.FC = () => {
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || '');
+  const [departmentFilter, setDepartmentFilter] = useState(externalDepartmentFilter || '');
+  const [statusFilter, setStatusFilter] = useState(externalStatusFilter || '');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -50,6 +72,75 @@ export const EnhancedEmployeeList: React.FC = () => {
   const departments = useMemo(() => {
     return DEPARTMENTS as readonly Department[];
   }, []);
+
+  /**
+   * 新規登録
+   */
+  const handleAddEmployee = () => {
+    setEmployeeToEdit(null);
+    setModalOpen(true);
+  };
+
+  // 外部検索クエリとの同期
+  useEffect(() => {
+    if (externalSearchQuery !== undefined) {
+      setSearchQuery(externalSearchQuery);
+    }
+  }, [externalSearchQuery]);
+
+  // 外部フィルターとの同期
+  useEffect(() => {
+    if (externalDepartmentFilter !== undefined) {
+      setDepartmentFilter(externalDepartmentFilter);
+    }
+  }, [externalDepartmentFilter]);
+
+  useEffect(() => {
+    if (externalStatusFilter !== undefined) {
+      setStatusFilter(externalStatusFilter);
+    }
+  }, [externalStatusFilter]);
+
+  // 外部からの新規追加トリガー
+  useEffect(() => {
+    if (triggerAddEmployee) {
+      handleAddEmployee();
+    }
+  }, [triggerAddEmployee]);
+
+  // 検索クエリ変更の通知
+  const handleSearchChange = (newQuery: string) => {
+    setSearchQuery(newQuery);
+    if (onExternalSearchChange) {
+      onExternalSearchChange(newQuery);
+    }
+  };
+
+  // 部署フィルター変更の通知
+  const handleDepartmentChange = (newDepartment: string) => {
+    setDepartmentFilter(newDepartment);
+    if (onExternalDepartmentChange) {
+      onExternalDepartmentChange(newDepartment);
+    }
+  };
+
+  // ステータスフィルター変更の通知
+  const handleStatusChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    if (onExternalStatusChange) {
+      onExternalStatusChange(newStatus);
+    }
+  };
+
+  // フィルタークリアの通知
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setDepartmentFilter('');
+    setStatusFilter('');
+    if (onExternalClearFilters) {
+      onExternalClearFilters();
+    }
+  };
 
   // フィルタリングとソート
   const filteredAndSortedEmployees = useMemo(() => {
@@ -106,15 +197,6 @@ export const EnhancedEmployeeList: React.FC = () => {
   };
 
   /**
-   * フィルターをクリア
-   */
-  const clearFilters = () => {
-    setSearchQuery('');
-    setDepartmentFilter('');
-    setStatusFilter('');
-  };
-
-  /**
    * CSVエクスポート
    */
   const exportToCSV = () => {
@@ -145,14 +227,6 @@ export const EnhancedEmployeeList: React.FC = () => {
     document.body.removeChild(link);
     
     toast.success('CSVファイルをダウンロードしました');
-  };
-
-  /**
-   * 新規登録
-   */
-  const handleAddEmployee = () => {
-    setEmployeeToEdit(null);
-    setModalOpen(true);
   };
 
   /**
@@ -236,18 +310,20 @@ export const EnhancedEmployeeList: React.FC = () => {
         alignItems: { xs: 'stretch', lg: 'flex-start' }
       }}>
         {/* 左側: フィルターエリア */}
-        <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: '400px' } }}>
-          <EmployeeFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            departments={departments}
-            departmentFilter={departmentFilter}
-            statusFilter={statusFilter}
-            onDepartmentChange={setDepartmentFilter}
-            onStatusChange={setStatusFilter}
-            onClearFilters={clearFilters}
-          />
-        </Box>
+        {!hideFilters && (
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: '400px' } }}>
+            <EmployeeFilters
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              departments={departments}
+              departmentFilter={departmentFilter}
+              statusFilter={statusFilter}
+              onDepartmentChange={handleDepartmentChange}
+              onStatusChange={handleStatusChange}
+              onClearFilters={handleClearFilters}
+            />
+          </Box>
+        )}
         
         {/* 右側: ヘッダーエリア */}
         <Box sx={{ 

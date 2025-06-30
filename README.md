@@ -9,6 +9,9 @@
 - **メンバー登録**: 直感的なUI でメンバーを追加・編集・削除
 - **社員選択**: 社員管理から登録済み社員を選択してチーム分けに追加
 - **ランダムチーム分け**: Fisher-Yates アルゴリズムによる公正なチーム分け
+- **チーム管理**: 保存済みチームの作成・編集・削除・読み込み機能
+- **チーム保存**: 現在のメンバーリストやチーム分け結果を保存
+- **タブ切り替え**: 「ランダム生成」と「チーム管理」の2つのモード
 - **アニメーション**: 美しいアニメーションとコンフェッティエフェクト
 - **レスポンシブデザイン**: モバイル・タブレット・デスクトップ対応
 
@@ -106,14 +109,15 @@ src/
 │   │   ├── TipsSidePanel.tsx    # コツ表示サイドパネル
 │   │   ├── meetingFlowData.ts   # ステップデータ定義
 │   │   └── tipsLoader.ts        # ヒント読み込み
-│   └── teamShuffle/             # チーム分け機能
-│       ├── TeamShuffle.tsx      # メイン画面
-│       ├── MemberRegister.tsx   # メンバー登録
-│       ├── TeamCard.tsx         # チーム表示カード
-│       ├── TeamResultPanel.tsx  # 結果表示パネル
-│       ├── useMemberList.ts     # メンバーリスト管理Hook
-│       ├── useTeamShuffleForm.ts # フォーム状態管理Hook
-│       └── utils.ts             # ユーティリティ関数
+│   └── teamManagement/          # チーム管理機能
+│       ├── TeamManagement.tsx   # メイン画面
+│       ├── EnhancedTeamList.tsx # チーム一覧表示
+│       ├── stores/
+│       │   ├── useTeamStore.ts  # チームデータストア
+│       │   └── useTeamFormStore.ts # フォーム状態ストア
+│       ├── components/          # UI コンポーネント
+│       ├── hooks/               # カスタムフック
+│       └── constants/           # 定数定義
 │   └── timecard/                # 勤怠管理機能
 │       ├── Timecard.tsx         # 一覧・登録画面
 │       ├── TimecardForm.tsx     # 勤怠登録フォーム

@@ -4,6 +4,12 @@ import { FeatureLayout, FeatureHeader, FeatureContent } from '../../components/l
 import { TimecardForm } from './TimecardForm';
 import { TimecardList } from './TimecardList';
 import TimecardSummary from './TimecardSummary';
+import { 
+  FadeIn, 
+  SlideUp, 
+  StaggerContainer, 
+  StaggerItem 
+} from '../../components/ui/Animation/MotionComponents';
 
 const Timecard: React.FC = () => {
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
@@ -24,7 +30,7 @@ const Timecard: React.FC = () => {
   );
 
   return (
-    <FeatureLayout maxWidth={false}>
+    <FeatureLayout maxWidth="xl">
       <FeatureHeader
         title="勤怠管理"
         subtitle="出勤・退勤の記録と勤怠履歴の確認ができます。月別の集計も表示されます。"
@@ -33,16 +39,28 @@ const Timecard: React.FC = () => {
       />
       
       <FeatureContent variant="transparent" padding={0}>
-        <Stack spacing={3} sx={{ p: 2 }}>
+        <StaggerContainer>
           {/* 勤怠登録フォーム */}
-          <TimecardForm />
+          <StaggerItem>
+            <FadeIn>
+              <TimecardForm />
+            </FadeIn>
+          </StaggerItem>
 
           {/* 勤怠サマリー */}
-          <TimecardSummary month={month} />
+          <StaggerItem>
+            <SlideUp>
+              <TimecardSummary month={month} />
+            </SlideUp>
+          </StaggerItem>
 
           {/* 勤怠履歴リスト */}
-          <TimecardList />
-        </Stack>
+          <StaggerItem>
+            <SlideUp>
+              <TimecardList />
+            </SlideUp>
+          </StaggerItem>
+        </StaggerContainer>
       </FeatureContent>
     </FeatureLayout>
   );

@@ -1,70 +1,89 @@
-import React from 'react';
-import {
-  Box,
-  Container,
-  Divider,
-  useTheme,
-} from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Button } from '@mui/material';
+import { FeatureLayout, FeatureContent, FeatureHeader } from '../../components/layout';
 import { EnhancedEmployeeList } from './EnhancedEmployeeList';
-import { 
-  FadeIn, 
-  StaggerContainer, 
-  StaggerItem,
-} from '../../components/ui/Animation/MotionComponents';
-import { PageTitle, BodyText } from '../../components/ui/Typography';
-import { spacingTokens } from '../../theme/designSystem';
+import { EmployeeFilters } from './components/EmployeeFilters';
+import GroupIcon from '@mui/icons-material/Group';
+import AddIcon from '@mui/icons-material/Add';
+import { DEPARTMENTS } from './constants/employeeFormConstants';
 
 /**
  * 社員管理メインページコンポーネント
  */
 export const EmployeeRegister: React.FC = () => {
-  const theme = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [triggerAddEmployee, setTriggerAddEmployee] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // 新規社員追加ボタンのハンドラー
+  const handleAddEmployee = () => {
+    setTriggerAddEmployee(true);
+    // リセット用のタイマー
+    setTimeout(() => setTriggerAddEmployee(false), 100);
+  };
+
+  // フィルタークリアのハンドラー
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setDepartmentFilter('');
+    setStatusFilter('');
+  };
+
+  // ヘッダーコンテンツ（フィルターと新規追加ボタン）
+  const headerContents = [
+    <Box key="filters" sx={{ flex: 1, maxWidth: 600 }}>
+      <EmployeeFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        departments={DEPARTMENTS}
+        departmentFilter={departmentFilter}
+        statusFilter={statusFilter}
+        onDepartmentChange={setDepartmentFilter}
+        onStatusChange={setStatusFilter}
+        onClearFilters={handleClearFilters}
+      />
+    </Box>,
+    <Button
+      key="add-employee"
+      variant="contained"
+      startIcon={<AddIcon />}
+      onClick={handleAddEmployee}
+      sx={{
+        borderRadius: 2,
+        px: 3,
+        py: 1.5,
+        fontWeight: 500,
+        textTransform: 'none',
+        minWidth: 'auto',
+        flexShrink: 0,
+      }}
+    >
+      社員登録
+    </Button>
+  ];
 
   return (
-    <Box sx={{ 
-      height: '100vh', 
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      {/* スクロール可能なコンテンツエリア */}
-      <Box sx={{ 
-        flex: 1, 
-        overflow: 'auto',
-        py: spacingTokens.sm,
-      }}>
-        <Container maxWidth="xl" sx={{ height: '100%', py: 0 }}>
-          <StaggerContainer>
-            {/* コンパクトなヘッダー */}
-            <StaggerItem>
-              <FadeIn>
-                <Box sx={{ mb: spacingTokens.md, textAlign: 'center' }}>
-                  <PageTitle 
-                    sx={{ 
-                      mb: spacingTokens.xs,
-                      color: theme.palette.text.primary,
-                      fontWeight: 600,
-                      fontSize: { xs: '1.75rem', sm: '2rem' }
-                    }}
-                  >
-                    社員管理
-                  </PageTitle>
-                  <Divider sx={{ my: spacingTokens.sm }} />
-                </Box>
-              </FadeIn>
-            </StaggerItem>
-
-            {/* 拡張社員一覧 */}
-            <StaggerItem>
-              <FadeIn>
-                <Box sx={{ height: 'calc(100vh - 160px)' }}>
-                  <EnhancedEmployeeList />
-                </Box>
-              </FadeIn>
-            </StaggerItem>
-          </StaggerContainer>
-        </Container>
-      </Box>
-    </Box>
+    <FeatureLayout maxWidth={false}>
+      <FeatureHeader
+        title='社員管理'
+        icon={<GroupIcon fontSize='large' />}
+        subtitle="社員の登録、編集、管理を行います。"
+        contents={headerContents}
+      />
+      <FeatureContent variant="transparent" padding={0}>
+        <EnhancedEmployeeList 
+          externalSearchQuery={searchQuery}
+          onExternalSearchChange={setSearchQuery}
+          triggerAddEmployee={triggerAddEmployee}
+          externalDepartmentFilter={departmentFilter}
+          externalStatusFilter={statusFilter}
+          onExternalDepartmentChange={setDepartmentFilter}
+          onExternalStatusChange={setStatusFilter}
+          onExternalClearFilters={handleClearFilters}
+          hideFilters={true}
+        />
+      </FeatureContent>
+    </FeatureLayout>
   );
 };

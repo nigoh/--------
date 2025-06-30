@@ -22,9 +22,9 @@ import { FloatingNavigation, MobileNavDrawer, SideNavigation } from './component
 import { TabPanel } from './components/common';
 
 // Lazy load components for better performance
-const TeamShuffle = React.lazy(() => import('./features/teamShuffle/TeamShuffle'));
+const TeamManagement = React.lazy(() => import('./features/teamManagement/TeamManagement'));
 const MeetingFlow = React.lazy(() => import('./features/meetingFlow/MeetingFlow'));
-const EmployeeRegister = React.lazy(() => import('./features/employeeRegister/EmployeeRegister').then(module => ({ default: module.EmployeeRegister })));
+const EmployeeRegister = React.lazy(() => import('./features/employeeRegister').then(module => ({ default: module.EmployeeRegister })));
 const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
@@ -127,16 +127,10 @@ function AppContent() {
 
               {/* Tab Content - スクロール可能 */}
               <TabPanel value={currentTab} index={0}>
-                <PageTransition mode="fade" key="team-shuffle">
+                <PageTransition mode="fade" key="team-management">
                   <ScrollableContent>
-                    <Suspense fallback={<PageLoader message="チームシャッフルを読み込み中..." />}>
-                      <TeamShuffle
-                        onShowMeeting={handleShowMeeting}
-                        members={members}
-                        setMembers={setMembers}
-                        teams={teams}
-                        setTeams={setTeams}
-                      />
+                    <Suspense fallback={<PageLoader message="チーム管理を読み込み中..." />}>
+                      <TeamManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
