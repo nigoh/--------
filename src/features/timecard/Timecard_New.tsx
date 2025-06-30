@@ -30,7 +30,7 @@ const Timecard: React.FC = () => {
   );
 
   return (
-    <FeatureLayout maxWidth={false}>
+    <FeatureLayout maxWidth="xl">
       <FeatureHeader
         title="勤怠管理"
         subtitle="出勤・退勤の記録と勤怠履歴の確認ができます。月別の集計も表示されます。"

@@ -4,7 +4,7 @@
  * ソート、フィルタリング、CSVエクスポート機能を含む社員一覧
  * Material Design 3準拠のコンパクトデザイン
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { useEmployeeStore, Employee } from './useEmployeeStore';
 import { useTemporary } from '../../hooks/useTemporary';
@@ -22,10 +22,20 @@ interface SortConfig {
   direction: SortDirection;
 }
 
+interface EnhancedEmployeeListProps {
+  externalSearchQuery?: string;
+  onExternalSearchChange?: (query: string) => void;
+  triggerAddEmployee?: boolean;
+}
+
 /**
  * 拡張社員一覧コンポーネント
  */
-export const EnhancedEmployeeList: React.FC = () => {
+export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
+  externalSearchQuery,
+  onExternalSearchChange,
+  triggerAddEmployee = false,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployeeStore();
@@ -36,7 +46,7 @@ export const EnhancedEmployeeList: React.FC = () => {
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || '');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
@@ -50,6 +60,36 @@ export const EnhancedEmployeeList: React.FC = () => {
   const departments = useMemo(() => {
     return DEPARTMENTS as readonly Department[];
   }, []);
+
+  /**
+   * 新規登録
+   */
+  const handleAddEmployee = () => {
+    setEmployeeToEdit(null);
+    setModalOpen(true);
+  };
+
+  // 外部検索クエリとの同期
+  useEffect(() => {
+    if (externalSearchQuery !== undefined) {
+      setSearchQuery(externalSearchQuery);
+    }
+  }, [externalSearchQuery]);
+
+  // 外部からの新規追加トリガー
+  useEffect(() => {
+    if (triggerAddEmployee) {
+      handleAddEmployee();
+    }
+  }, [triggerAddEmployee]);
+
+  // 検索クエリ変更の通知
+  const handleSearchChange = (newQuery: string) => {
+    setSearchQuery(newQuery);
+    if (onExternalSearchChange) {
+      onExternalSearchChange(newQuery);
+    }
+  };
 
   // フィルタリングとソート
   const filteredAndSortedEmployees = useMemo(() => {
@@ -145,14 +185,6 @@ export const EnhancedEmployeeList: React.FC = () => {
     document.body.removeChild(link);
     
     toast.success('CSVファイルをダウンロードしました');
-  };
-
-  /**
-   * 新規登録
-   */
-  const handleAddEmployee = () => {
-    setEmployeeToEdit(null);
-    setModalOpen(true);
   };
 
   /**

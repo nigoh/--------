@@ -1,12 +1,12 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { FeatureLayout } from '../../components/layout';
 import { EquipmentRegister } from './EquipmentRegister';
 
 const Equipment: React.FC = () => {
   return (
-    <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+    <FeatureLayout maxWidth={false}>
       <EquipmentRegister />
-    </Box>
+    </FeatureLayout>
   );
 };
 

@@ -24,7 +24,7 @@ import { TabPanel } from './components/common';
 // Lazy load components for better performance
 const TeamManagement = React.lazy(() => import('./features/teamManagement/TeamManagement'));
 const MeetingFlow = React.lazy(() => import('./features/meetingFlow/MeetingFlow'));
-const EmployeeRegister = React.lazy(() => import('./features/employeeRegister/EmployeeRegister').then(module => ({ default: module.EmployeeRegister })));
+const EmployeeRegister = React.lazy(() => import('./features/employeeRegister').then(module => ({ default: module.EmployeeRegister })));
 const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
