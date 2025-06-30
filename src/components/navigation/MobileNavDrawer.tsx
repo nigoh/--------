@@ -11,8 +11,8 @@ import {
   Typography
 } from '@mui/material';
 import { 
-  Shuffle as ShuffleIcon, 
   People as PeopleIcon,
+  Groups as GroupsIcon,
   MeetingRoom as MeetingIcon, 
   AccessTime as TimeIcon,
   ReceiptLong as ExpenseIcon,
@@ -58,10 +58,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   
   const mainNavigationItems = [
     { icon: <DashboardIcon />, label: 'ダッシュボード', index: -1 },
-    { icon: <ShuffleIcon />, label: 'チーム分け', index: 0 },
-    { icon: <MeetingIcon />, label: 'ミーティング進行', index: 3 },
+    { icon: <GroupsIcon />, label: 'チーム管理', index: 0 },
     { icon: <PeopleIcon />, label: '社員管理', index: 1 },
     { icon: <TimeIcon />, label: '勤怠管理', index: 2 },
+    { icon: <MeetingIcon />, label: 'ミーティング進行', index: 3 },
     { icon: <ExpenseIcon />, label: '経費管理', index: 4 },
     { icon: <InventoryIcon />, label: '備品管理', index: 5 },
   ];

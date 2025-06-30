@@ -109,14 +109,15 @@ src/
 │   │   ├── TipsSidePanel.tsx    # コツ表示サイドパネル
 │   │   ├── meetingFlowData.ts   # ステップデータ定義
 │   │   └── tipsLoader.ts        # ヒント読み込み
-│   └── teamShuffle/             # チーム分け機能
-│       ├── TeamShuffle.tsx      # メイン画面
-│       ├── MemberRegister.tsx   # メンバー登録
-│       ├── TeamCard.tsx         # チーム表示カード
-│       ├── TeamResultPanel.tsx  # 結果表示パネル
-│       ├── useMemberList.ts     # メンバーリスト管理Hook
-│       ├── useTeamShuffleForm.ts # フォーム状態管理Hook
-│       └── utils.ts             # ユーティリティ関数
+│   └── teamManagement/          # チーム管理機能
+│       ├── TeamManagement.tsx   # メイン画面
+│       ├── EnhancedTeamList.tsx # チーム一覧表示
+│       ├── stores/
+│       │   ├── useTeamStore.ts  # チームデータストア
+│       │   └── useTeamFormStore.ts # フォーム状態ストア
+│       ├── components/          # UI コンポーネント
+│       ├── hooks/               # カスタムフック
+│       └── constants/           # 定数定義
 │   └── timecard/                # 勤怠管理機能
 │       ├── Timecard.tsx         # 一覧・登録画面
 │       ├── TimecardForm.tsx     # 勤怠登録フォーム

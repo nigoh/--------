@@ -22,9 +22,9 @@ import {
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
-  Shuffle as ShuffleIcon,
   MeetingRoom as MeetingIcon,
   People as PeopleIcon,
+  Groups as GroupsIcon,
   AccessTime as TimeIcon,
   ReceiptLong as ExpenseIcon,
   Inventory as InventoryIcon,
@@ -86,17 +86,10 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       index: -1,
     },
     {
-      id: 'team-shuffle',
-      label: 'チーム分け',
-      icon: <ShuffleIcon />,
+      id: 'team-management',
+      label: 'チーム管理',
+      icon: <GroupsIcon />,
       index: 0,
-      badge: 'AI',
-    },
-    {
-      id: 'meeting',
-      label: 'ミーティング進行',
-      icon: <MeetingIcon />,
-      index: 3,
     },
     {
       id: 'employee',
@@ -109,6 +102,12 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       label: '勤怠管理',
       icon: <TimeIcon />,
       index: 2,
+    },
+    {
+      id: 'meeting',
+      label: 'ミーティング進行',
+      icon: <MeetingIcon />,
+      index: 3,
     },
     {
       id: 'expense',

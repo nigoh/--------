@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useTeamStore } from '../features/teamShuffle/useTeamStore';
+import { useTeamStore } from '../features/teamManagement/stores/useTeamStore';
 
 describe('useTeamStore', () => {
   beforeEach(() => {

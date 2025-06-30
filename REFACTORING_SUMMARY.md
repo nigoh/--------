@@ -149,8 +149,8 @@ src/features/
 │   ├── MeetingFlow.tsx
 │   ├── useMeetingFlowStore.ts
 │   └── index.ts
-└── teamShuffle/
-    └── [既存のファイル群]
+└── teamManagement/
+    └── [新しいチーム管理機能群]
 ```
 
 ---

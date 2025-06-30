@@ -1,7 +1,7 @@
 {
-  "name": "ランダムチーム分けアプリ",
-  "short_name": "TeamShuffle",
-  "description": "ランダムなチーム分けとミーティング進行をサポートするWebアプリ",
+  "name": "ワーク支援アプリ",
+  "short_name": "WorkApp",
+  "description": "チーム管理、社員管理、勤怠管理など業務をサポートするWebアプリ",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#667eea",

@@ -23,7 +23,7 @@
 
 ### 4. アプリケーション更新
 - [x] **Main App.tsx** - Glassmorphism効果、スムーズなページ遷移、ナビゲーション改善
-- [x] **TeamShuffle Component** - 新デザインシステム適用、アニメーション統合
+- [x] **TeamManagement Component** - 新デザインシステム適用、アニメーション統合
 - [x] **EmployeeRegister Component** - Bentoグリッドとアニメーション統合、MD3スタイリング
 
 ### 5. 設定・管理システム
