@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { createModernTheme } from './theme/modernTheme';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
+import { AuthProvider, ProtectedRoute } from './features/auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import EnterpriseSettingsPanel from './components/EnterpriseSettingsPanel';
 import { PageLoader } from './components/LoadingSpinner';
@@ -226,7 +227,11 @@ function AppContent() {
 function App() {
   return (
     <CustomThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <ProtectedRoute>
+          <AppContent />
+        </ProtectedRoute>
+      </AuthProvider>
     </CustomThemeProvider>
   );
 }
