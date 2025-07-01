@@ -36,8 +36,10 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   ViewModule as DialogIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../theme/componentStyles';
+import { useAuth } from '../../auth';
 
 export interface SideNavigationProps {
   currentTab: number;
@@ -70,6 +72,7 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
   onToggleCollapse,
 }) => {
   const theme = useTheme();
+  const { signOut, user } = useAuth();
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
 
   // 折りたたみ時に展開状態をリセット
@@ -144,9 +147,15 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       index: -4, // 特別な値
       badge: 'Dev',
     }] : []),
+    {
+      id: 'logout',
+      label: 'ログアウト',
+      icon: <LogoutIcon />,
+      index: -5, // 特別な値
+    },
   ];
 
-  const handleItemClick = (item: NavigationItem, event?: React.MouseEvent) => {
+  const handleItemClick = async (item: NavigationItem, event?: React.MouseEvent) => {
     // 親要素のクリックイベントを停止
     event?.stopPropagation();
     
@@ -170,6 +179,13 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       } else if (item.index === -4) {
         // パフォーマンス（開発時のみ）
         onOpenPerformance?.();
+      } else if (item.index === -5) {
+        // ログアウト
+        try {
+          await signOut();
+        } catch (error) {
+          console.error('ログアウトに失敗しました:', error);
+        }
       } else {
         // 通常のタブナビゲーション
         onNavigate(item.index);
@@ -332,20 +348,20 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
               mr: collapsed ? 0 : 2,
             }}
           >
-            <DashboardIcon />
+            {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
           </Avatar>
           
           {!collapsed && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                WorkApp
+                {user?.displayName || 'ユーザー'}
               </Typography>
               <Typography 
                 variant="caption" 
                 color="text.secondary"
                 sx={{ fontSize: '0.75rem' }}
               >
-                統合ワークフロー
+                {user?.email || 'ログイン済み'}
               </Typography>
             </Box>
           )}

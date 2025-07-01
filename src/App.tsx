@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { createModernTheme } from './theme/modernTheme';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import EnterpriseSettingsPanel from './components/EnterpriseSettingsPanel';
 import { PageLoader } from './components/LoadingSpinner';
@@ -29,6 +30,7 @@ const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
+const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -41,6 +43,7 @@ function AppContent() {
   const [performanceOpen, setPerformanceOpen] = useState(false);
   
   const { isDarkMode, isHighContrast, fontSize } = useThemeContext();
+  const { isAuthenticated, isLoading } = useAuth();
   const currentTheme = createModernTheme({ 
     mode: isDarkMode ? 'dark' : 'light', 
     highContrast: isHighContrast, 
@@ -53,6 +56,35 @@ function AppContent() {
   React.useEffect(() => {
     initPerformanceMonitoring();
   }, []);
+
+  // 認証中の場合
+  if (isLoading) {
+    return (
+      <ThemeProvider theme={currentTheme}>
+        <CssBaseline />
+        <Box sx={{ 
+          height: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}>
+          <PageLoader message="認証状態を確認中..." />
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
+  // 未認証の場合は認証画面を表示
+  if (!isAuthenticated) {
+    return (
+      <ThemeProvider theme={currentTheme}>
+        <CssBaseline />
+        <Suspense fallback={<PageLoader message="認証画面を読み込み中..." />}>
+          <AuthPage />
+        </Suspense>
+      </ThemeProvider>
+    );
+  }
 
   const handleTabChange = (newValue: number) => {
     setCurrentTab(newValue);
@@ -237,7 +269,9 @@ function AppContent() {
 function App() {
   return (
     <CustomThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </CustomThemeProvider>
   );
 }

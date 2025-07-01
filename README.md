@@ -5,7 +5,16 @@
 
 ## 🎯 主な機能
 
-### 1. チーム分け機能
+### 1. 認証機能 🔐
+- **Firebase Authentication**: セキュアなユーザー認証
+- **メール・パスワード認証**: 標準的なログイン方式
+- **Google OAuth**: ワンクリックでの簡単ログイン
+- **パスキー対応**: 将来的な生体認証・WebAuthn対応（準備済み）
+- **パスワード強度チェック**: リアルタイムパスワード強度表示
+- **メール確認**: 新規登録時のメール確認プロセス
+- **レスポンシブ認証UI**: 美しいグラデーション背景の認証画面
+
+### 2. チーム分け機能
 - **メンバー登録**: 直感的なUI でメンバーを追加・編集・削除
 - **社員選択**: 社員管理から登録済み社員を選択してチーム分けに追加
 - **ランダムチーム分け**: Fisher-Yates アルゴリズムによる公正なチーム分け
@@ -77,6 +86,7 @@ npm run lint
 - **TypeScript** - 型安全性の確保
 - **Vite 6.3.5** - 高速ビルドツール
 - **Material-UI (MUI) 7.1.2** - UIコンポーネントライブラリ
+- **Firebase** - 認証・データベース・クラウド機能
 - **Emotion** - CSS-in-JS スタイリング
 
 ### 追加ライブラリ
@@ -91,6 +101,21 @@ npm run lint
 
 ```
 src/
+├── auth/                # 認証機能
+│   ├── components/              # 認証関連UI
+│   │   ├── LoginForm.tsx        # ログインフォーム
+│   │   ├── RegisterForm.tsx     # 新規登録フォーム
+│   │   └── AuthPage.tsx         # 認証メインページ
+│   ├── hooks/                   # 認証関連フック
+│   │   ├── useLogin.ts          # ログイン処理
+│   │   └── useRegister.ts       # 新規登録処理
+│   ├── stores/                  # 認証状態管理
+│   │   └── useAuthStore.ts      # 認証ストア
+│   ├── firebase.ts              # Firebase設定
+│   ├── context.tsx              # 認証コンテキスト
+│   ├── passkey.ts               # パスキー処理
+│   ├── types.ts                 # 型定義
+│   └── index.ts                 # エクスポート統合
 ├── components/          # 再利用可能なUIコンポーネント
 │   ├── AnimatedBackground.tsx    # アニメーション背景
 │   ├── ConfettiCanvas.tsx       # 紙吹雪エフェクト
