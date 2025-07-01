@@ -14,6 +14,7 @@ import {
   spacingTokens, 
   motionTokens 
 } from './designSystem';
+import { globalIMEStyles, getIMEStyles, japaneseInputStyles } from './imeStyles';
 
 declare module '@mui/material/styles' {
   interface BreakpointOverrides {
@@ -229,7 +230,7 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
     components: {
       // Global styles
       MuiCssBaseline: {
-        styleOverrides: {
+        styleOverrides: (theme) => ({
           html: {
             // スムーススクロール
             scrollBehavior: 'smooth',
@@ -252,7 +253,9 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
             outline: `2px solid ${palette.primary.main}`,
             outlineOffset: '2px',
           },
-        },
+          // グローバルIMEスタイル追加
+          ...globalIMEStyles(theme),
+        }),
       },
 
       // Button
@@ -319,10 +322,10 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
         },
       },
 
-      // TextField
+      // TextField (IMEスタイル統合版)
       MuiTextField: {
         styleOverrides: {
-          root: {
+          root: (props) => ({
             '& .MuiOutlinedInput-root': {
               borderRadius: highContrast 
                 ? shapeTokens.corner.none 
@@ -334,8 +337,12 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
               '&.Mui-focused': {
                 ...(!highContrast && elevationTokens.level2),
               },
+              // IMEスタイル統合（テーマオブジェクトを渡す）
+              ...getIMEStyles(props.theme),
             },
-          },
+            // 日本語入力専用スタイル
+            ...japaneseInputStyles(props.theme),
+          }),
         },
       },
 
@@ -413,6 +420,8 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
           },
         },
       },
+
+      // IME関連のスタイルオーバーライドは上記TextFieldに統合済み
     },
   });
 };
