@@ -8,6 +8,7 @@
  * - レスポンシブ対応
  */
 import React, { useState, useMemo, useCallback } from 'react';
+import { ConfirmationDialog } from '../../components/ui';
 import {
   Box,
   Container,
@@ -359,12 +360,20 @@ export const EnhancedExpenseList: React.FC = () => {
       <ExpenseDialogs
         selected={selectedExpense}
         onCloseDetail={handleCloseDetail}
-        deleteOpen={deleteDialogOpen}
-        deleting={expenseToDelete}
-        onCancelDelete={handleCancelDelete}
-        onConfirmDelete={handleConfirmDelete}
         formatDate={formatDate}
         formatCurrency={formatCurrency}
+      />
+      
+      {/* 削除確認ダイアログ */}
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="経費データの削除"
+        message={`「${expenseToDelete?.note || '選択された経費'}」を削除してもよろしいですか？この操作は元に戻すことができません。`}
+        type="warning"
+        dangerous={true}
+        confirmText="削除"
       />
     </Container>
   );

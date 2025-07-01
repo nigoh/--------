@@ -5,6 +5,7 @@
  * Material Design 3準拠のコンパクトデザイン
  */
 import React, { useState, useMemo } from 'react';
+import { ConfirmationDialog } from '../../components/ui';
 import {
   Box,
   Card,
@@ -99,6 +100,8 @@ export const EnhancedEquipmentList: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [stockAdjustmentItem, setStockAdjustmentItem] = useState<EquipmentItem | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetItem, setDeleteTargetItem] = useState<EquipmentItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
@@ -627,7 +630,11 @@ export const EnhancedEquipmentList: React.FC = () => {
         <MenuItem
           onClick={() => {
             if (menuItemId) {
-              deleteItem(menuItemId);
+              const item = items.find(i => i.id === menuItemId);
+              if (item) {
+                setDeleteTargetItem(item);
+                setDeleteConfirmOpen(true);
+              }
             }
             handleMenuClose();
           }}
@@ -653,6 +660,27 @@ export const EnhancedEquipmentList: React.FC = () => {
         onClose={handleCloseStockDialog}
         item={stockAdjustmentItem}
         onAdjust={handleStockAdjustment}
+      />
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setDeleteTargetItem(null);
+        }}
+        onConfirm={() => {
+          if (deleteTargetItem) {
+            deleteItem(deleteTargetItem.id);
+            setDeleteConfirmOpen(false);
+            setDeleteTargetItem(null);
+          }
+        }}
+        title="備品の削除"
+        message={`「${deleteTargetItem?.name}」を削除してもよろしいですか？この操作は元に戻すことができません。`}
+        type="warning"
+        dangerous={true}
+        confirmText="削除"
       />
     </Box>
   );

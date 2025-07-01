@@ -5,14 +5,10 @@ import {
   Button,
   Menu,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Typography,
   useTheme,
-  alpha,
+  Alert,
 } from '@mui/material';
 import {
   Schedule as PendingIcon,
@@ -21,6 +17,7 @@ import {
   Payment as SettledIcon,
   ExpandMore as ExpandIcon,
 } from '@mui/icons-material';
+import { FormDialog, FormDialogContent, FormDialogSection, ConfirmationDialog } from '../../components/ui';
 import { useExpenseStore, ExpenseStatus } from './useExpenseStore';
 
 interface StatusManagerProps {
@@ -52,13 +49,28 @@ const statusConfig = {
     textColor: '#d32f2f',
   },
   settled: {
-    label: '清算済み',
+    label: '精算済み',
     color: 'info',
     icon: SettledIcon,
     bgColor: '#e3f2fd',
     textColor: '#1976d2',
   },
 } as const;
+
+const getNextStatuses = (current: ExpenseStatus): ExpenseStatus[] => {
+  switch (current) {
+    case 'pending':
+      return ['approved', 'rejected'];
+    case 'approved':
+      return ['settled'];
+    case 'rejected':
+      return ['pending'];
+    case 'settled':
+      return [];
+    default:
+      return [];
+  }
+};
 
 export const StatusManager: React.FC<StatusManagerProps> = ({
   expenseId,
@@ -69,15 +81,17 @@ export const StatusManager: React.FC<StatusManagerProps> = ({
   const { updateStatus } = useExpenseStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus | null>(null);
-  const [approvedBy, setApprovedBy] = useState('');
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const config = statusConfig[currentStatus];
-  const IconComponent = config.icon;
+  const currentConfig = statusConfig[currentStatus];
+  const IconComponent = currentConfig.icon;
+  const nextStatuses = getNextStatuses(currentStatus);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    if (disabled) return;
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (disabled || nextStatuses.length === 0) return;
     setAnchorEl(event.currentTarget);
   };
 
@@ -85,152 +99,163 @@ export const StatusManager: React.FC<StatusManagerProps> = ({
     setAnchorEl(null);
   };
 
-  const handleStatusChange = (status: ExpenseStatus) => {
-    handleMenuClose();
+  const handleStatusSelect = (status: ExpenseStatus) => {
+    setSelectedStatus(status);
+    setAnchorEl(null);
     
-    if (status === 'approved' || status === 'rejected') {
-      setSelectedStatus(status);
+    if (status === 'rejected') {
+      // 却下の場合はコメント入力ダイアログを表示
       setDialogOpen(true);
     } else {
-      updateStatus(expenseId, status);
+      // その他の場合は確認ダイアログを表示
+      setConfirmOpen(true);
     }
   };
 
-  const handleDialogConfirm = () => {
+  const handleDialogConfirm = async () => {
     if (!selectedStatus) return;
 
-    const metadata: any = {};
-    if (selectedStatus === 'approved' && approvedBy.trim()) {
-      metadata.approvedBy = approvedBy.trim();
+    setIsSubmitting(true);
+    try {
+      await updateStatus(expenseId, selectedStatus, { rejectionReason: comment });
+      setDialogOpen(false);
+      setComment('');
+      setSelectedStatus(null);
+    } catch (error) {
+      console.error('ステータス更新エラー:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    if (selectedStatus === 'rejected' && rejectionReason.trim()) {
-      metadata.rejectionReason = rejectionReason.trim();
-    }
-
-    updateStatus(expenseId, selectedStatus, metadata);
-    setDialogOpen(false);
-    setSelectedStatus(null);
-    setApprovedBy('');
-    setRejectionReason('');
   };
 
   const handleDialogCancel = () => {
     setDialogOpen(false);
+    setComment('');
     setSelectedStatus(null);
-    setApprovedBy('');
-    setRejectionReason('');
   };
 
-  // 変更可能なステータスを決定
-  const getAvailableStatuses = (): ExpenseStatus[] => {
-    switch (currentStatus) {
-      case 'pending':
-        return ['approved', 'rejected'];
-      case 'approved':
-        return ['settled'];
-      case 'rejected':
-        return ['pending'];
-      case 'settled':
-        return [];
-      default:
-        return [];
+  const handleConfirmDialog = async () => {
+    if (!selectedStatus) return;
+
+    setIsSubmitting(true);
+    try {
+      await updateStatus(expenseId, selectedStatus);
+      setConfirmOpen(false);
+      setSelectedStatus(null);
+    } catch (error) {
+      console.error('ステータス更新エラー:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const availableStatuses = getAvailableStatuses();
+  const handleConfirmCancel = () => {
+    setConfirmOpen(false);
+    setSelectedStatus(null);
+  };
 
   return (
     <>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box
+      <Button
+        onClick={handleMenuClick}
+        disabled={disabled || nextStatuses.length === 0}
+        endIcon={nextStatuses.length > 0 ? <ExpandIcon /> : undefined}
+        sx={{
+          minWidth: 'auto',
+          p: 0,
+          '&:hover': {
+            backgroundColor: 'transparent',
+          },
+        }}
+      >
+        <Chip
+          icon={<IconComponent />}
+          label={currentConfig.label}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 1,
-            borderRadius: 2,
-            backgroundColor: config.bgColor,
-            color: config.textColor,
-            border: `1px solid ${alpha(config.textColor, 0.3)}`,
+            backgroundColor: currentConfig.bgColor,
+            color: currentConfig.textColor,
+            fontWeight: 'medium',
+            '& .MuiChip-icon': {
+              color: currentConfig.textColor,
+            },
           }}
-        >
-          <IconComponent fontSize="small" />
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {config.label}
-          </Typography>
-        </Box>
-
-        {availableStatuses.length > 0 && !disabled && (
-          <Button
-            size="small"
-            variant="outlined"
-            endIcon={<ExpandIcon />}
-            onClick={handleMenuOpen}
-            sx={{ minWidth: 'auto' }}
-          >
-            変更
-          </Button>
-        )}
-      </Box>
+        />
+      </Button>
 
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 150,
+          },
+        }}
       >
-        {availableStatuses.map((status) => {
-          const statusConf = statusConfig[status];
-          const StatusIcon = statusConf.icon;
+        {nextStatuses.map((status) => {
+          const config = statusConfig[status];
+          const StatusIcon = config.icon;
           return (
-            <MenuItem key={status} onClick={() => handleStatusChange(status)}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <StatusIcon fontSize="small" sx={{ color: statusConf.textColor }} />
-                <Typography>{statusConf.label}</Typography>
-              </Box>
+            <MenuItem
+              key={status}
+              onClick={() => handleStatusSelect(status)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                py: 1,
+              }}
+            >
+              <StatusIcon sx={{ fontSize: 16, color: config.textColor }} />
+              <Typography variant="body2">{config.label}</Typography>
             </MenuItem>
           );
         })}
       </Menu>
 
-      <Dialog open={dialogOpen} onClose={handleDialogCancel} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600 }}>
-          ステータス変更: {selectedStatus && statusConfig[selectedStatus].label}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            {selectedStatus === 'approved' && (
-              <TextField
-                label="承認者名"
-                value={approvedBy}
-                onChange={(e) => setApprovedBy(e.target.value)}
-                fullWidth
-                helperText="承認者の名前を入力してください（任意）"
-              />
-            )}
-            {selectedStatus === 'rejected' && (
-              <TextField
-                label="却下理由"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                fullWidth
-                multiline
-                rows={3}
-                helperText="却下理由を入力してください（任意）"
-              />
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogCancel} variant="outlined">
-            キャンセル
-          </Button>
-          <Button onClick={handleDialogConfirm} variant="contained">
-            変更
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* 却下時のコメント入力ダイアログ */}
+      <FormDialog
+        open={dialogOpen}
+        onClose={handleDialogCancel}
+        onSubmit={handleDialogConfirm}
+        title="経費申請の却下"
+        size="sm"
+        loading={isSubmitting}
+        isValid={comment.trim() !== ''}
+        submitText="却下"
+      >
+        <FormDialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            この経費申請を却下します。却下理由を入力してください。
+          </Alert>
+          
+          <FormDialogSection title="却下理由">
+            <TextField
+              label="却下理由"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              multiline
+              rows={4}
+              required
+              fullWidth
+              placeholder="却下理由を詳細に記入してください"
+            />
+          </FormDialogSection>
+        </FormDialogContent>
+      </FormDialog>
+
+      {/* その他のステータス変更確認ダイアログ */}
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={handleConfirmCancel}
+        onConfirm={handleConfirmDialog}
+        title="ステータス変更の確認"
+        message={`この経費申請のステータスを「${selectedStatus ? statusConfig[selectedStatus].label : ''}」に変更してもよろしいですか？`}
+        type="question"
+        loading={isSubmitting}
+        confirmText="変更"
+      />
     </>
   );
 };

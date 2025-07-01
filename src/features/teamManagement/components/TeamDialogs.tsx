@@ -1,10 +1,5 @@
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   TextField,
   FormControl,
   InputLabel,
@@ -12,17 +7,16 @@ import {
   MenuItem,
   Box,
   Typography,
-  IconButton,
-  CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import SaveIcon from '@mui/icons-material/Save';
+import { FormDialog, FormDialogContent, FormDialogSection } from '../../../components/ui';
 import { useTeamForm } from '../hooks/useTeamForm';
 import { TeamMemberSelector } from './TeamMemberSelector';
 import { TEAM_TYPES, TEAM_STATUS } from '../constants/teamConstants';
+import type { TeamMember } from '../stores/useTeamStore';
 
 /**
  * チームのCRUD操作用ダイアログ
+ * 統一ダイアログシステムを使用
  */
 export const TeamDialogs: React.FC = () => {
   const { formStore, handleSubmit, closeDialog } = useTeamForm();
@@ -41,135 +35,90 @@ export const TeamDialogs: React.FC = () => {
     formStore.updateField(field as any, value);
   };
 
+  const isValid = formStore.name.trim() !== '' && 
+                  formStore.type !== '' && 
+                  formStore.status !== '';
+
   return (
-    <Dialog
+    <FormDialog
       open={formStore.isDialogOpen}
       onClose={closeDialog}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: { minHeight: '600px' }
-      }}
+      onSubmit={handleSave}
+      title={title}
+      size="md"
+      loading={formStore.isSubmitting}
+      isValid={isValid}
+      submitText={isEditing ? '更新' : '作成'}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">{title}</Typography>
-        <IconButton onClick={closeDialog} disabled={formStore.isSubmitting}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* チーム基本情報 */}
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            チーム基本情報
-          </Typography>
+      <FormDialogContent>
+        <FormDialogSection title="基本情報">
+          <TextField
+            label="チーム名"
+            value={formStore.name}
+            onChange={(e) => handleFieldChange('name', e.target.value)}
+            error={!!formStore.errors.name}
+            helperText={formStore.errors.name}
+            required
+            fullWidth
+            size="small"
+          />
           
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              label="チーム名"
-              value={formStore.name}
-              onChange={(e) => handleFieldChange('name', e.target.value)}
-              error={!!formStore.errors.name}
-              helperText={formStore.errors.name}
-              disabled={formStore.isSubmitting}
-              required
-            />
+          <TextField
+            label="説明"
+            value={formStore.description}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
+            multiline
+            rows={3}
+            fullWidth
+            size="small"
+          />
+        </FormDialogSection>
 
-            <TextField
-              fullWidth
-              label="説明"
-              value={formStore.description}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              multiline
-              rows={3}
-              disabled={formStore.isSubmitting}
-            />
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel required>チームタイプ</InputLabel>
-                <Select
-                  value={formStore.type}
-                  onChange={(e) => handleFieldChange('type', e.target.value)}
-                  label="チームタイプ"
-                  error={!!formStore.errors.type}
-                  disabled={formStore.isSubmitting}
-                  required
-                >
-                  <MenuItem value="">
-                    <em>選択してください</em>
+        <FormDialogSection title="チーム設定">
+          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <FormControl size="small" sx={{ flex: 1 }}>
+              <InputLabel>チームタイプ</InputLabel>
+              <Select
+                value={formStore.type}
+                onChange={(e) => handleFieldChange('type', e.target.value)}
+                label="チームタイプ"
+                required
+              >
+                {TEAM_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
                   </MenuItem>
-                  {TEAM_TYPES.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formStore.errors.type && (
-                  <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
-                    {formStore.errors.type}
-                  </Typography>
-                )}
-              </FormControl>
+                ))}
+              </Select>
+            </FormControl>
 
-              <FormControl fullWidth>
-                <InputLabel required>ステータス</InputLabel>
-                <Select
-                  value={formStore.status}
-                  onChange={(e) => handleFieldChange('status', e.target.value)}
-                  label="ステータス"
-                  error={!!formStore.errors.status}
-                  disabled={formStore.isSubmitting}
-                  required
-                >
-                  <MenuItem value="">
-                    <em>選択してください</em>
+            <FormControl size="small" sx={{ flex: 1 }}>
+              <InputLabel>ステータス</InputLabel>
+              <Select
+                value={formStore.status}
+                onChange={(e) => handleFieldChange('status', e.target.value)}
+                label="ステータス"
+                required
+              >
+                {TEAM_STATUS.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
                   </MenuItem>
-                  {TEAM_STATUS.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formStore.errors.status && (
-                  <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
-                    {formStore.errors.status}
-                  </Typography>
-                )}
-              </FormControl>
-            </Box>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
-        </Box>
+        </FormDialogSection>
 
-        {/* メンバー選択 */}
-        <TeamMemberSelector />
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
-          onClick={closeDialog}
-          disabled={formStore.isSubmitting}
-          color="inherit"
-        >
-          キャンセル
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={formStore.isSubmitting}
-          startIcon={
-            formStore.isSubmitting ? (
-              <CircularProgress size={20} />
-            ) : (
-              <SaveIcon />
-            )
-          }
-        >
-          {formStore.isSubmitting ? '保存中...' : isEditing ? '更新' : '作成'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <FormDialogSection title="チームメンバー">
+          <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              チームに所属するメンバーを選択してください
+            </Typography>
+            <TeamMemberSelector />
+          </Box>
+        </FormDialogSection>
+      </FormDialogContent>
+    </FormDialog>
   );
 };

@@ -1,53 +1,134 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Stack, Button, Checkbox, FormControlLabel, FormControl, FormLabel, RadioGroup, Radio } from '@mui/material';
+import {
+  TextField,
+  Stack,
+  Checkbox,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
+} from '@mui/material';
+import { FormDialog, FormDialogContent, FormDialogSection } from '../../../components/ui';
 
 export interface EditForm {
   date: string;
   startTime: string;
-  endTime?: string;
-  note?: string;
-  isAbsence: boolean;
-  absenceReason?: string;
-  absenceType?: 'planned' | 'sudden';
+  endTime: string;
+  breakTime: string;
+  overtime: string;
+  isHoliday: boolean;
+  workType: string;
 }
 
 interface Props {
   open: boolean;
   form: EditForm;
-  onChange: (f: EditForm) => void;
+  onChange: (field: keyof EditForm, value: any) => void;
   onClose: () => void;
   onSave: () => void;
 }
 
-const TimecardEditDialog: React.FC<Props> = ({ open, form, onChange, onClose, onSave }) => (
-  <Dialog open={open} onClose={onClose}>
-    <DialogTitle sx={{ fontWeight: 'bold' }}>勤怠編集</DialogTitle>
-    <DialogContent>
-      <Stack spacing={2} sx={{ mt: 1 }}>
-        <TextField label="日付" type="date" value={form.date} onChange={(e) => onChange({ ...form, date: e.target.value })} InputLabelProps={{ shrink: true }} />
-        <FormControlLabel control={<Checkbox checked={form.isAbsence} onChange={(e) => onChange({ ...form, isAbsence: e.target.checked })} />} label="休暇" />
-        <TextField label="出勤時間" type="time" value={form.startTime} onChange={(e) => onChange({ ...form, startTime: e.target.value })} InputLabelProps={{ shrink: true }} disabled={form.isAbsence} />
-        <TextField label="退勤時間" type="time" value={form.endTime} onChange={(e) => onChange({ ...form, endTime: e.target.value })} InputLabelProps={{ shrink: true }} disabled={form.isAbsence} />
-        {form.isAbsence && (
-          <>
-            <TextField label="理由" value={form.absenceReason} onChange={(e) => onChange({ ...form, absenceReason: e.target.value })} />
-            <FormControl>
-              <FormLabel>種別</FormLabel>
-              <RadioGroup row value={form.absenceType} onChange={(e) => onChange({ ...form, absenceType: e.target.value as 'planned' | 'sudden' })}>
-                <FormControlLabel value="planned" control={<Radio />} label="計画" />
-                <FormControlLabel value="sudden" control={<Radio />} label="突発" />
+const TimecardEditDialog: React.FC<Props> = ({ 
+  open, 
+  form, 
+  onChange, 
+  onClose, 
+  onSave 
+}) => {
+  const isValid = form.date !== '' && form.startTime !== '' && form.endTime !== '';
+
+  return (
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      onSubmit={onSave}
+      title="勤怠編集"
+      size="sm"
+      isValid={isValid}
+      submitText="保存"
+    >
+      <FormDialogContent>
+        <FormDialogSection title="勤務情報">
+          <Stack spacing={2}>
+            <TextField
+              label="日付"
+              type="date"
+              value={form.date}
+              onChange={(e) => onChange('date', e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              size="small"
+              fullWidth
+            />
+            
+            <TextField
+              label="開始時刻"
+              type="time"
+              value={form.startTime}
+              onChange={(e) => onChange('startTime', e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              size="small"
+              fullWidth
+            />
+            
+            <TextField
+              label="終了時刻"
+              type="time"
+              value={form.endTime}
+              onChange={(e) => onChange('endTime', e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              size="small"
+              fullWidth
+            />
+            
+            <TextField
+              label="休憩時間（分）"
+              type="number"
+              value={form.breakTime}
+              onChange={(e) => onChange('breakTime', e.target.value)}
+              size="small"
+              fullWidth
+            />
+            
+            <TextField
+              label="残業時間（分）"
+              type="number"
+              value={form.overtime}
+              onChange={(e) => onChange('overtime', e.target.value)}
+              size="small"
+              fullWidth
+            />
+          </Stack>
+        </FormDialogSection>
+
+        <FormDialogSection title="勤務設定">
+          <Stack spacing={2}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={form.isHoliday}
+                  onChange={(e) => onChange('isHoliday', e.target.checked)}
+                />
+              }
+              label="休日出勤"
+            />
+            
+            <FormControl component="fieldset">
+              <FormLabel component="legend">勤務形態</FormLabel>
+              <RadioGroup
+                value={form.workType}
+                onChange={(e) => onChange('workType', e.target.value)}
+              >
+                <FormControlLabel value="通常" control={<Radio />} label="通常勤務" />
+                <FormControlLabel value="在宅" control={<Radio />} label="在宅勤務" />
+                <FormControlLabel value="出張" control={<Radio />} label="出張" />
               </RadioGroup>
             </FormControl>
-          </>
-        )}
-        <TextField label="備考" value={form.note} onChange={(e) => onChange({ ...form, note: e.target.value })} multiline rows={2} />
-      </Stack>
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose} variant="outlined">キャンセル</Button>
-      <Button onClick={onSave} variant="contained">保存</Button>
-    </DialogActions>
-  </Dialog>
-);
+          </Stack>
+        </FormDialogSection>
+      </FormDialogContent>
+    </FormDialog>
+  );
+};
 
 export default TimecardEditDialog;

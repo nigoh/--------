@@ -141,6 +141,8 @@ export const FormDialogContent: React.FC<FormDialogContentProps> = ({
   return (
     <Box
       sx={{
+        // マージンとパディングを設定
+        padding: spacing,
         display: 'flex',
         flexDirection: 'column',
         gap: spacing,

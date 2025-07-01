@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   TextField,
   Typography,
   Box,
   Stack,
-  Fade,
   Alert,
   Chip,
   ButtonGroup,
+  Button,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Remove as RemoveIcon,
   Inventory as InventoryIcon,
 } from '@mui/icons-material';
+import { FormDialog, FormDialogContent, FormDialogSection } from '../../components/ui';
 import { EquipmentItem } from './useEquipmentStore';
 
 interface StockAdjustmentDialogProps {
@@ -37,6 +33,7 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
   const [adjustment, setAdjustment] = useState('');
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'remove' | 'set'>('add');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -46,129 +43,118 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
     }
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
 
-    if (!item) return;
-
-    const value = Number(adjustment);
-    if (isNaN(value) || value <= 0) {
-      setError('正の数値を入力してください');
+    if (!item) {
+      setError('備品が選択されていません');
       return;
     }
 
-    let delta = 0;
-    
-    switch (adjustmentType) {
-      case 'add':
-        delta = value;
-        break;
-      case 'remove':
-        if (value > item.quantity) {
-          setError(`在庫数量(${item.quantity})を超えて減らすことはできません`);
-          return;
-        }
-        delta = -value;
-        break;
-      case 'set':
-        delta = value - item.quantity;
-        break;
+    const adjustmentNum = parseInt(adjustment);
+    if (isNaN(adjustmentNum) || adjustmentNum <= 0) {
+      setError('正しい数量を入力してください');
+      return;
     }
 
-    onAdjust(item.id, delta);
-    handleClose();
+    setIsSubmitting(true);
+    try {
+      let delta = 0;
+      
+      switch (adjustmentType) {
+        case 'add':
+          delta = adjustmentNum;
+          break;
+        case 'remove':
+          if (adjustmentNum > item.quantity) {
+            setError(`減らす数量が在庫数(${item.quantity})を超えています`);
+            setIsSubmitting(false);
+            return;
+          }
+          delta = -adjustmentNum;
+          break;
+        case 'set':
+          delta = adjustmentNum - item.quantity;
+          break;
+      }
+
+      onAdjust(item.id, delta);
+      onClose();
+    } catch (err) {
+      setError('在庫調整に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleClose = () => {
-    setAdjustment('');
-    setAdjustmentType('add');
-    setError(null);
-    onClose();
-  };
+  const isValid = adjustment !== '' && parseInt(adjustment) > 0;
 
   const getNewQuantity = () => {
     if (!item || !adjustment) return item?.quantity || 0;
     
-    const value = Number(adjustment);
-    if (isNaN(value)) return item.quantity;
+    const adjustmentNum = parseInt(adjustment);
+    if (isNaN(adjustmentNum)) return item.quantity;
 
     switch (adjustmentType) {
       case 'add':
-        return item.quantity + value;
+        return item.quantity + adjustmentNum;
       case 'remove':
-        return Math.max(0, item.quantity - value);
+        return Math.max(0, item.quantity - adjustmentNum);
       case 'set':
-        return Math.max(0, value);
+        return adjustmentNum;
       default:
         return item.quantity;
     }
   };
 
-  const newQuantity = getNewQuantity();
+  if (!item) return null;
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      TransitionComponent={Fade}
-      slotProps={{
-        paper: {
-          sx: {
-            borderRadius: 2,
-          }
-        }
-      }}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      title="在庫調整"
+      size="sm"
+      loading={isSubmitting}
+      isValid={isValid}
+      submitText="調整実行"
     >
-      <form onSubmit={handleSubmit}>
-        <DialogTitle>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <InventoryIcon />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              在庫調整
-            </Typography>
-          </Stack>
-          {item && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {item.name} ({item.category})
-            </Typography>
-          )}
-        </DialogTitle>
+      <FormDialogContent>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            {error && (
-              <Alert severity="error" onClose={() => setError(null)}>
-                {error}
-              </Alert>
-            )}
-
-            {/* 現在の在庫数 */}
-            <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                現在の在庫数
+        <FormDialogSection title="備品情報">
+          <Box sx={{ p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
+            <Stack spacing={1}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <InventoryIcon color="primary" />
+                {item.name}
               </Typography>
-              <Chip
-                label={`${item?.quantity || 0} 個`}
-                color="primary"
-                variant="outlined"
-                size="medium"
-              />
-            </Box>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Chip label={item.category} size="small" variant="outlined" />
+                <Typography variant="body2" color="text.secondary">
+                  現在の在庫: {item.quantity}個
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        </FormDialogSection>
 
-            {/* 調整方法 */}
+        <FormDialogSection title="調整設定">
+          <Stack spacing={2}>
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                調整方法
+              <Typography variant="body2" gutterBottom>
+                調整タイプ
               </Typography>
-              <ButtonGroup fullWidth variant="outlined">
+              <ButtonGroup fullWidth size="small">
                 <Button
                   variant={adjustmentType === 'add' ? 'contained' : 'outlined'}
                   onClick={() => setAdjustmentType('add')}
                   startIcon={<AddIcon />}
-                  color="success"
                 >
                   追加
                 </Button>
@@ -176,86 +162,39 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
                   variant={adjustmentType === 'remove' ? 'contained' : 'outlined'}
                   onClick={() => setAdjustmentType('remove')}
                   startIcon={<RemoveIcon />}
-                  color="error"
                 >
                   減少
                 </Button>
                 <Button
                   variant={adjustmentType === 'set' ? 'contained' : 'outlined'}
                   onClick={() => setAdjustmentType('set')}
-                  startIcon={<InventoryIcon />}
                 >
                   設定
                 </Button>
               </ButtonGroup>
             </Box>
 
-            {/* 数量入力 */}
             <TextField
-              label={
-                adjustmentType === 'add' ? '追加数量' :
-                adjustmentType === 'remove' ? '減少数量' : '設定数量'
-              }
+              label={adjustmentType === 'set' ? '設定する数量' : '調整数量'}
               type="number"
               value={adjustment}
               onChange={(e) => setAdjustment(e.target.value)}
-              fullWidth
               required
+              fullWidth
+              size="small"
               inputProps={{ min: 1 }}
-              helperText={
-                adjustmentType === 'add' ? '追加する数量を入力' :
-                adjustmentType === 'remove' ? '減らす数量を入力' : '新しい在庫数を入力'
-              }
             />
 
-            {/* 結果プレビュー */}
             {adjustment && (
-              <Box sx={{ 
-                p: 2, 
-                bgcolor: 'background.default', 
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider'
-              }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                  調整後の在庫数
+              <Box sx={{ p: 2, backgroundColor: 'primary.50', borderRadius: 1 }}>
+                <Typography variant="body2" color="primary">
+                  調整後の在庫: {getNewQuantity()}個
                 </Typography>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Typography variant="body1">
-                    {item?.quantity || 0} → {newQuantity}
-                  </Typography>
-                  <Chip
-                    label={`変更: ${adjustmentType === 'add' ? '+' : adjustmentType === 'remove' ? '-' : ''}${
-                      adjustmentType === 'set' ? 
-                        (newQuantity - (item?.quantity || 0)) : 
-                        adjustment
-                    }`}
-                    color={
-                      adjustmentType === 'add' ? 'success' :
-                      adjustmentType === 'remove' ? 'error' : 'info'
-                    }
-                    size="small"
-                  />
-                </Stack>
               </Box>
             )}
           </Stack>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={handleClose} color="inherit">
-            キャンセル
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{ fontWeight: 600 }}
-            disabled={!adjustment}
-          >
-            調整実行
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+        </FormDialogSection>
+      </FormDialogContent>
+    </FormDialog>
   );
 };
