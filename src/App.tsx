@@ -31,6 +31,7 @@ const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
+const MFAManagement = React.lazy(() => import('./auth').then(module => ({ default: module.MFAManagement })));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -232,6 +233,16 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ダイアログデモを読み込み中..." />}>
                       <DialogShowcase />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={7}>
+                <PageTransition mode="fade" key="mfa-management">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="MFA管理ページを読み込み中..." />}>
+                      <MFAManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>

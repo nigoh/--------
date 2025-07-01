@@ -8,22 +8,26 @@ import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
   type UserCredential,
+  type MultiFactorError,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import type { LoginFormData, AuthErrorCode } from '../types';
+import type { MultiFactorResolver } from 'firebase/auth';
 
 // ログインフックの戻り値型
 interface UseLoginReturn {
   // 状態
   isLoading: boolean;
   error: string | null;
+  mfaResolver: MultiFactorResolver | null;
   
   // アクション
   loginWithEmail: (data: LoginFormData) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   clearError: () => void;
+  clearMfaResolver: () => void;
 }
 
 /**
@@ -32,8 +36,9 @@ interface UseLoginReturn {
 export const useLogin = (): UseLoginReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
   
-  const { setLastLogin, setError: setStoreError } = useAuthStore();
+  const { setLastLogin, setError: setStoreError, setMfaRequired } = useAuthStore();
 
   // エラーメッセージの変換
   const getErrorMessage = useCallback((errorCode: string): string => {
@@ -55,6 +60,12 @@ export const useLogin = (): UseLoginReturn => {
     setStoreError(null);
   }, [setStoreError]);
 
+  // MFAリゾルバークリア
+  const clearMfaResolver = useCallback(() => {
+    setMfaResolver(null);
+    setMfaRequired(false);
+  }, [setMfaRequired]);
+
   // メール・パスワードでのログイン
   const loginWithEmail = useCallback(async (data: LoginFormData): Promise<boolean> => {
     try {
@@ -69,12 +80,23 @@ export const useLogin = (): UseLoginReturn => {
 
       if (userCredential.user) {
         setLastLogin('email');
+        clearMfaResolver();
         console.log('✅ メール認証でログインしました');
         return true;
       }
 
       return false;
     } catch (error: any) {
+      // MFAが必要な場合
+      if (error.code === 'auth/multi-factor-auth-required') {
+        const resolver = error.resolver as MultiFactorResolver;
+        setMfaResolver(resolver);
+        setMfaRequired(true);
+        setError('多要素認証が必要です');
+        console.log('🔐 MFA認証が必要です');
+        return false;
+      }
+
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
@@ -83,7 +105,7 @@ export const useLogin = (): UseLoginReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [setLastLogin, getErrorMessage, setStoreError]);
+  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver]);
 
   // Googleログイン
   const loginWithGoogle = useCallback(async (): Promise<boolean> => {
@@ -102,6 +124,7 @@ export const useLogin = (): UseLoginReturn => {
 
       if (userCredential.user) {
         setLastLogin('google');
+        clearMfaResolver();
         console.log('✅ Google認証でログインしました');
         return true;
       }
@@ -114,6 +137,16 @@ export const useLogin = (): UseLoginReturn => {
         return false;
       }
 
+      // MFAが必要な場合
+      if (error.code === 'auth/multi-factor-auth-required') {
+        const resolver = error.resolver as MultiFactorResolver;
+        setMfaResolver(resolver);
+        setMfaRequired(true);
+        setError('多要素認証が必要です');
+        console.log('🔐 MFA認証が必要です');
+        return false;
+      }
+
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
@@ -122,7 +155,7 @@ export const useLogin = (): UseLoginReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [setLastLogin, getErrorMessage, setStoreError]);
+  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver]);
 
   // パスワード再設定
   const resetPassword = useCallback(async (email: string): Promise<boolean> => {
@@ -148,9 +181,11 @@ export const useLogin = (): UseLoginReturn => {
   return {
     isLoading,
     error,
+    mfaResolver,
     loginWithEmail,
     loginWithGoogle,
     resetPassword,
     clearError,
+    clearMfaResolver,
   };
 };

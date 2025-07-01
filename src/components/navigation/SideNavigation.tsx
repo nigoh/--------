@@ -37,6 +37,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ViewModule as DialogIcon,
   Logout as LogoutIcon,
+  Security as SecurityIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../theme/componentStyles';
 import { useAuth } from '../../auth';
@@ -130,6 +131,12 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       label: 'ダイアログデモ',
       icon: <DialogIcon />,
       index: 6,
+    },
+    {
+      id: 'mfa-management',
+      label: 'MFA管理',
+      icon: <SecurityIcon />,
+      index: 7,
     },
   ];
 

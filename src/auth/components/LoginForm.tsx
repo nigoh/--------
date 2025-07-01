@@ -32,6 +32,7 @@ import { LoadingButton } from '@mui/lab';
 import { useLogin } from '../hooks/useLogin';
 import { isPasskeySupported, checkBiometricAvailability } from '../passkey';
 import { spacingTokens, shapeTokens } from '../../theme/designSystem';
+import { MFAVerificationDialog } from './MFAVerificationDialog';
 import type { LoginFormData } from '../types';
 
 // Props型定義
@@ -50,7 +51,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSuccess,
 }) => {
   const theme = useTheme();
-  const { isLoading, error, loginWithEmail, loginWithGoogle, clearError } = useLogin();
+  const { 
+    isLoading, 
+    error, 
+    mfaResolver,
+    loginWithEmail, 
+    loginWithGoogle, 
+    clearError,
+    clearMfaResolver
+  } = useLogin();
 
   // フォーム状態
   const [formData, setFormData] = useState<LoginFormData>({
@@ -112,14 +121,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   }, []);
 
   return (
-    <Card
-      elevation={2}
-      sx={{
-        maxWidth: 400,
-        width: '100%',
-        borderRadius: shapeTokens.corner.large,
-      }}
-    >
+    <Box>
+      <Card
+        elevation={2}
+        sx={{
+          maxWidth: 400,
+          width: '100%',
+          borderRadius: shapeTokens.corner.large,
+        }}
+      >
       <CardContent sx={{ p: spacingTokens.xl }}>
         {/* ヘッダー */}
         <Box sx={{ textAlign: 'center', mb: spacingTokens.lg }}>
@@ -285,5 +295,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         )}
       </CardContent>
     </Card>
-  );
+
+    {/* MFA検証ダイアログ */}
+    <MFAVerificationDialog
+      open={!!mfaResolver}
+      resolver={mfaResolver}
+      onSuccess={() => {
+        clearMfaResolver();
+        onLoginSuccess?.();
+      }}
+      onCancel={() => {
+        clearMfaResolver();
+      }}
+    />
+  </Box>
+);
 };

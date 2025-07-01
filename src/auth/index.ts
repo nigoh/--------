@@ -30,6 +30,7 @@ export { useAuthStore, useAuthSelectors } from './stores/useAuthStore';
 // フック
 export { useLogin } from './hooks/useLogin';
 export { useRegister } from './hooks/useRegister';
+export { useMFA } from './hooks/useMFA';
 
 // パスキー
 export {
@@ -49,3 +50,6 @@ export type {
 export { LoginForm } from './components/LoginForm';
 export { RegisterForm } from './components/RegisterForm';
 export { AuthPage } from './components/AuthPage';
+export { MFASetupDialog } from './components/MFASetupDialog';
+export { MFAVerificationDialog } from './components/MFAVerificationDialog';
+export { MFAManagement } from './components/MFAManagement';
