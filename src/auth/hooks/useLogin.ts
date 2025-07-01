@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthStore } from '../stores/useAuthStore';
+import { authenticateWithPasskey, formatCredentialResponse } from '../passkey';
 import type { LoginFormData, AuthErrorCode } from '../types';
 import type { MultiFactorResolver } from 'firebase/auth';
 
@@ -25,6 +26,7 @@ interface UseLoginReturn {
   // アクション
   loginWithEmail: (data: LoginFormData) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
+  loginWithPasskey: () => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   clearError: () => void;
   clearMfaResolver: () => void;
@@ -157,6 +159,68 @@ export const useLogin = (): UseLoginReturn => {
     }
   }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver]);
 
+  // パスキーログイン
+  const loginWithPasskey = useCallback(async (): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // 認証チャレンジを取得（本来はサーバーから取得）
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      const challengeBase64 = btoa(String.fromCharCode(...challenge))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+
+      // パスキー認証を実行
+      const credential = await authenticateWithPasskey({
+        challenge: challengeBase64,
+        // 登録済みの認証子を指定（実際の実装では保存された情報を使用）
+        allowCredentials: undefined, // 全ての登録済み認証子を許可
+      });
+
+      if (!credential) {
+        throw new Error('パスキー認証に失敗しました');
+      }
+
+      // 認証レスポンスを整形
+      const formattedResponse = formatCredentialResponse(credential);
+      
+      // TODO: Firebase Custom Tokenベースの認証
+      // 現在はデモンストレーション用のモック認証
+      console.log('✅ パスキー認証レスポンス:', formattedResponse);
+
+      // 一時的にゲストユーザーとしてログイン（デモ用）
+      // 実際の実装では、サーバーでパスキーを検証してFirebase Custom Tokenを発行
+      setLastLogin('passkey');
+      clearMfaResolver();
+      
+      console.log('✅ パスキーでログインしました（デモモード）');
+      return true;
+
+    } catch (error: any) {
+      console.error('❌ パスキーログインエラー:', error);
+      
+      // パスキー固有のエラーハンドリング
+      if (error.message.includes('キャンセル')) {
+        console.log('ℹ️ ユーザーがパスキー認証をキャンセルしました');
+        return false;
+      }
+      
+      if (error.message.includes('サポートされていません')) {
+        setError('このデバイスではパスキーがサポートされていません');
+      } else {
+        setError(error.message || 'パスキー認証に失敗しました');
+      }
+      
+      setStoreError(error.message || 'パスキー認証に失敗しました');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setLastLogin, setStoreError, clearMfaResolver]);
+
   // パスワード再設定
   const resetPassword = useCallback(async (email: string): Promise<boolean> => {
     try {
@@ -184,6 +248,7 @@ export const useLogin = (): UseLoginReturn => {
     mfaResolver,
     loginWithEmail,
     loginWithGoogle,
+    loginWithPasskey,
     resetPassword,
     clearError,
     clearMfaResolver,

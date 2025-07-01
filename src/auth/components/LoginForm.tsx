@@ -57,6 +57,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     mfaResolver,
     loginWithEmail, 
     loginWithGoogle, 
+    loginWithPasskey,
     clearError,
     clearMfaResolver
   } = useLogin();
@@ -114,11 +115,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
   }, [loginWithGoogle, onLoginSuccess]);
 
-  // パスキーログイン（今後実装）
+  // パスキーログイン
   const handlePasskeyLogin = useCallback(async () => {
-    console.log('パスキーログイン（未実装）');
-    // TODO: パスキー認証の実装
-  }, []);
+    try {
+      const success = await loginWithPasskey();
+      if (success && onLoginSuccess) {
+        onLoginSuccess();
+      }
+    } catch (error) {
+      console.error('パスキーログインエラー:', error);
+    }
+  }, [loginWithPasskey, onLoginSuccess]);
 
   return (
     <Box>
