@@ -35,6 +35,7 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  ViewModule as DialogIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../theme/componentStyles';
 
@@ -120,6 +121,12 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       label: '備品管理',
       icon: <InventoryIcon />,
       index: 5,
+    },
+    {
+      id: 'dialog-demo',
+      label: 'ダイアログデモ',
+      icon: <DialogIcon />,
+      index: 6,
     },
   ];
 

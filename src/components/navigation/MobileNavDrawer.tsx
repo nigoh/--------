@@ -19,7 +19,8 @@ import {
   Inventory as InventoryIcon,
   Settings as SettingsIcon,
   Speed as SpeedIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  ViewModule as DialogIcon
 } from '@mui/icons-material';
 import { createModernTheme } from '../../theme/modernTheme';
 import { useThemeContext } from '../../contexts/ThemeContext';
@@ -64,6 +65,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     { icon: <MeetingIcon />, label: 'ミーティング進行', index: 3 },
     { icon: <ExpenseIcon />, label: '経費管理', index: 4 },
     { icon: <InventoryIcon />, label: '備品管理', index: 5 },
+    { icon: <DialogIcon />, label: 'ダイアログデモ', index: 6 },
   ];
 
   const settingsNavigationItems = [

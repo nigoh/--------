@@ -28,6 +28,7 @@ const EmployeeRegister = React.lazy(() => import('./features/employeeRegister').
 const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
+const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -189,6 +190,16 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="備品管理を読み込み中..." />}>
                       <Equipment />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={6}>
+                <PageTransition mode="fade" key="dialog-demo">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="ダイアログデモを読み込み中..." />}>
+                      <DialogShowcase />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
