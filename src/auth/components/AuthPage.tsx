@@ -78,78 +78,115 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       sx={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: theme.palette.mode === 'dark'
-          ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
-          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        py: spacingTokens.xl,
-        px: spacingTokens.md,
+        padding: spacingTokens.md,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <Container maxWidth="sm">
+      
+      <Container 
+        maxWidth="sm" 
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: isMobile ? 'auto' : '80vh',
+          width: '100%',
+          position: 'relative',
+          zIndex: 10, // 1から10に増加
+        }}
+      >
         {/* 成功メッセージ */}
         {successMessage && (
           <Fade in={!!successMessage}>
-            <Alert
-              severity="success"
-              onClose={() => setSuccessMessage(null)}
-              sx={{ mb: spacingTokens.lg }}
-            >
-              {successMessage}
-            </Alert>
-          </Fade>
-        )}
-
-        {/* ログインフォーム */}
-        {authMode === 'login' && (
-          <Fade in={authMode === 'login'} timeout={300}>
-            <Box>
-              <LoginForm
-                onSwitchToRegister={() => setAuthMode('register')}
-                onForgotPassword={handleForgotPassword}
-                onLoginSuccess={handleAuthSuccess}
-              />
-            </Box>
-          </Fade>
-        )}
-
-        {/* 新規登録フォーム */}
-        {authMode === 'register' && (
-          <Fade in={authMode === 'register'} timeout={300}>
-            <Box>
-              <RegisterForm
-                onSwitchToLogin={() => setAuthMode('login')}
-                onRegisterSuccess={handleRegisterSuccess}
-              />
-            </Box>
-          </Fade>
-        )}
-
-        {/* パスワード再設定フォーム（今後実装） */}
-        {authMode === 'reset-password' && (
-          <Fade in={authMode === 'reset-password'} timeout={300}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" gutterBottom>
-                パスワード再設定
-              </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                パスワード再設定機能は今後実装予定です。
-              </Typography>
-              <Typography
-                variant="body2"
-                color="primary"
-                sx={{ cursor: 'pointer' }}
-                onClick={() => setAuthMode('login')}
+            <Box sx={{ width: '100%', mb: spacingTokens.lg }}>
+              <Alert
+                severity="success"
+                onClose={() => setSuccessMessage(null)}
+                sx={{
+                  background: 'rgba(76, 175, 80, 0.15)',
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${theme.palette.success.main}40`,
+                  color: theme.palette.success.main,
+                  '& .MuiAlert-icon': {
+                    color: theme.palette.success.main,
+                  },
+                  '& .MuiAlert-action': {
+                    color: theme.palette.success.main,
+                  },
+                }}
               >
-                ログインに戻る
-              </Typography>
+                {successMessage}
+              </Alert>
             </Box>
           </Fade>
         )}
+
+        {/* メインコンテンツエリア */}
+        <Box 
+          sx={{ 
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            flex: 1,
+          }}
+        >
+
+          {/* ログインフォーム */}
+          {authMode === 'login' && (
+            <Fade in={authMode === 'login'} timeout={300}>
+              <Box sx={{ width: '100%' }}>
+                <LoginForm
+                  onSwitchToRegister={() => setAuthMode('register')}
+                  onForgotPassword={handleForgotPassword}
+                  onLoginSuccess={handleAuthSuccess}
+                />
+              </Box>
+            </Fade>
+          )}
+
+          {/* 新規登録フォーム */}
+          {authMode === 'register' && (
+            <Fade in={authMode === 'register'} timeout={300}>
+              <Box sx={{ width: '100%' }}>
+                <RegisterForm
+                  onSwitchToLogin={() => setAuthMode('login')}
+                  onRegisterSuccess={handleRegisterSuccess}
+                />
+              </Box>
+            </Fade>
+          )}
+
+          {/* パスワード再設定フォーム（今後実装） */}
+          {authMode === 'reset-password' && (
+            <Fade in={authMode === 'reset-password'} timeout={300}>
+              <Box sx={{ textAlign: 'center', width: '100%' }}>
+                <Typography variant="h5" gutterBottom>
+                  パスワード再設定
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  パスワード再設定機能は今後実装予定です。
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="primary"
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => setAuthMode('login')}
+                >
+                  ログインに戻る
+                </Typography>
+              </Box>
+            </Fade>
+          )}
+        </Box>
 
         {/* フッター */}
-        <Box sx={{ textAlign: 'center', mt: spacingTokens.xl }}>
+        <Box sx={{ textAlign: 'center', mt: spacingTokens.xl, width: '100%' }}>
           <Typography variant="body2" color="text.secondary">
             © 2025 WorkApp. All rights reserved.
           </Typography>

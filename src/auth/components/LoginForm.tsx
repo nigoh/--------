@@ -128,18 +128,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   }, [loginWithPasskey, onLoginSuccess]);
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
       <Card
         elevation={2}
         sx={{
           maxWidth: 400,
           width: '100%',
           borderRadius: shapeTokens.corner.large,
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         }}
       >
-      <CardContent sx={{ p: spacingTokens.xl }}>
+      <CardContent sx={{ p: spacingTokens.md }}>
         {/* ヘッダー */}
-        <Box sx={{ textAlign: 'center', mb: spacingTokens.lg }}>
+        <Box sx={{ textAlign: 'center', mb: spacingTokens.md }}>
           <Typography variant="h4" component="h1" gutterBottom>
             ログイン
           </Typography>
@@ -156,7 +160,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         )}
 
         {/* メール・パスワードフォーム */}
-        <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: spacingTokens.lg }}>
+        <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: spacingTokens.md }}>
           <Stack spacing={spacingTokens.md}>
             <TextField
               fullWidth
@@ -217,6 +221,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   />
                 }
                 label="ログイン状態を保持"
+                sx={{
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: '0.875rem', // 14px (body2相当)
+                    color: 'text.secondary',
+                  }
+                }}
               />
               
               {onForgotPassword && (

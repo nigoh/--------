@@ -18,6 +18,7 @@ import {
   InputAdornment,
   Stack,
   LinearProgress,
+  useTheme,
 } from '@mui/material';
 import {
   Visibility,
@@ -53,6 +54,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSwitchToLogin,
   onRegisterSuccess,
 }) => {
+  const theme = useTheme();
   const { isLoading, error, register, clearError } = useRegister();
 
   // フォーム状態
@@ -145,14 +147,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const showPasswordMismatch = formData.confirmPassword && !passwordMatch;
 
   return (
-    <Card
-      elevation={2}
-      sx={{
-        maxWidth: 450,
-        width: '100%',
-        borderRadius: shapeTokens.corner.large,
-      }}
-    >
+    <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <Card
+        elevation={2}
+        sx={{
+          maxWidth: 450,
+          width: '100%',
+          borderRadius: shapeTokens.corner.large,
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        }}
+      >
       <CardContent sx={{ p: spacingTokens.xl }}>
         {/* ヘッダー */}
         <Box sx={{ textAlign: 'center', mb: spacingTokens.lg }}>
@@ -380,5 +387,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         )}
       </CardContent>
     </Card>
+    </Box>
   );
 };

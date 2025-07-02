@@ -33,6 +33,9 @@ const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
 const MFAManagement = React.lazy(() => import('./auth').then(module => ({ default: module.MFAManagement })));
 
+// 背景アニメーション（テスト用）
+import GeometricAnimatedBackground from './components/GeometricAnimatedBackground';
+
 // メインアプリコンテンツ
 function AppContent() {
   const [members, setMembers] = useState<string[]>([]);
@@ -110,6 +113,9 @@ function AppContent() {
           overflow: 'hidden', 
           display: 'flex',
         }}>
+          
+          {/* 背景アニメーション（テスト用） */}
+          <GeometricAnimatedBackground />
           
           {/* 左側ナビゲーション - デスクトップのみ */}
           {!isMobile && (
