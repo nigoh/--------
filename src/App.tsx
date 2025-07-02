@@ -44,10 +44,10 @@ function AppContent() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [performanceOpen, setPerformanceOpen] = useState(false);
   
-  const { isDarkMode, isHighContrast, fontSize } = useThemeContext();
+  const { isDarkMode, isHighContrast, fontSize, mode } = useThemeContext();
   const { isAuthenticated, isLoading } = useAuth();
   const currentTheme = createModernTheme({ 
-    mode: isDarkMode ? 'dark' : 'light', 
+    mode: mode === 'system' ? (isDarkMode ? 'dark' : 'light') : mode, 
     highContrast: isHighContrast, 
     fontSize 
   });

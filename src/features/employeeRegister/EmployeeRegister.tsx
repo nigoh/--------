@@ -31,37 +31,38 @@ export const EmployeeRegister: React.FC = () => {
   };
 
   // ヘッダーコンテンツ（フィルターと新規追加ボタン）
-  const headerContents = [
-    <Box key="filters" sx={{ flex: 1, maxWidth: 600 }}>
-      <EmployeeFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        departments={DEPARTMENTS}
-        departmentFilter={departmentFilter}
-        statusFilter={statusFilter}
-        onDepartmentChange={setDepartmentFilter}
-        onStatusChange={setStatusFilter}
-        onClearFilters={handleClearFilters}
-      />
-    </Box>,
-    <Button
-      key="add-employee"
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={handleAddEmployee}
-      sx={{
-        borderRadius: 2,
-        px: 3,
-        py: 1.5,
-        fontWeight: 500,
-        textTransform: 'none',
-        minWidth: 'auto',
-        flexShrink: 0,
-      }}
-    >
-      社員登録
-    </Button>
-  ];
+  const headerActions = (
+    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Box sx={{ flex: 1, minWidth: 300, maxWidth: 600 }}>
+        <EmployeeFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          departments={DEPARTMENTS}
+          departmentFilter={departmentFilter}
+          statusFilter={statusFilter}
+          onDepartmentChange={setDepartmentFilter}
+          onStatusChange={setStatusFilter}
+          onClearFilters={handleClearFilters}
+        />
+      </Box>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={handleAddEmployee}
+        sx={{
+          borderRadius: 2,
+          px: 3,
+          py: 1.5,
+          fontWeight: 500,
+          textTransform: 'none',
+          minWidth: 'auto',
+          flexShrink: 0,
+        }}
+      >
+        社員登録
+      </Button>
+    </Box>
+  );
 
   return (
     <FeatureLayout maxWidth={false}>
@@ -69,7 +70,8 @@ export const EmployeeRegister: React.FC = () => {
         title='社員管理'
         icon={<GroupIcon fontSize='large' />}
         subtitle="社員の登録、編集、管理を行います。"
-        contents={headerContents}
+        actions={headerActions}
+        showAddButton={false}
       />
       <FeatureContent variant="transparent" padding={0}>
         <EnhancedEmployeeList 

@@ -28,6 +28,8 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../theme/componentStyles';
+import { gradientTokens } from '../../theme/gradients';
+import { spacingTokens, motionTokens } from '../../theme/designSystem';
 import { useAuth } from '../../auth';
 import { getMainNavigationItems, getSettingsNavigationItems } from './navigationItems';
 import type { NavigationItem } from './navigationItems';
@@ -121,20 +123,46 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
           px: collapsed ? 2 : 2.5,
           py: 1,
           ml: depth * 2,
-          borderRadius: 2,
+          borderRadius: '12px',
           mx: 1,
           mb: 0.5,
           background: isActive 
-            ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+            ? gradientTokens.primary.bold
             : 'transparent',
           color: isActive ? 'white' : theme.palette.text.primary,
           cursor: 'pointer',
           userSelect: 'none',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
           '&:hover': {
-            backgroundColor: isActive 
-              ? alpha(theme.palette.primary.main, 0.8)
-              : alpha(theme.palette.primary.main, 0.08),
+            background: isActive 
+              ? gradientTokens.primary.dark
+              : gradientTokens.themeAware.glass(theme.palette.mode === 'dark'),
+            transform: 'translateX(4px)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           },
+          '&:active': {
+            transform: 'translateX(2px)',
+          },
+          // Glowing border effect for active item
+          ...(isActive && {
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: '12px',
+              padding: '1px',
+              background: gradientTokens.primary.bold,
+              mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              maskComposite: 'xor',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+            },
+          }),
         }}
       >
         <Box
@@ -145,6 +173,10 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
             minWidth: 24,
             mr: collapsed ? 0 : 3,
             color: isActive ? 'white' : theme.palette.text.primary,
+            '& svg': {
+              fontSize: '1.25rem',
+              filter: isActive ? 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))' : 'none',
+            },
           }}
         >
           {item.icon}
@@ -159,12 +191,13 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
                 fontWeight: isActive ? 600 : 500,
                 color: 'inherit',
                 flex: 1,
+                letterSpacing: '0.01em',
               }}
             >
               {item.label}
             </Typography>
             
-            {/* バッジ表示 */}
+            {/* バッジ表示（改良版） */}
             {item.badge && (
               <Chip
                 label={item.badge}
@@ -172,19 +205,28 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
                 sx={{
                   height: 20,
                   fontSize: '0.625rem',
-                  backgroundColor: isActive 
+                  fontWeight: 600,
+                  background: isActive 
                     ? 'rgba(255,255,255,0.2)' 
-                    : theme.palette.primary.main,
-                  color: isActive ? 'white' : 'white',
+                    : gradientTokens.tertiary.subtle,
+                  color: isActive ? 'white' : theme.palette.tertiary?.main || theme.palette.primary.main,
                   mr: hasChildren ? 1 : 0,
+                  backdropFilter: 'blur(8px)',
+                  border: 'none',
                 }}
               />
             )}
             
             {/* 展開アイコン */}
             {hasChildren && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {isExpanded ? <ExpandLess /> : <ExpandMore />}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                opacity: 0.7,
+                transition: `transform ${motionTokens.duration.short4} ${motionTokens.easing.standard}`,
+                transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+              }}>
+                <ExpandLess fontSize="small" />
               </Box>
             )}
           </>
@@ -202,6 +244,18 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
             enterDelay={0}
             leaveDelay={0}
             TransitionProps={{ timeout: 0 }}
+            arrow
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  background: gradientTokens.themeAware.surfaceElevated(theme.palette.mode === 'dark'),
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                },
+              },
+            }}
           >
             {buttonContent}
           </Tooltip>
@@ -211,9 +265,11 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
 
         {/* 子項目 */}
         {hasChildren && !collapsed && isExpanded && (
-          <Box sx={{ pl: 2 }}>
-            {item.children!.map(child => renderNavigationItem(child, depth + 1))}
-          </Box>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <Box sx={{ pl: 2 }}>
+              {item.children!.map(child => renderNavigationItem(child, depth + 1))}
+            </Box>
+          </Collapse>
         )}
       </Box>
     );
@@ -225,39 +281,64 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
         width: collapsed ? 80 : width,
         height: '100vh',
         flexShrink: 0,
-        ...surfaceStyles.surface(theme),
-        borderRight: `1px solid ${theme.palette.divider}`,
+        background: gradientTokens.themeAware.surfaceElevated(theme.palette.mode === 'dark'),
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRight: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         display: 'flex',
         flexDirection: 'column',
-        transition: 'width 0.2s ease-out',
+        transition: `all ${motionTokens.duration.medium3} ${motionTokens.easing.emphasized}`,
         position: 'relative',
         zIndex: theme.zIndex.drawer,
         cursor: collapsed ? 'pointer' : 'default',
+        boxShadow: '0 0 20px rgba(0, 0, 0, 0.1)',
         '&:hover': collapsed ? {
           backgroundColor: alpha(theme.palette.primary.main, 0.02),
         } : {},
+        // Glassmorphism border effect
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '0 16px 16px 0',
+          background: gradientTokens.themeAware.glassBorder(theme.palette.mode === 'dark'),
+          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          maskComposite: 'xor',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          padding: '1px',
+        },
       }}
       onClick={collapsed && onToggleCollapse ? onToggleCollapse : undefined}
       title={collapsed ? 'クリックして展開' : undefined}
     >
-      {/* ヘッダー */}
+      {/* ヘッダー（改良版） */}
       <Box
         sx={{
           p: collapsed ? 2 : 3,
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
           position: 'relative',
+          background: gradientTokens.themeAware.glass(theme.palette.mode === 'dark'),
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar
             sx={{
-              bgcolor: theme.palette.primary.main,
-              width: collapsed ? 32 : 40,
-              height: collapsed ? 32 : 40,
+              bgcolor: gradientTokens.primary.bold,
+              background: gradientTokens.primary.bold,
+              width: collapsed ? 40 : 48,
+              height: collapsed ? 40 : 48,
               mr: collapsed ? 0 : 2,
+              fontSize: collapsed ? '1rem' : '1.25rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              border: `2px solid ${alpha('#ffffff', 0.2)}`,
             }}
           >
             {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
@@ -265,13 +346,26 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
           
           {!collapsed && (
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  background: gradientTokens.primary.bold,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
                 {user?.displayName || 'ユーザー'}
               </Typography>
               <Typography 
                 variant="caption" 
                 color="text.secondary"
-                sx={{ fontSize: '0.75rem' }}
+                sx={{ 
+                  fontSize: '0.75rem',
+                  opacity: 0.7,
+                }}
               >
                 {user?.email || 'ログイン済み'}
               </Typography>
@@ -279,7 +373,7 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
           )}
         </Box>
 
-        {/* 折りたたみボタン（展開時のみ表示） */}
+        {/* 折りたたみボタン（改良版） */}
         {onToggleCollapse && !collapsed && (
           <Tooltip 
             title="折りたたみ" 
@@ -293,54 +387,64 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
               onClick={onToggleCollapse}
               disableRipple
               sx={{
-                bgcolor: theme.palette.background.paper,
-                width: 32,
-                height: 32,
+                bgcolor: alpha(theme.palette.background.paper, 0.8),
+                width: 36,
+                height: 36,
+                backdropFilter: 'blur(8px)',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
                 '&:hover': {
-                  bgcolor: theme.palette.action.hover,
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  transform: 'scale(1.05)',
                 },
                 '&:active': {
-                  bgcolor: theme.palette.action.selected,
-                },
-                '&:focus': {
-                  outline: 'none',
-                  boxShadow: 'none',
+                  transform: 'scale(0.95)',
                 },
               }}
             >
-              <ChevronLeftIcon fontSize="medium" />
+              <ChevronLeftIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
       </Box>
 
       {/* メインナビゲーションリスト */}
-      <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', py: spacingTokens.sm }}>
         <Box>
           {mainNavigationItems.map(item => renderNavigationItem(item))}
         </Box>
       </Box>
 
       {/* 設定セクション */}
-      <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, pt: 1 }}>
+      <Box sx={{ 
+        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`, 
+        pt: spacingTokens.sm,
+        background: gradientTokens.themeAware.glass(theme.palette.mode === 'dark'),
+      }}>
         <Box sx={{ py: 0 }}>
           {settingsNavigationItems.map(item => renderNavigationItem(item))}
         </Box>
       </Box>
 
-      {/* フッター */}
+      {/* フッター（改良版） */}
       {!collapsed && (
-        <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+        <Box sx={{ 
+          p: 2, 
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          background: gradientTokens.themeAware.glass(theme.palette.mode === 'dark'),
+        }}>
           <Typography 
             variant="caption" 
             color="text.secondary"
             sx={{ 
               display: 'block',
               textAlign: 'center',
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
+              opacity: 0.6,
+              fontWeight: 500,
             }}
           >
-            v1.0.0 - Material Design 3
+            WorkApp v2.0 - MD3
           </Typography>
         </Box>
       )}

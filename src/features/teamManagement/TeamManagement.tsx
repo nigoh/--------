@@ -16,46 +16,47 @@ const TeamManagement: React.FC = () => {
   const { searchQuery, setSearchQuery } = useTeamStore();
 
   // ヘッダーコンテンツ（検索フィールドと新規追加ボタン）
-  const headerContents = [
-    <Box key="search" sx={{ flex: 1, maxWidth: 400 }}>
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="チーム名で検索..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
-            ),
-          }
-        }}
+  const headerActions = (
+    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Box sx={{ flex: 1, minWidth: 300, maxWidth: 400 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="チーム名で検索..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+              ),
+            }
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+            }
+          }}
+        />
+      </Box>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={openCreateDialog}
         sx={{
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-          }
+          borderRadius: 2,
+          px: 3,
+          py: 1.5,
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          textTransform: 'none',
+          minWidth: 'auto',
         }}
-      />
-    </Box>,
-    <Button
-      key="add-team"
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={openCreateDialog}
-      sx={{
-        borderRadius: 2,
-        px: 3,
-        py: 1.5,
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        textTransform: 'none',
-        minWidth: 'auto',
-      }}
-    >
-      新しいチーム
-    </Button>
-  ];
+      >
+        新しいチーム
+      </Button>
+    </Box>
+  );
 
   return (
     <FeatureLayout maxWidth={false}>
@@ -63,7 +64,8 @@ const TeamManagement: React.FC = () => {
         title='チーム管理'
         icon={<GroupIcon fontSize='large' />}
         subtitle="チームの作成、編集、チームメンバー管理を行います。"
-        contents={headerContents}
+        actions={headerActions}
+        showAddButton={false}
       />
       
       <FeatureContent variant="transparent" padding={0}>

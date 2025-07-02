@@ -1,11 +1,16 @@
 /**
- * Material Design 3 Modern Theme
+ * Material Design 3 Modern Theme - MUI v7 Compatible
  * 
- * 新しいデザインシステムに基づいた統一されたテーマ
- * CSS Variables対応、アクセシビリティ配慮、パフォーマンス最適化
+ * MUI v7最新推奨パターンに基づいた統一されたテーマ
+ * - CSS Variables完全対応 (cssVariables: true)
+ * - colorSchemes API採用
+ * - theme.applyStyles() 使用
+ * - Material Design 3準拠
+ * - アクセシビリティ配慮、パフォーマンス最適化
  */
 
 import { createTheme, Theme } from '@mui/material/styles';
+import type {} from '@mui/material/themeCssVarsAugmentation';
 import { 
   colorTokens, 
   typographyTokens, 
@@ -16,6 +21,7 @@ import {
 } from './designSystem';
 import { globalIMEStyles, getIMEStyles, japaneseInputStyles } from './imeStyles';
 
+// MUI v7 Breakpoint overrides
 declare module '@mui/material/styles' {
   interface BreakpointOverrides {
     xs: true;
@@ -24,15 +30,34 @@ declare module '@mui/material/styles' {
     lg: true;
     xl: true;
   }
+  
+  // Custom palette extensions for CSS variables
+  interface PaletteOptions {
+    surface?: {
+      main?: string;
+      variant?: string;
+    };
+    outline?: string;
+    outlineVariant?: string;
+  }
+  
+  interface Palette {
+    surface: {
+      main: string;
+      variant: string;
+    };
+    outline: string;
+    outlineVariant: string;
+  }
 }
 
 export interface ThemeOptions {
-  mode: 'light' | 'dark';
-  highContrast: boolean;
-  fontSize: 'small' | 'medium' | 'large';
+  mode?: 'light' | 'dark' | 'system';
+  highContrast?: boolean;
+  fontSize?: 'small' | 'medium' | 'large';
 }
 
-// Typography scale mapping for different font sizes
+// Typography scale mapping for different font sizes - MUI v7 compatible
 const getTypographyScale = (fontSize: 'small' | 'medium' | 'large') => {
   const scaleFactor = fontSize === 'small' ? 0.875 : fontSize === 'large' ? 1.125 : 1;
   
@@ -94,105 +119,134 @@ const getTypographyScale = (fontSize: 'small' | 'medium' | 'large') => {
   };
 };
 
-// テーマ作成関数
-export const createModernTheme = (options: ThemeOptions): Theme => {
-  const { mode, highContrast, fontSize } = options;
+// MUI v7 推奨テーマ作成関数 - CSS Variables & colorSchemes API採用
+export const createModernTheme = (options: ThemeOptions = {}): Theme => {
+  const { 
+    mode = 'system', 
+    highContrast = false, 
+    fontSize = 'medium' 
+  } = options;
   
-  // ベースカラーパレット
-  const basePalette = {
-    mode,
-    primary: {
-      main: mode === 'dark' ? colorTokens.primary[80] : colorTokens.primary[40],
-      light: mode === 'dark' ? colorTokens.primary[90] : colorTokens.primary[50],
-      dark: mode === 'dark' ? colorTokens.primary[70] : colorTokens.primary[30],
-      contrastText: mode === 'dark' ? colorTokens.primary[20] : colorTokens.primary[100],
-    },
-    secondary: {
-      main: mode === 'dark' ? colorTokens.secondary[80] : colorTokens.secondary[40],
-      light: mode === 'dark' ? colorTokens.secondary[90] : colorTokens.secondary[50],
-      dark: mode === 'dark' ? colorTokens.secondary[70] : colorTokens.secondary[30],
-      contrastText: mode === 'dark' ? colorTokens.secondary[20] : colorTokens.secondary[100],
-    },
-    error: {
-      main: mode === 'dark' ? colorTokens.error[80] : colorTokens.error[40],
-      light: mode === 'dark' ? colorTokens.error[90] : colorTokens.error[50],
-      dark: mode === 'dark' ? colorTokens.error[70] : colorTokens.error[30],
-      contrastText: mode === 'dark' ? colorTokens.error[20] : colorTokens.error[100],
-    },
-    warning: {
-      main: mode === 'dark' ? colorTokens.tertiary[80] : colorTokens.tertiary[40],
-      light: mode === 'dark' ? colorTokens.tertiary[90] : colorTokens.tertiary[50],
-      dark: mode === 'dark' ? colorTokens.tertiary[70] : colorTokens.tertiary[30],
-      contrastText: mode === 'dark' ? colorTokens.tertiary[20] : colorTokens.tertiary[100],
-    },
-    info: {
-      main: mode === 'dark' ? '#64B5F6' : '#2196F3', // Material Blue
-      light: mode === 'dark' ? '#90CAF9' : '#42A5F5',
-      dark: mode === 'dark' ? '#42A5F5' : '#1976D2',
-      contrastText: '#ffffff',
-    },
-    success: {
-      main: mode === 'dark' ? '#81C784' : '#4CAF50', // Material Green
-      light: mode === 'dark' ? '#A5D6A7' : '#66BB6A',
-      dark: mode === 'dark' ? '#66BB6A' : '#388E3C',
-      contrastText: '#ffffff',
-    },
-    background: {
-      default: mode === 'dark' ? colorTokens.neutral[10] : colorTokens.neutral[99],
-      paper: mode === 'dark' ? colorTokens.neutral[20] : colorTokens.neutral[100],
-    },
-    surface: {
-      main: mode === 'dark' ? colorTokens.neutral[20] : colorTokens.neutral[99],
-      variant: mode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[90],
-    },
-    text: {
-      primary: mode === 'dark' ? colorTokens.neutral[90] : colorTokens.neutral[10],
-      secondary: mode === 'dark' ? colorTokens.neutral[80] : colorTokens.neutral[30],
-      disabled: mode === 'dark' ? colorTokens.neutral[60] : colorTokens.neutral[50],
-    },
-    divider: mode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[80],
-    outline: mode === 'dark' ? colorTokens.neutralVariant[60] : colorTokens.neutralVariant[50],
-    outlineVariant: mode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[80],
-  };
+  // ベースカラーパレット - Material Design 3準拠
+  const createColorScheme = (schemeMode: 'light' | 'dark', isHighContrast: boolean = false) => {
+    if (isHighContrast) {
+      return {
+        palette: {
+          primary: {
+            main: schemeMode === 'dark' ? '#FFFFFF' : '#000000',
+            light: schemeMode === 'dark' ? '#FFFFFF' : '#333333',
+            dark: schemeMode === 'dark' ? '#CCCCCC' : '#000000',
+            contrastText: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+          },
+          secondary: {
+            main: schemeMode === 'dark' ? '#FFFF00' : '#0066CC',
+            light: schemeMode === 'dark' ? '#FFFF66' : '#3399FF',
+            dark: schemeMode === 'dark' ? '#CCCC00' : '#004499',
+            contrastText: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+          },
+          error: {
+            main: schemeMode === 'dark' ? '#FF6B6B' : '#CC0000',
+            light: schemeMode === 'dark' ? '#FF9999' : '#FF3333',
+            dark: schemeMode === 'dark' ? '#CC0000' : '#990000',
+            contrastText: '#FFFFFF',
+          },
+          background: {
+            default: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+            paper: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+          },
+          text: {
+            primary: schemeMode === 'dark' ? '#FFFFFF' : '#000000',
+            secondary: schemeMode === 'dark' ? '#CCCCCC' : '#333333',
+            disabled: schemeMode === 'dark' ? '#666666' : '#999999',
+          },
+          divider: schemeMode === 'dark' ? '#FFFFFF' : '#000000',
+          surface: {
+            main: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+            variant: schemeMode === 'dark' ? '#000000' : '#FFFFFF',
+          },
+          outline: schemeMode === 'dark' ? '#FFFFFF' : '#000000',
+          outlineVariant: schemeMode === 'dark' ? '#FFFFFF' : '#000000',
+        },
+      };
+    }
 
-  // ハイコントラスト用パレット
-  const highContrastPalette = {
-    mode,
-    primary: {
-      main: mode === 'dark' ? '#FFFFFF' : '#000000',
-      light: mode === 'dark' ? '#FFFFFF' : '#333333',
-      dark: mode === 'dark' ? '#CCCCCC' : '#000000',
-      contrastText: mode === 'dark' ? '#000000' : '#FFFFFF',
-    },
-    secondary: {
-      main: mode === 'dark' ? '#FFFF00' : '#0066CC',
-      light: mode === 'dark' ? '#FFFF66' : '#3399FF',
-      dark: mode === 'dark' ? '#CCCC00' : '#004499',
-      contrastText: mode === 'dark' ? '#000000' : '#FFFFFF',
-    },
-    error: {
-      main: mode === 'dark' ? '#FF6B6B' : '#CC0000',
-      light: mode === 'dark' ? '#FF9999' : '#FF3333',
-      dark: mode === 'dark' ? '#CC0000' : '#990000',
-      contrastText: '#FFFFFF',
-    },
-    background: {
-      default: mode === 'dark' ? '#000000' : '#FFFFFF',
-      paper: mode === 'dark' ? '#000000' : '#FFFFFF',
-    },
-    text: {
-      primary: mode === 'dark' ? '#FFFFFF' : '#000000',
-      secondary: mode === 'dark' ? '#CCCCCC' : '#333333',
-      disabled: mode === 'dark' ? '#666666' : '#999999',
-    },
-    divider: mode === 'dark' ? '#FFFFFF' : '#000000',
+    return {
+      palette: {
+        primary: {
+          main: schemeMode === 'dark' ? colorTokens.primary[70] : colorTokens.primary[50],
+          light: schemeMode === 'dark' ? colorTokens.primary[80] : colorTokens.primary[60],
+          dark: schemeMode === 'dark' ? colorTokens.primary[60] : colorTokens.primary[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.primary[10] : colorTokens.primary[99],
+        },
+        secondary: {
+          main: schemeMode === 'dark' ? colorTokens.secondary[70] : colorTokens.secondary[50],
+          light: schemeMode === 'dark' ? colorTokens.secondary[80] : colorTokens.secondary[60],
+          dark: schemeMode === 'dark' ? colorTokens.secondary[60] : colorTokens.secondary[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.secondary[10] : colorTokens.secondary[99],
+        },
+        tertiary: {
+          main: schemeMode === 'dark' ? colorTokens.tertiary[70] : colorTokens.tertiary[50],
+          light: schemeMode === 'dark' ? colorTokens.tertiary[80] : colorTokens.tertiary[60],
+          dark: schemeMode === 'dark' ? colorTokens.tertiary[60] : colorTokens.tertiary[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.tertiary[10] : colorTokens.tertiary[99],
+        },
+        error: {
+          main: schemeMode === 'dark' ? colorTokens.error[70] : colorTokens.error[50],
+          light: schemeMode === 'dark' ? colorTokens.error[80] : colorTokens.error[60],
+          dark: schemeMode === 'dark' ? colorTokens.error[60] : colorTokens.error[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.error[10] : colorTokens.error[99],
+        },
+        warning: {
+          main: schemeMode === 'dark' ? colorTokens.warning[70] : colorTokens.warning[50],
+          light: schemeMode === 'dark' ? colorTokens.warning[80] : colorTokens.warning[60],
+          dark: schemeMode === 'dark' ? colorTokens.warning[60] : colorTokens.warning[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.warning[10] : colorTokens.warning[99],
+        },
+        info: {
+          main: schemeMode === 'dark' ? colorTokens.tertiary[70] : colorTokens.tertiary[50],
+          light: schemeMode === 'dark' ? colorTokens.tertiary[80] : colorTokens.tertiary[60],
+          dark: schemeMode === 'dark' ? colorTokens.tertiary[60] : colorTokens.tertiary[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.tertiary[10] : colorTokens.tertiary[99],
+        },
+        success: {
+          main: schemeMode === 'dark' ? colorTokens.success[70] : colorTokens.success[50],
+          light: schemeMode === 'dark' ? colorTokens.success[80] : colorTokens.success[60],
+          dark: schemeMode === 'dark' ? colorTokens.success[60] : colorTokens.success[40],
+          contrastText: schemeMode === 'dark' ? colorTokens.success[10] : colorTokens.success[99],
+        },
+        background: {
+          default: schemeMode === 'dark' ? colorTokens.neutral[10] : colorTokens.neutral[99],
+          paper: schemeMode === 'dark' ? colorTokens.neutral[20] : colorTokens.neutral[100],
+        },
+        surface: {
+          main: schemeMode === 'dark' ? colorTokens.neutral[20] : colorTokens.neutral[99],
+          variant: schemeMode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[90],
+        },
+        text: {
+          primary: schemeMode === 'dark' ? colorTokens.neutral[90] : colorTokens.neutral[10],
+          secondary: schemeMode === 'dark' ? colorTokens.neutral[80] : colorTokens.neutral[30],
+          disabled: schemeMode === 'dark' ? colorTokens.neutral[60] : colorTokens.neutral[50],
+        },
+        divider: schemeMode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[80],
+        outline: schemeMode === 'dark' ? colorTokens.neutralVariant[60] : colorTokens.neutralVariant[50],
+        outlineVariant: schemeMode === 'dark' ? colorTokens.neutralVariant[30] : colorTokens.neutralVariant[80],
+      },
+    };
   };
-
-  const palette = highContrast ? highContrastPalette : basePalette;
 
   return createTheme({
+    // MUI v7 CSS Variables完全対応
     cssVariables: true,
-    palette,
+    
+    // MUI v7 colorSchemes API採用
+    colorSchemes: {
+      light: createColorScheme('light', highContrast),
+      dark: createColorScheme('dark', highContrast),
+    },
+    
+    // デフォルトモード設定
+    defaultMode: mode as 'light' | 'dark' | 'system',
+    
     typography: {
       fontFamily: typographyTokens.bodyLarge.fontFamily,
       ...getTypographyScale(fontSize),
@@ -228,7 +282,7 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
       },
     },
     components: {
-      // Global styles
+      // Global styles - MUI v7対応
       MuiCssBaseline: {
         styleOverrides: (theme) => ({
           html: {
@@ -248,9 +302,9 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
               },
             },
           },
-          // フォーカスリング
+          // フォーカスリング - CSS Variables対応
           '*:focus-visible': {
-            outline: `2px solid ${palette.primary.main}`,
+            outline: `2px solid var(--mui-palette-primary-main)`,
             outlineOffset: '2px',
           },
           // グローバルIMEスタイル追加
@@ -258,57 +312,80 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
         }),
       },
 
-      // Button
+      // Button - theme.applyStyles() 使用
       MuiButton: {
         defaultProps: {
           disableRipple: highContrast,
           disableElevation: highContrast,
         },
         styleOverrides: {
-          root: {
-            borderRadius: highContrast 
-              ? shapeTokens.corner.none 
-              : shapeTokens.corner.large,
-            textTransform: 'none',
-            fontWeight: 500,
-            transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
-            '&:hover': {
-              transform: highContrast ? 'none' : 'translateY(-1px)',
+          root: ({ theme }) => [
+            {
+              borderRadius: highContrast 
+                ? shapeTokens.corner.none 
+                : shapeTokens.corner.large,
+              textTransform: 'none',
+              fontWeight: 500,
+              transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
+              '&:hover': {
+                transform: highContrast ? 'none' : 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: highContrast ? 'none' : 'translateY(0px)',
+              },
             },
-            '&:active': {
-              transform: highContrast ? 'none' : 'translateY(0px)',
+            // dark mode対応 - theme.applyStyles()使用
+            theme.applyStyles('dark', {
+              '&:hover': {
+                backgroundColor: theme.vars?.palette.primary.dark || 'var(--mui-palette-primary-dark)',
+              },
+            }),
+          ],
+          contained: ({ theme }) => [
+            {
+              ...elevationTokens.level1,
+              '&:hover': {
+                ...(!highContrast && elevationTokens.level2),
+              },
             },
-          },
-          contained: {
-            ...elevationTokens.level1,
-            '&:hover': {
-              ...(!highContrast && elevationTokens.level2),
-            },
-          },
+            // dark mode追加スタイル
+            theme.applyStyles('dark', {
+              backgroundColor: theme.vars?.palette.primary.main || 'var(--mui-palette-primary-main)',
+            }),
+          ],
         },
       },
 
-      // Card
+      // Card - theme.applyStyles() 使用
       MuiCard: {
         styleOverrides: {
-          root: {
-            borderRadius: highContrast 
-              ? shapeTokens.corner.none 
-              : shapeTokens.corner.large,
-            border: highContrast 
-              ? `2px solid ${palette.text.primary}` 
-              : 'none',
-            ...(!highContrast && elevationTokens.level1),
-            transition: `all ${motionTokens.duration.medium3} ${motionTokens.easing.standard}`,
-            '&:hover': {
-              transform: highContrast ? 'none' : 'translateY(-2px)',
-              ...(!highContrast && elevationTokens.level3),
+          root: ({ theme }) => [
+            {
+              borderRadius: highContrast 
+                ? shapeTokens.corner.none 
+                : shapeTokens.corner.large,
+              border: highContrast 
+                ? `2px solid var(--mui-palette-text-primary)` 
+                : 'none',
+              ...(!highContrast && elevationTokens.level1),
+              transition: `all ${motionTokens.duration.medium3} ${motionTokens.easing.standard}`,
+              '&:hover': {
+                transform: highContrast ? 'none' : 'translateY(-2px)',
+                ...(!highContrast && elevationTokens.level3),
+              },
             },
-          },
+            // dark mode対応
+            theme.applyStyles('dark', {
+              backgroundColor: theme.vars?.palette.background.paper || 'var(--mui-palette-background-paper)',
+              '&:hover': {
+                backgroundColor: theme.vars?.palette.action?.hover || 'var(--mui-palette-action-hover)',
+              },
+            }),
+          ],
         },
       },
 
-      // Paper
+      // Paper - CSS Variables対応
       MuiPaper: {
         styleOverrides: {
           root: {
@@ -316,100 +393,140 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
               ? shapeTokens.corner.none 
               : shapeTokens.corner.medium,
             border: highContrast 
-              ? `1px solid ${palette.text.primary}` 
+              ? `1px solid var(--mui-palette-text-primary)` 
               : 'none',
+            backgroundColor: 'var(--mui-palette-background-paper)',
           },
         },
       },
 
-      // TextField (IMEスタイル統合版)
+      // TextField - IMEスタイル統合版 + theme.applyStyles()
       MuiTextField: {
         styleOverrides: {
-          root: (props) => ({
-            '& .MuiOutlinedInput-root': {
+          root: ({ theme }) => [
+            {
+              '& .MuiOutlinedInput-root': {
+                borderRadius: highContrast 
+                  ? shapeTokens.corner.none 
+                  : shapeTokens.corner.small,
+                transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
+                '&:hover': {
+                  ...(!highContrast && elevationTokens.level1),
+                },
+                '&.Mui-focused': {
+                  ...(!highContrast && elevationTokens.level2),
+                },
+                // IMEスタイル統合
+                ...getIMEStyles(theme),
+              },
+              // 日本語入力専用スタイル
+              ...japaneseInputStyles(theme),
+            },
+            // dark mode対応
+            theme.applyStyles('dark', {
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: theme.vars?.palette.background.paper || 'var(--mui-palette-background-paper)',
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.vars?.palette.primary.main || 'var(--mui-palette-primary-main)',
+                },
+              },
+            }),
+          ],
+        },
+      },
+
+      // Chip - CSS Variables対応
+      MuiChip: {
+        styleOverrides: {
+          root: ({ theme }) => [
+            {
               borderRadius: highContrast 
                 ? shapeTokens.corner.none 
                 : shapeTokens.corner.small,
               transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
               '&:hover': {
-                ...(!highContrast && elevationTokens.level1),
+                transform: highContrast ? 'none' : 'scale(1.02)',
               },
-              '&.Mui-focused': {
-                ...(!highContrast && elevationTokens.level2),
-              },
-              // IMEスタイル統合（テーマオブジェクトを渡す）
-              ...getIMEStyles(props.theme),
             },
-            // 日本語入力専用スタイル
-            ...japaneseInputStyles(props.theme),
-          }),
+            theme.applyStyles('dark', {
+              backgroundColor: theme.vars?.palette.background.paper || 'var(--mui-palette-background-paper)',
+              color: theme.vars?.palette.text.primary || 'var(--mui-palette-text-primary)',
+            }),
+          ],
         },
       },
 
-      // Chip
-      MuiChip: {
-        styleOverrides: {
-          root: {
-            borderRadius: highContrast 
-              ? shapeTokens.corner.none 
-              : shapeTokens.corner.small,
-            transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
-            '&:hover': {
-              transform: highContrast ? 'none' : 'scale(1.02)',
-            },
-          },
-        },
-      },
-
-      // Dialog
+      // Dialog - theme.applyStyles() 使用
       MuiDialog: {
         styleOverrides: {
-          paper: {
-            borderRadius: highContrast 
-              ? shapeTokens.corner.none 
-              : shapeTokens.corner.extraLarge,
-            border: highContrast 
-              ? `2px solid ${palette.text.primary}` 
-              : 'none',
-            ...(!highContrast && elevationTokens.level5),
-          },
+          paper: ({ theme }) => [
+            {
+              borderRadius: highContrast 
+                ? shapeTokens.corner.none 
+                : shapeTokens.corner.extraLarge,
+              border: highContrast 
+                ? `2px solid var(--mui-palette-text-primary)` 
+                : 'none',
+              ...(!highContrast && elevationTokens.level5),
+            },
+            theme.applyStyles('dark', {
+              backgroundColor: theme.vars?.palette.background.paper || 'var(--mui-palette-background-paper)',
+            }),
+          ],
         },
       },
 
-      // AppBar
+      // AppBar - Glassmorphism + CSS Variables
       MuiAppBar: {
         styleOverrides: {
-          root: {
-            backgroundColor: 'transparent',
-            backgroundImage: 'none',
-            ...(!highContrast && {
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+          root: ({ theme }) => [
+            {
+              backgroundColor: 'transparent',
+              backgroundImage: 'none',
+              ...(!highContrast && {
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              }),
+              border: highContrast 
+                ? `1px solid var(--mui-palette-text-primary)` 
+                : 'none',
+            },
+            theme.applyStyles('dark', {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              ...(!highContrast && {
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              }),
             }),
-            border: highContrast 
-              ? `1px solid ${palette.text.primary}` 
-              : 'none',
-          },
+          ],
         },
       },
 
-      // Tabs
+      // Tabs - theme.applyStyles() 使用
       MuiTab: {
         styleOverrides: {
-          root: {
-            textTransform: 'none',
-            fontWeight: 500,
-            transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
-            '&:hover': {
-              backgroundColor: highContrast 
-                ? 'transparent'
-                : `rgba(${mode === 'dark' ? '255, 255, 255' : '0, 0, 0'}, 0.04)`,
+          root: ({ theme }) => [
+            {
+              textTransform: 'none',
+              fontWeight: 500,
+              transition: `all ${motionTokens.duration.medium2} ${motionTokens.easing.standard}`,
+              '&:hover': {
+                backgroundColor: highContrast 
+                  ? 'transparent'
+                  : 'var(--mui-palette-action-hover)',
+              },
             },
-          },
+            theme.applyStyles('dark', {
+              color: theme.vars?.palette.text.primary || 'var(--mui-palette-text-primary)',
+              '&:hover': {
+                backgroundColor: theme.vars?.palette.action?.hover || 'var(--mui-palette-action-hover)',
+              },
+            }),
+          ],
         },
       },
 
-      // Tooltip
+      // Tooltip - CSS Variables対応
       MuiTooltip: {
         styleOverrides: {
           tooltip: {
@@ -417,39 +534,62 @@ export const createModernTheme = (options: ThemeOptions): Theme => {
               ? shapeTokens.corner.none 
               : shapeTokens.corner.small,
             ...typographyTokens.bodySmall,
+            backgroundColor: 'var(--mui-palette-text-primary)',
+            color: 'var(--mui-palette-background-default)',
           },
         },
       },
 
-      // IME関連のスタイルオーバーライドは上記TextFieldに統合済み
+      // Drawer - theme.applyStyles() 使用
+      MuiDrawer: {
+        styleOverrides: {
+          paper: ({ theme }) => [
+            {
+              backgroundColor: 'var(--mui-palette-background-paper)',
+              ...(!highContrast && {
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              }),
+            },
+            theme.applyStyles('dark', {
+              backgroundColor: 'rgba(18, 18, 18, 0.95)',
+              ...(!highContrast && {
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              }),
+            }),
+          ],
+        },
+      },
     },
   });
 };
 
-// デフォルトテーマインスタンス
+// MUI v7推奨テーマインスタンス - デフォルト設定
 export const modernTheme = createModernTheme({
-  mode: 'light',
+  mode: 'system',
   highContrast: false,
   fontSize: 'medium',
 });
 
-// ダークテーマインスタンス
+// レガシー互換用テーマ（既存コード対応）
 export const modernDarkTheme = createModernTheme({
   mode: 'dark',
   highContrast: false,
   fontSize: 'medium',
 });
 
-// ハイコントラストテーマインスタンス
 export const modernHighContrastTheme = createModernTheme({
   mode: 'light',
   highContrast: true,
   fontSize: 'medium',
 });
 
-// ハイコントラストダークテーマインスタンス
 export const modernHighContrastDarkTheme = createModernTheme({
   mode: 'dark',
   highContrast: true,
   fontSize: 'medium',
 });
+
+// デフォルトエクスポートはMUI v7推奨の system mode
+export default modernTheme;

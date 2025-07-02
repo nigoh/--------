@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography, useTheme } from '@mui/material';
 import { spacingTokens } from '../../theme/designSystem';
+import { gradientTokens } from '../../theme/gradients';
 
 interface FeatureLayoutProps {
   children: React.ReactNode;
@@ -9,24 +10,43 @@ interface FeatureLayoutProps {
   showHeader?: boolean;
   headerContent?: React.ReactNode;
   backgroundColor?: string;
+  variant?: 'default' | 'elevated' | 'glass' | 'gradient';
+  useGradient?: boolean;
 }
 
 /**
  * 全機能共通のベースレイアウトコンポーネント
  * 統一されたレイアウト構造とレスポンシブ対応を提供
+ * 現代的なデザインシステムに基づく改良版
  */
 export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
   children,
   title,
-  maxWidth = false, // デフォルトを false に変更してフル幅に
+  maxWidth = false,
   showHeader = false,
   headerContent,
   backgroundColor,
+  variant = 'gradient',
+  useGradient = true,
 }) => {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
-  const defaultBackground = backgroundColor || 
-    `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 100%)`;
+  // 背景の決定
+  const getBackground = () => {
+    if (backgroundColor) return backgroundColor;
+    
+    switch (variant) {
+      case 'elevated':
+        return gradientTokens.themeAware.surfaceElevated(isDark);
+      case 'glass':
+        return gradientTokens.themeAware.glass(isDark);
+      case 'gradient':
+        return gradientTokens.themeAware.background(isDark);
+      default:
+        return theme.palette.background.default;
+    }
+  };
 
   return (
     <Box sx={{ 
@@ -34,16 +54,47 @@ export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      background: defaultBackground,
+      background: getBackground(),
+      position: 'relative',
+      // Glass morphism効果
+      ...(variant === 'glass' && {
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${gradientTokens.themeAware.glassBorder(isDark)}`,
+      }),
     }}>
-      {/* ヘッダー部分（オプション） */}
+      {/* 装飾的オーバーレイ（グラデーション効果強化） */}
+      {useGradient && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDark 
+              ? 'radial-gradient(ellipse at top, rgba(114, 99, 167, 0.15) 0%, transparent 50%)'
+              : 'radial-gradient(ellipse at top, rgba(114, 99, 167, 0.08) 0%, transparent 50%)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
+
+      {/* ヘッダー部分（改良版） */}
       {showHeader && (
         <Box sx={{ 
-          py: spacingTokens.md,
+          py: { xs: spacingTokens.md, md: spacingTokens.lg },
           px: { xs: spacingTokens.sm, sm: spacingTokens.md, md: spacingTokens.lg },
           borderBottom: `1px solid ${theme.palette.divider}`,
-          backgroundColor: theme.palette.background.paper,
-          boxShadow: theme.shadows[1],
+          background: variant === 'glass' 
+            ? gradientTokens.themeAware.surfaceElevated(isDark)
+            : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          position: 'relative',
+          zIndex: 1,
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}>
           <Container maxWidth={maxWidth} sx={{ px: 0 }}>
             {title && (
@@ -51,9 +102,13 @@ export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
                 variant="h4" 
                 component="h1" 
                 sx={{ 
-                  fontWeight: 600,
-                  color: theme.palette.text.primary,
-                  mb: headerContent ? 2 : 0
+                  fontWeight: 700,
+                  background: gradientTokens.primary.bold,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: headerContent ? 2 : 0,
+                  letterSpacing: '-0.02em',
                 }}
               >
                 {title}
@@ -64,36 +119,45 @@ export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
         </Box>
       )}
 
-      {/* メインコンテンツ領域 */}
+      {/* メインコンテンツ領域（改良版） */}
       <Box sx={{ 
         flex: 1, 
         overflow: 'auto',
         width: '100%',
         height: '100%',
+        position: 'relative',
+        zIndex: 1,
+        // 改良されたスクロールバー
         '&::-webkit-scrollbar': {
           width: '8px',
         },
         '&::-webkit-scrollbar-track': {
-          backgroundColor: theme.palette.action.hover,
-          borderRadius: '4px',
+          backgroundColor: 'transparent',
         },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: theme.palette.action.selected,
-          borderRadius: '4px',
+          backgroundColor: isDark 
+            ? 'rgba(255, 255, 255, 0.2)' 
+            : 'rgba(0, 0, 0, 0.2)',
+          borderRadius: '8px',
           '&:hover': {
-            backgroundColor: theme.palette.action.focus,
+            backgroundColor: isDark 
+              ? 'rgba(255, 255, 255, 0.3)' 
+              : 'rgba(0, 0, 0, 0.3)',
           },
         },
+        // スムーススクロール
+        scrollBehavior: 'smooth',
       }}>
         <Container 
           maxWidth={maxWidth}
           sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            py: { xs: spacingTokens.xs, sm: spacingTokens.sm, md: spacingTokens.md },
-            px: { xs: spacingTokens.xs, sm: spacingTokens.sm, md: spacingTokens.md },
+            py: { xs: spacingTokens.md, sm: spacingTokens.lg, md: spacingTokens.xl },
+            px: { xs: spacingTokens.md, sm: spacingTokens.lg, md: spacingTokens.xl },
             minHeight: '100%',
             width: '100%',
+            position: 'relative',
           }}
         >
           {children}

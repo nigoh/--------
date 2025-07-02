@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useColorScheme, PaletteMode } from '@mui/material/styles';
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 
+// MUI v7対応 - useColorScheme統合型のThemeContext
 interface ThemeContextType {
+  // 従来の互換性のためのプロパティ
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   isHighContrast: boolean;
@@ -8,22 +12,28 @@ interface ThemeContextType {
   isReducedMotion: boolean;
   fontSize: 'small' | 'medium' | 'large';
   setFontSize: (size: 'small' | 'medium' | 'large') => void;
+  
+  // MUI v7 カラースキーム関連
+  mode: PaletteMode | 'system' | undefined;
+  setMode: (mode: PaletteMode | 'system') => void;
+  systemMode: PaletteMode | undefined; // 'light' | 'dark'
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeInitScript = () => {
+  return <InitColorSchemeScript defaultMode="system" />;
+};
 
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
 export const CustomThemeProvider = ({ children }: ThemeProviderProps) => {
-  // システム設定またはlocalStorageから初期値を取得
-  const getInitialDarkMode = () => {
-    const saved = localStorage.getItem('darkMode');
-    if (saved !== null) return JSON.parse(saved);
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  };
+  // MUI v7のuseColorScheme hookを使用
+  const { mode, setMode, systemMode } = useColorScheme();
 
+  // 以下は従来のコードとの互換性のために維持
   const getInitialHighContrast = () => {
     const saved = localStorage.getItem('highContrast');
     if (saved !== null) return JSON.parse(saved);
@@ -35,7 +45,8 @@ export const CustomThemeProvider = ({ children }: ThemeProviderProps) => {
     return saved ? (saved as 'small' | 'medium' | 'large') : 'medium';
   };
 
-  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
+  // MUI v7のmodeをisDarkModeと同期
+  const isDarkMode = mode === 'dark' || (mode === 'system' && systemMode === 'dark');
   const [isHighContrast, setIsHighContrast] = useState(getInitialHighContrast);
   const [fontSize, setFontSizeState] = useState(getInitialFontSize);
   
@@ -45,16 +56,10 @@ export const CustomThemeProvider = ({ children }: ThemeProviderProps) => {
   );
 
   // システム設定の変更を監視
+  // ダークモードはuseColorSchemeが内部的に監視するため不要
   useEffect(() => {
-    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
-
-    const handleDarkModeChange = (e: MediaQueryListEvent) => {
-      if (localStorage.getItem('darkMode') === null) {
-        setIsDarkMode(e.matches);
-      }
-    };
 
     const handleReducedMotionChange = (e: MediaQueryListEvent) => {
       setIsReducedMotion(e.matches);
@@ -66,29 +71,29 @@ export const CustomThemeProvider = ({ children }: ThemeProviderProps) => {
       }
     };
 
-    darkModeQuery.addEventListener('change', handleDarkModeChange);
     reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
     highContrastQuery.addEventListener('change', handleHighContrastChange);
 
     return () => {
-      darkModeQuery.removeEventListener('change', handleDarkModeChange);
       reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
       highContrastQuery.removeEventListener('change', handleHighContrastChange);
     };
   }, []);
 
+  // ダークモード切替 - MUI v7のsetModeを使用
   const toggleDarkMode = () => {
-    const newValue = !isDarkMode;
-    setIsDarkMode(newValue);
-    localStorage.setItem('darkMode', JSON.stringify(newValue));
+    setMode(mode === 'light' ? 'dark' : mode === 'dark' ? 'light' : 'system');
+    // localStorage管理はuseColorSchemeが内部的に行うため不要
   };
 
+  // ハイコントラスト切替
   const toggleHighContrast = () => {
     const newValue = !isHighContrast;
     setIsHighContrast(newValue);
     localStorage.setItem('highContrast', JSON.stringify(newValue));
   };
 
+  // フォントサイズ設定
   const setFontSize = (size: 'small' | 'medium' | 'large') => {
     setFontSizeState(size);
     localStorage.setItem('fontSize', size);
@@ -97,13 +102,19 @@ export const CustomThemeProvider = ({ children }: ThemeProviderProps) => {
   return (
     <ThemeContext.Provider 
       value={{ 
+        // 従来のプロパティ
         isDarkMode, 
         toggleDarkMode, 
         isHighContrast, 
         toggleHighContrast,
         isReducedMotion,
         fontSize,
-        setFontSize
+        setFontSize,
+        
+        // MUI v7のカラースキーム関連
+        mode,
+        setMode,
+        systemMode
       }}
     >
       {children}
