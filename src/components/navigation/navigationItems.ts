@@ -16,6 +16,7 @@ import {
   ViewModule as DialogIcon,
   Logout as LogoutIcon,
   Security as SecurityIcon,
+  AdminPanelSettings as AdminIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
 
@@ -88,6 +89,12 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     label: 'ユーザー設定',
     icon: React.createElement(PersonIcon),
     index: 8,
+  },
+  {
+    id: 'role-management',
+    label: '権限管理',
+    icon: React.createElement(AdminIcon),
+    index: 9,
   },
 ];
 

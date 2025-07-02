@@ -1,12 +1,16 @@
 import { User as FirebaseUser } from 'firebase/auth';
+import { UserRole, Permission } from './types/roles';
 
 /**
  * 認証ユーザーの拡張型定義
  */
 export interface AuthUser extends FirebaseUser {
   customClaims?: {
-    role?: string;
-    permissions?: string[];
+    roles?: UserRole[];
+    permissions?: Permission[];
+    department?: string;
+    position?: string;
+    lastRoleUpdate?: string;
   };
 }
 

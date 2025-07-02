@@ -56,3 +56,4 @@ export { UserProfileManagement } from './components/UserProfileManagement';
 export { MFASetupDialog } from './components/MFASetupDialog';
 export { MFAVerificationDialog } from './components/MFAVerificationDialog';
 export { MFAManagement } from './components/MFAManagement';
+export { default as RoleManagementPage } from './components/RoleManagementPage';
