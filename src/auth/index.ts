@@ -52,8 +52,8 @@ export { LoginForm } from './components/LoginForm';
 export { RegisterForm } from './components/RegisterForm';
 export { PasswordResetForm } from './components/PasswordResetForm';
 export { AuthPage } from './components/AuthPage';
-export { UserProfileManagement } from './components/UserProfileManagement';
+// UserProfileManagement は features/userProfile に移動しました
 export { MFASetupDialog } from './components/MFASetupDialog';
 export { MFAVerificationDialog } from './components/MFAVerificationDialog';
-export { MFAManagement } from './components/MFAManagement';
+// MFAManagement は features/mfa に移動しました
 // RoleManagementPage は features/roleManagement に移動しました

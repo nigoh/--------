@@ -12,7 +12,6 @@ import {
   Button,
   Typography,
   Alert,
-  Divider,
   Avatar,
   IconButton,
   Dialog,
@@ -35,96 +34,38 @@ import {
   Verified as VerifiedIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useAuth } from '../context';
-import { useUserProfile } from '../hooks/useUserProfile';
-import { spacingTokens, shapeTokens } from '../../theme/designSystem';
-import type { ProfileUpdateData, EmailUpdateData, PasswordUpdateData } from '../hooks/useUserProfile';
+import { useAuth } from '../../../auth/context';
+import { useUserProfileForm } from '../hooks/useUserProfileForm';
+import { spacingTokens } from '../../../theme/designSystem';
 
 /**
  * ユーザープロファイル管理コンポーネント
  */
-export const UserProfileManagement: React.FC = () => {
+export const UserProfileManager: React.FC = () => {
   const theme = useTheme();
   const { user, signOut } = useAuth();
   const {
     isLoading,
     error,
     clearError,
-    updateUserProfile,
-    updateUserEmail,
-    updateUserPassword,
-    deleteUserAccount,
-  } = useUserProfile();
-
-  // 編集モード状態
-  const [editMode, setEditMode] = useState<'none' | 'profile' | 'email' | 'password'>('none');
-  
-  // フォームデータ
-  const [profileData, setProfileData] = useState<ProfileUpdateData>({
-    displayName: user?.displayName || '',
-    photoURL: user?.photoURL || '',
-  });
-  
-  const [emailData, setEmailData] = useState<EmailUpdateData>({
-    newEmail: '',
-    currentPassword: '',
-  });
-  
-  const [passwordData, setPasswordData] = useState<PasswordUpdateData>({
-    currentPassword: '',
-    newPassword: '',
-  });
-
-  // 削除確認ダイアログ
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
-
-  // プロファイル更新
-  const handleProfileUpdate = useCallback(async () => {
-    const success = await updateUserProfile(profileData);
-    if (success) {
-      setEditMode('none');
-    }
-  }, [profileData, updateUserProfile]);
-
-  // メールアドレス更新
-  const handleEmailUpdate = useCallback(async () => {
-    const success = await updateUserEmail(emailData);
-    if (success) {
-      setEditMode('none');
-      setEmailData({ newEmail: '', currentPassword: '' });
-    }
-  }, [emailData, updateUserEmail]);
-
-  // パスワード更新
-  const handlePasswordUpdate = useCallback(async () => {
-    const success = await updateUserPassword(passwordData);
-    if (success) {
-      setEditMode('none');
-      setPasswordData({ currentPassword: '', newPassword: '' });
-    }
-  }, [passwordData, updateUserPassword]);
-
-  // アカウント削除
-  const handleAccountDelete = useCallback(async () => {
-    const success = await deleteUserAccount(deletePassword);
-    if (success) {
-      setDeleteDialogOpen(false);
-      await signOut();
-    }
-  }, [deletePassword, deleteUserAccount, signOut]);
-
-  // 編集キャンセル
-  const handleCancelEdit = useCallback(() => {
-    setEditMode('none');
-    setProfileData({
-      displayName: user?.displayName || '',
-      photoURL: user?.photoURL || '',
-    });
-    setEmailData({ newEmail: '', currentPassword: '' });
-    setPasswordData({ currentPassword: '', newPassword: '' });
-    clearError();
-  }, [user, clearError]);
+    profileData,
+    setProfileData,
+    emailData,
+    setEmailData,
+    passwordData,
+    setPasswordData,
+    editMode,
+    setEditMode,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deletePassword,
+    setDeletePassword,
+    handleProfileUpdate,
+    handleEmailUpdate,
+    handlePasswordUpdate,
+    handleAccountDelete,
+    handleCancelEdit
+  } = useUserProfileForm();
 
   if (!user) {
     return (
@@ -139,7 +80,7 @@ export const UserProfileManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: spacingTokens.md }}>
+    <Box>
       {/* エラー表示 */}
       {error && (
         <Alert severity="error" sx={{ mb: spacingTokens.md }} onClose={clearError}>

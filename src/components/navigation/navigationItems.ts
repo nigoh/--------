@@ -96,6 +96,12 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     icon: React.createElement(AdminIcon),
     index: 9,
   },
+  {
+    id: 'passkey-management',
+    label: 'パスキー管理',
+    icon: React.createElement(SecurityIcon),
+    index: 10,
+  }
 ];
 
 // 設定ナビゲーションアイテム

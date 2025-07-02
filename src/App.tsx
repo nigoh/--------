@@ -31,9 +31,10 @@ const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
-const MFAManagement = React.lazy(() => import('./auth').then(module => ({ default: module.MFAManagement })));
-const UserProfileManagement = React.lazy(() => import('./auth/components/UserProfileManagement').then(module => ({ default: module.UserProfileManagement })));
-const RoleManagement = React.lazy(() => import('./features/roleManagement').then(module => ({ default: module.RoleManagement })));
+const MFAManagement = React.lazy(() => import('./features/mfa/MFA'));
+const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'));
+const RoleManagement = React.lazy(() => import('./features/roleManagement/RoleManagement'));
+const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -257,7 +258,7 @@ function AppContent() {
                 <PageTransition mode="fade" key="user-profile">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ユーザー設定を読み込み中..." />}>
-                      <UserProfileManagement />
+                      <UserProfile />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
@@ -268,6 +269,16 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="権限管理を読み込み中..." />}>
                       <RoleManagement />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={10}>
+                <PageTransition mode="fade" key="passkey-management">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="パスキー管理を読み込み中..." />}>
+                      <Passkey />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
