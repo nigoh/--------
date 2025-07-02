@@ -53,7 +53,15 @@
 - **在庫調整**: 一覧から数量を増減
 - **編集・削除**: 既存備品の更新と削除
 
-### 3. UI/UX機能
+### 6. 🆕 統一ログシステム
+- **マルチレベルログ**: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+- **React統合**: useLogger Hook による簡単な導入
+- **PII自動マスキング**: 個人情報（メール、クレジットカード等）の自動保護
+- **マルチトランスポート**: Console、LocalStorage、HTTP API への同時出力
+- **エラー統合**: 既存 Error Boundary との自動連携
+- **パフォーマンス配慮**: 非同期処理、バッファリング、最小限のオーバーヘッド
+
+### 7. UI/UX機能
 - **ダークモード**: 目に優しいダークテーマ
 - **ハイコントラストモード**: アクセシビリティ対応
 - **フォントサイズ調整**: 見やすさの個人設定
@@ -77,7 +85,58 @@ npm run preview
 
 # ESLint実行
 npm run lint
+
+# テスト実行
+npm run test
 ```
+
+## 📋 ログシステムの使用方法
+
+### 基本的な使い方
+
+```tsx
+import { useLogger } from './logging';
+
+const MyComponent = () => {
+  const logger = useLogger();
+  
+  const handleSubmit = async () => {
+    logger.info('フォーム送信開始', { formId: 'user-profile' });
+    
+    try {
+      await submitForm();
+      logger.info('フォーム送信成功');
+    } catch (error) {
+      logger.logError(error, { context: 'form-submission' });
+    }
+  };
+  
+  return <form onSubmit={handleSubmit}>...</form>;
+};
+```
+
+### ログレベル
+
+- **TRACE**: 詳細なデバッグ情報
+- **DEBUG**: 開発時の状態情報
+- **INFO**: 一般的な動作情報
+- **WARN**: 警告・非推奨使用
+- **ERROR**: エラー発生
+- **FATAL**: 重大な障害
+
+### PII保護
+
+個人情報は自動的にマスクされます：
+
+```tsx
+logger.info('ユーザー情報', {
+  email: 'user@example.com',    // → 'u***@example.com'
+  password: 'secret123',        // → '***MASKED***'
+  creditCard: '1234-5678-9012-3456'  // → '****-****-****-3456'
+});
+```
+
+詳細な使用方法は [docs/LOGGING_GUIDE.md](docs/LOGGING_GUIDE.md) を参照してください。
 
 ## 🛠 技術スタック
 
@@ -150,6 +209,16 @@ src/
 │       └── useTimecardStore.ts  # Zustandストア
 ├── hooks/               # カスタムHooks
 │   └── useResponsive.ts         # レスポンシブ対応Hook
+├── logging/             # 🆕 統一ログシステム
+│   ├── Logger.ts                # ログメインクラス
+│   ├── LogProvider.tsx          # React Context
+│   ├── types.ts                 # 型定義
+│   ├── transports/              # ログ出力先
+│   │   ├── Console.ts           # コンソール出力
+│   │   ├── Storage.ts           # ローカルストレージ
+│   │   └── Http.ts              # HTTP API送信
+│   └── utils/
+│       └── maskPII.ts           # 個人情報マスキング
 ├── theme/               # テーマ定義
 │   └── modernTheme.ts           # MUIテーマ設定
 └── utils/               # ユーティリティ
