@@ -10,4 +10,4 @@ export { MFASetupDialog } from './MFASetupDialog';
 export { MFAVerificationDialog } from './MFAVerificationDialog';
 export { MFAManagement } from './MFAManagement';
 export { PasskeyManagement } from './PasskeyManagement';
-export { default as RoleManagementPage } from './RoleManagementPage';
+// RoleManagementPage は features/roleManagement に移動しました

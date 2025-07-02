@@ -33,7 +33,7 @@ const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
 const MFAManagement = React.lazy(() => import('./auth').then(module => ({ default: module.MFAManagement })));
 const UserProfileManagement = React.lazy(() => import('./auth/components/UserProfileManagement').then(module => ({ default: module.UserProfileManagement })));
-const RoleManagementPage = React.lazy(() => import('./auth/components/RoleManagementPage'));
+const RoleManagement = React.lazy(() => import('./features/roleManagement').then(module => ({ default: module.RoleManagement })));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -267,7 +267,7 @@ function AppContent() {
                 <PageTransition mode="fade" key="role-management">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="権限管理を読み込み中..." />}>
-                      <RoleManagementPage />
+                      <RoleManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
