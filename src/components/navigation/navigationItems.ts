@@ -18,6 +18,7 @@ import {
   Security as SecurityIcon,
   AdminPanelSettings as AdminIcon,
   Person as PersonIcon,
+  BugReport as LogIcon,
 } from '@mui/icons-material';
 
 export interface NavigationItem {
@@ -101,7 +102,14 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     label: 'パスキー管理',
     icon: React.createElement(SecurityIcon),
     index: 10,
-  }
+  },
+  ...(process.env.NODE_ENV === 'development' ? [{
+    id: 'logging-demo',
+    label: 'ログ機能デモ',
+    icon: React.createElement(LogIcon),
+    index: 11,
+    badge: 'Dev',
+  }] : []),
 ];
 
 // 設定ナビゲーションアイテム
