@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { 
   ThemeProvider, 
   CssBaseline, 
@@ -15,6 +15,7 @@ import { NotificationSystem } from './components/NotificationSystem';
 import { ProgressOverlay } from './components/ProgressOverlay';
 import { PageTransition } from './components/ui/Animation/MotionComponents';
 import { initPerformanceMonitoring, PerformanceDevTools } from './utils/performance';
+import { useLogger } from './logging';
 
 // 分離されたコンポーネントのインポート
 import { Dashboard } from './components/dashboard';
@@ -48,6 +49,8 @@ function AppContent() {
   
   const { isDarkMode, isHighContrast, fontSize, mode } = useThemeContext();
   const { isAuthenticated, isLoading } = useAuth();
+  const logger = useLogger();
+  
   const currentTheme = createModernTheme({ 
     mode: mode === 'system' ? (isDarkMode ? 'dark' : 'light') : mode, 
     highContrast: isHighContrast, 
@@ -55,6 +58,27 @@ function AppContent() {
   });
   
   const isMobile = useMediaQuery(currentTheme.breakpoints.down('md'));
+
+  // ログシステムのセットアップ
+  useEffect(() => {
+    // グローバルロガーを設定
+    window.__APP_LOGGER__ = logger;
+    
+    // アプリケーション開始ログ
+    logger.info('Application started', {
+      theme: mode,
+      isDarkMode,
+      isHighContrast,
+      fontSize,
+      isMobile,
+      userAgent: navigator.userAgent,
+      type: 'application-lifecycle'
+    });
+
+    return () => {
+      logger.info('Application unmounting', { type: 'application-lifecycle' });
+    };
+  }, [logger, mode, isDarkMode, isHighContrast, fontSize, isMobile]);
 
   // パフォーマンス監視を初期化
   React.useEffect(() => {

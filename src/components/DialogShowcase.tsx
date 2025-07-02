@@ -20,6 +20,7 @@ import {
   FormDialogContent,
   FormDialogSection
 } from './ui';
+import { LoggingExample } from './LoggingExample';
 import { spacingTokens } from '../theme/designSystem';
 
 const DialogShowcase: React.FC = () => {
@@ -31,6 +32,7 @@ const DialogShowcase: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const [loggingExampleOpen, setLoggingExampleOpen] = useState(false);
   
   // フォームデータ
   const [formData, setFormData] = useState({
@@ -163,6 +165,26 @@ const DialogShowcase: React.FC = () => {
             </Button>
           </Box>
         </Paper>
+      </Box>
+      
+      {/* ログシステム デモセクション */}
+      <Box sx={{ mt: spacingTokens.xl }}>
+        <Typography variant="h5" gutterBottom>
+          ログシステム デモ
+        </Typography>
+        <Typography variant="body1" sx={{ mb: spacingTokens.md, color: theme.palette.text.secondary }}>
+          統一ログシステムの機能をテストできます。
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={() => setLoggingExampleOpen(true)}
+          sx={{ mb: spacingTokens.md }}
+        >
+          ログシステム デモを開く
+        </Button>
+        {loggingExampleOpen && (
+          <LoggingExample onClose={() => setLoggingExampleOpen(false)} />
+        )}
       </Box>
       
       {/* 標準ダイアログ */}

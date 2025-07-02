@@ -107,13 +107,30 @@ const reportError = (error: Error, errorInfo: ErrorInfo, errorId: string) => {
     userId: localStorage.getItem('userId') || 'anonymous',
   };
 
+  // 新しいログシステムを使用してエラーをログ
+  try {
+    // グローバルロガーが利用可能な場合は使用
+    if (window.__APP_LOGGER__) {
+      window.__APP_LOGGER__.fatal('React Error Boundary triggered', {
+        errorId,
+        errorName: error.name,
+        errorMessage: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        type: 'react-error-boundary'
+      });
+    }
+  } catch (logError) {
+    console.warn('Failed to log error via logging system:', logError);
+  }
+
   // 本番環境では実際のエラー監視サービスに送信
   if (process.env.NODE_ENV === 'production') {
     // 例: Sentry, LogRocket, Bugsnag等
     // Sentry.captureException(error, { extra: errorReport });
   }
 
-  // 開発環境ではローカルストレージに保存
+  // 開発環境ではローカルストレージに保存（後方互換性のため保持）
   if (process.env.NODE_ENV === 'development') {
     const errors = JSON.parse(localStorage.getItem('error-reports') || '[]');
     errors.push(errorReport);
