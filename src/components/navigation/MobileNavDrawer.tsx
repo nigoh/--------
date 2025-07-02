@@ -43,7 +43,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onOpenPerformance 
 }) => {
   const { isDarkMode, isHighContrast, fontSize } = useThemeContext();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const theme = createModernTheme({ 
     mode: isDarkMode ? 'dark' : 'light',
     highContrast: isHighContrast,
@@ -53,7 +53,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   const mainNavigationItems = getMainNavigationItems();
   const settingsNavigationItems = getSettingsNavigationItems();
 
-  const handleItemClick = (item: NavigationItem) => {
+  const handleItemClick = async (item: NavigationItem) => {
     if (item.index === 3) {
       // ミーティング進行機能
       onShowMeeting();
@@ -63,6 +63,13 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     } else if (item.index === -4) {
       // パフォーマンス（開発時のみ）
       onOpenPerformance?.();
+    } else if (item.index === -2) {
+      // ログアウト
+      try {
+        await signOut();
+      } catch (error) {
+        console.error('ログアウトに失敗しました:', error);
+      }
     } else {
       // 通常のタブナビゲーション（ダッシュボード含む）
       onNavigate(item.index);

@@ -91,7 +91,7 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
       } else if (item.index === -4) {
         // パフォーマンス（開発時のみ）
         onOpenPerformance?.();
-      } else if (item.index === -5) {
+      } else if (item.index === -2) {
         // ログアウト
         try {
           await signOut();
