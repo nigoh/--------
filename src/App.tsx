@@ -32,9 +32,7 @@ const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
 const MFAManagement = React.lazy(() => import('./auth').then(module => ({ default: module.MFAManagement })));
-
-// 背景アニメーション（テスト用）
-import GeometricAnimatedBackground from './components/GeometricAnimatedBackground';
+const UserProfileManagement = React.lazy(() => import('./auth/components/UserProfileManagement').then(module => ({ default: module.UserProfileManagement })));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -115,7 +113,7 @@ function AppContent() {
         }}>
           
           {/* 背景アニメーション（テスト用） */}
-          <GeometricAnimatedBackground />
+          {/* <GeometricAnimatedBackground /> */}
           
           {/* 左側ナビゲーション - デスクトップのみ */}
           {!isMobile && (
@@ -249,6 +247,16 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="MFA管理ページを読み込み中..." />}>
                       <MFAManagement />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={8}>
+                <PageTransition mode="fade" key="user-profile">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="ユーザー設定を読み込み中..." />}>
+                      <UserProfileManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>

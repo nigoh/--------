@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { PasswordResetForm } from './PasswordResetForm';
 import { spacingTokens } from '../../theme/designSystem';
 import { useAuth } from '../context';
 
@@ -57,6 +58,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   // パスワード再設定ハンドラー
   const handleForgotPassword = useCallback(() => {
     setAuthMode('reset-password');
+  }, []);
+
+  // パスワード再設定成功ハンドラー
+  const handleResetSuccess = useCallback((email: string) => {
+    setSuccessMessage(`${email} 宛にパスワード再設定用のメールをお送りしました。メールをご確認ください。`);
+    setAuthMode('login');
   }, []);
 
   // 既にログイン済みの場合
@@ -162,24 +169,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             </Fade>
           )}
 
-          {/* パスワード再設定フォーム（今後実装） */}
+          {/* パスワード再設定フォーム */}
           {authMode === 'reset-password' && (
             <Fade in={authMode === 'reset-password'} timeout={300}>
-              <Box sx={{ textAlign: 'center', width: '100%' }}>
-                <Typography variant="h5" gutterBottom>
-                  パスワード再設定
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                  パスワード再設定機能は今後実装予定です。
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="primary"
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => setAuthMode('login')}
-                >
-                  ログインに戻る
-                </Typography>
+              <Box sx={{ width: '100%' }}>
+                <PasswordResetForm
+                  onSwitchToLogin={() => setAuthMode('login')}
+                  onResetSuccess={handleResetSuccess}
+                />
               </Box>
             </Fade>
           )}

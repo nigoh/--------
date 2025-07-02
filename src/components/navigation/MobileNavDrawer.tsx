@@ -10,18 +10,10 @@ import {
   Avatar,
   Typography
 } from '@mui/material';
-import { 
-  People as PeopleIcon,
-  Groups as GroupsIcon,
-  MeetingRoom as MeetingIcon, 
-  AccessTime as TimeIcon,
-  ReceiptLong as ExpenseIcon,
-  Inventory as InventoryIcon,
-  Settings as SettingsIcon,
-  Speed as SpeedIcon,
-  Dashboard as DashboardIcon,
-  ViewModule as DialogIcon
-} from '@mui/icons-material';
+import { Dashboard } from '@mui/icons-material';
+import { useAuth } from '../../auth';
+import { getMainNavigationItems, getSettingsNavigationItems } from './navigationItems';
+import type { NavigationItem } from './navigationItems';
 import { createModernTheme } from '../../theme/modernTheme';
 import { useThemeContext } from '../../contexts/ThemeContext';
 
@@ -51,31 +43,17 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onOpenPerformance 
 }) => {
   const { isDarkMode, isHighContrast, fontSize } = useThemeContext();
+  const { user } = useAuth();
   const theme = createModernTheme({ 
     mode: isDarkMode ? 'dark' : 'light',
     highContrast: isHighContrast,
     fontSize 
   });
   
-  const mainNavigationItems = [
-    { icon: <DashboardIcon />, label: 'ダッシュボード', index: -1 },
-    { icon: <GroupsIcon />, label: 'チーム管理', index: 0 },
-    { icon: <PeopleIcon />, label: '社員管理', index: 1 },
-    { icon: <TimeIcon />, label: '勤怠管理', index: 2 },
-    { icon: <MeetingIcon />, label: 'ミーティング進行', index: 3 },
-    { icon: <ExpenseIcon />, label: '経費管理', index: 4 },
-    { icon: <InventoryIcon />, label: '備品管理', index: 5 },
-    { icon: <DialogIcon />, label: 'ダイアログデモ', index: 6 },
-  ];
+  const mainNavigationItems = getMainNavigationItems();
+  const settingsNavigationItems = getSettingsNavigationItems();
 
-  const settingsNavigationItems = [
-    { icon: <SettingsIcon />, label: '設定', index: -3 },
-    ...(process.env.NODE_ENV === 'development' ? [
-      { icon: <SpeedIcon />, label: 'パフォーマンス', index: -4 }
-    ] : []),
-  ];
-
-  const handleItemClick = (item: typeof mainNavigationItems[0]) => {
+  const handleItemClick = (item: NavigationItem) => {
     if (item.index === 3) {
       // ミーティング進行機能
       onShowMeeting();
@@ -108,7 +86,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
       <Box sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Avatar sx={{ mr: 2, bgcolor: 'rgba(255,255,255,0.2)' }}>
-            <DashboardIcon />
+            <Dashboard />
           </Avatar>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             WorkApp

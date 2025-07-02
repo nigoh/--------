@@ -21,26 +21,16 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  Dashboard as DashboardIcon,
-  MeetingRoom as MeetingIcon,
-  People as PeopleIcon,
-  Groups as GroupsIcon,
-  AccessTime as TimeIcon,
-  ReceiptLong as ExpenseIcon,
-  Inventory as InventoryIcon,
-  Settings as SettingsIcon,
-  Speed as SpeedIcon,
   ExpandLess,
   ExpandMore,
   AutoAwesome as AutoAwesomeIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  ViewModule as DialogIcon,
-  Logout as LogoutIcon,
-  Security as SecurityIcon,
 } from '@mui/icons-material';
 import { surfaceStyles } from '../../theme/componentStyles';
 import { useAuth } from '../../auth';
+import { getMainNavigationItems, getSettingsNavigationItems } from './navigationItems';
+import type { NavigationItem } from './navigationItems';
 
 export interface SideNavigationProps {
   currentTab: number;
@@ -51,15 +41,6 @@ export interface SideNavigationProps {
   width?: number;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
-}
-
-interface NavigationItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  index: number;
-  badge?: string;
-  children?: NavigationItem[];
 }
 
 export const SideNavigation: React.FC<SideNavigationProps> = ({
@@ -83,84 +64,8 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
     }
   }, [collapsed]);
 
-  const mainNavigationItems: NavigationItem[] = [
-    {
-      id: 'dashboard',
-      label: 'ダッシュボード',
-      icon: <DashboardIcon />,
-      index: -1,
-    },
-    {
-      id: 'team-management',
-      label: 'チーム管理',
-      icon: <GroupsIcon />,
-      index: 0,
-    },
-    {
-      id: 'employee',
-      label: '社員管理',
-      icon: <PeopleIcon />,
-      index: 1,
-    },
-    {
-      id: 'timecard',
-      label: '勤怠管理',
-      icon: <TimeIcon />,
-      index: 2,
-    },
-    {
-      id: 'meeting',
-      label: 'ミーティング進行',
-      icon: <MeetingIcon />,
-      index: 3,
-    },
-    {
-      id: 'expense',
-      label: '経費管理',
-      icon: <ExpenseIcon />,
-      index: 4,
-    },
-    {
-      id: 'equipment',
-      label: '備品管理',
-      icon: <InventoryIcon />,
-      index: 5,
-    },
-    {
-      id: 'dialog-demo',
-      label: 'ダイアログデモ',
-      icon: <DialogIcon />,
-      index: 6,
-    },
-    {
-      id: 'mfa-management',
-      label: 'MFA管理',
-      icon: <SecurityIcon />,
-      index: 7,
-    },
-  ];
-
-  const settingsNavigationItems: NavigationItem[] = [
-    {
-      id: 'settings',
-      label: '設定',
-      icon: <SettingsIcon />,
-      index: -3, // 特別な値
-    },
-    ...(process.env.NODE_ENV === 'development' ? [{
-      id: 'performance',
-      label: 'パフォーマンス',
-      icon: <SpeedIcon />,
-      index: -4, // 特別な値
-      badge: 'Dev',
-    }] : []),
-    {
-      id: 'logout',
-      label: 'ログアウト',
-      icon: <LogoutIcon />,
-      index: -5, // 特別な値
-    },
-  ];
+  const mainNavigationItems = getMainNavigationItems();
+  const settingsNavigationItems = getSettingsNavigationItems();
 
   const handleItemClick = async (item: NavigationItem, event?: React.MouseEvent) => {
     // 親要素のクリックイベントを停止
