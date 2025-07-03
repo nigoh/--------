@@ -20,8 +20,8 @@ import {
   Clear as ClearIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
-import { UserFilters } from '../types';
-import { UserRole } from '../../auth/types/roles';
+import { UserFilters as UserFiltersType } from '../types';
+import { UserRole } from '@/auth';
 import {
   DEPARTMENTS,
   DEPARTMENT_LABELS,
@@ -33,8 +33,8 @@ import {
 } from '../constants/userConstants';
 
 interface UserFiltersProps {
-  filters: UserFilters;
-  onFiltersChange: (filters: Partial<UserFilters>) => void;
+  filters: UserFiltersType;
+  onFiltersChange: (filters: Partial<UserFiltersType>) => void;
   loading?: boolean;
 }
 

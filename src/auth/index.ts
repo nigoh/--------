@@ -21,6 +21,10 @@ export type {
   AuthProviderConfig,
 } from './types';
 
+// ロール・パーミッション型
+export { UserRole, Permission, DEFAULT_ROLE_PERMISSIONS } from './types/roles';
+export type { UserPermissionData } from './types/roles';
+
 // コンテキスト
 export { AuthProvider, useAuth, withAuth } from './context';
 
@@ -32,6 +36,7 @@ export { useLogin } from './hooks/useLogin';
 export { useRegister } from './hooks/useRegister';
 export { useMFA } from './hooks/useMFA';
 export { useUserProfile } from './hooks/useUserProfile';
+export { usePermission } from './hooks/usePermission';
 
 // パスキー
 export {
@@ -52,6 +57,7 @@ export { LoginForm } from './components/LoginForm';
 export { RegisterForm } from './components/RegisterForm';
 export { PasswordResetForm } from './components/PasswordResetForm';
 export { AuthPage } from './components/AuthPage';
+export { PermissionGate } from './components/PermissionGate';
 // UserProfileManagement は features/userProfile に移動しました
 export { MFASetupDialog } from './components/MFASetupDialog';
 export { MFAVerificationDialog } from './components/MFAVerificationDialog';

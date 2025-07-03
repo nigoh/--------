@@ -1,7 +1,7 @@
 /**
  * ユーザー管理機能の型定義
  */
-import { UserRole, Permission } from '../../auth/types/roles';
+import { UserRole, Permission } from '../../auth';
 
 // 統合ユーザー型定義
 export interface User {

@@ -26,7 +26,7 @@ import { TabPanel } from './components/common';
 // Lazy load components for better performance
 const TeamManagement = React.lazy(() => import('./features/teamManagement/TeamManagement'));
 const MeetingFlow = React.lazy(() => import('./features/meetingFlow/MeetingFlow'));
-const EmployeeRegister = React.lazy(() => import('./features/employeeRegister').then(module => ({ default: module.EmployeeRegister })));
+const UserManagement = React.lazy(() => import('./features/userManagement').then(module => ({ default: module.UserManagement })));
 const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
@@ -34,8 +34,6 @@ const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
 const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
 const MFAManagement = React.lazy(() => import('./features/mfa/MFA'));
 const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'));
-const RoleManagement = React.lazy(() => import('./features/roleManagement/RoleManagement'));
-const DebugRoleManagement = React.lazy(() => import('./features/roleManagement/DebugRoleManagement'));
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
 const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
@@ -181,10 +179,10 @@ function AppContent() {
               </TabPanel>
 
               <TabPanel value={currentTab} index={1}>
-                <PageTransition mode="fade" key="employee-register">
+                <PageTransition mode="fade" key="user-management">
                   <ScrollableContent>
-                    <Suspense fallback={<PageLoader message="社員管理を読み込み中..." />}>
-                      <EmployeeRegister />
+                    <Suspense fallback={<PageLoader message="ユーザー管理を読み込み中..." />}>
+                      <UserManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>
@@ -269,16 +267,6 @@ function AppContent() {
               </TabPanel>
 
               <TabPanel value={currentTab} index={9}>
-                <PageTransition mode="fade" key="role-management">
-                  <ScrollableContent>
-                    <Suspense fallback={<PageLoader message="権限管理を読み込み中..." />}>
-                      <RoleManagement />
-                    </Suspense>
-                  </ScrollableContent>
-                </PageTransition>
-              </TabPanel>
-
-              <TabPanel value={currentTab} index={10}>
                 <PageTransition mode="fade" key="passkey-management">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="パスキー管理を読み込み中..." />}>
@@ -288,7 +276,7 @@ function AppContent() {
                 </PageTransition>
               </TabPanel>
 
-              <TabPanel value={currentTab} index={11}>
+              <TabPanel value={currentTab} index={10}>
                 <PageTransition mode="fade" key="logging-dashboard">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ロギングダッシュボードを読み込み中..." />}>
@@ -298,20 +286,11 @@ function AppContent() {
                 </PageTransition>
               </TabPanel>
 
-              <TabPanel value={currentTab} index={12}>
+              <TabPanel value={currentTab} index={11}>
                 <PageTransition mode="fade" key="logging-demo">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ログ機能デモを読み込み中..." />}>
                       <LoggingDemo />
-                    </Suspense>
-                  </ScrollableContent>
-                </PageTransition>
-              </TabPanel>
-              <TabPanel value={currentTab} index={13}>
-                <PageTransition mode="fade" key="debug-role-management">
-                  <ScrollableContent>
-                    <Suspense fallback={<PageLoader message="デバッグ権限管理を読み込み中..." />}>
-                      <DebugRoleManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>

@@ -45,8 +45,8 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     index: 0,
   },
   {
-    id: 'employees',
-    label: '社員管理',
+    id: 'user-management',
+    label: 'ユーザー管理',
     icon: React.createElement(PeopleIcon),
     index: 1,
   },
@@ -93,34 +93,22 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     index: 8,
   },
   {
-    id: 'role-management',
-    label: '権限管理',
-    icon: React.createElement(AdminIcon),
-    index: 9,
-  },
-  {
     id: 'passkey-management',
     label: 'パスキー管理',
     icon: React.createElement(SecurityIcon),
-    index: 10,
+    index: 9,
   },
   {
     id: 'logging-dashboard',
     label: 'ロギングダッシュボード',
     icon: React.createElement(AnalyticsIcon),
-    index: 11,
+    index: 10,
   },
   ...(process.env.NODE_ENV === 'development' ? [{
     id: 'logging-demo',
     label: 'ログ機能デモ',
     icon: React.createElement(LogIcon),
-    index: 12,
-    badge: 'Dev',
-  }, {
-    id: 'debug-role-management',
-    label: 'デバッグ権限管理',
-    icon: React.createElement(AdminIcon),
-    index: 13,
+    index: 11,
     badge: 'Dev',
   }] : []),
 ];

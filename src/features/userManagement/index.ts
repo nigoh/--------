@@ -1,7 +1,7 @@
 /**
  * ユーザー管理機能のエクスポート
  */
-export { default as UserManagement } from './UserManagement';
+export { UserManagement } from './UserManagement';
 export { useUserManagementStore } from './stores/useUserManagementStore';
 export { UserStatsCards } from './components/UserStatsCards';
 export { UserFilters as UserFiltersComponent } from './components/UserFilters';

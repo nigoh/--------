@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../../auth/firebase';
+import { db, UserRole } from '@/auth';
 import { 
   User, 
   CreateUserInput, 
@@ -30,7 +30,6 @@ import {
   UserListResult,
   UserStats 
 } from '../types';
-import { UserRole } from '../../auth/types/roles';
 
 // コレクション名
 const USERS_COLLECTION = 'users';

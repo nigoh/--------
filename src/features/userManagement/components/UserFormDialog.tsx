@@ -28,7 +28,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ja } from 'date-fns/locale';
 import { CreateUserInput, UpdateUserInput } from '../types';
-import { UserRole, Permission, DEFAULT_ROLE_PERMISSIONS } from '../../auth/types/roles';
+import { UserRole, Permission, DEFAULT_ROLE_PERMISSIONS } from '@/auth';
 import { useUserManagementStore } from '../stores/useUserManagementStore';
 import {
   DEPARTMENTS,

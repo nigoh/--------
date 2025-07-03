@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import { UserStats } from '../types';
 import { ROLE_LABELS, DEPARTMENT_LABELS } from '../constants/userConstants';
-import { UserRole } from '../../auth/types/roles';
+import { UserRole } from '@/auth';
 
 interface UserStatsCardsProps {
   stats: UserStats;

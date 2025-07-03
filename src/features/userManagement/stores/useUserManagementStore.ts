@@ -12,7 +12,7 @@ import {
   PaginationConfig,
   UserStats 
 } from '../types';
-import { UserRole } from '../../auth/types/roles';
+import { UserRole } from '../../auth';
 import {
   fetchUsers,
   fetchUser,

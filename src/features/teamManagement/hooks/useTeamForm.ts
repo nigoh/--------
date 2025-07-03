@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTeamStore } from '../stores/useTeamStore';
 import { useTeamFormStore } from '../stores/useTeamFormStore';
-import { useEmployeeStore } from '../../employeeRegister/useEmployeeStore';
+import { useUserManagementStore } from '../../userManagement/stores/useUserManagementStore';
 import { useManagementLoggers } from '../../../hooks/logging';
 import type { TeamRole, TeamType, TeamStatus } from '../constants/teamConstants';
 
@@ -11,7 +11,7 @@ import type { TeamRole, TeamType, TeamStatus } from '../constants/teamConstants'
 export const useTeamForm = () => {
   const teamStore = useTeamStore();
   const formStore = useTeamFormStore();
-  const { employees } = useEmployeeStore();
+  const { users } = useUserManagementStore();
   const { featureLogger, crudLogger } = useManagementLoggers('TeamManagement');
 
   // フォーム送信処理
@@ -34,7 +34,7 @@ export const useTeamForm = () => {
         console.warn('入力内容に不備があります');
         
         // バリデーションエラーログ
-        crudLogger.logValidationError({
+        crudLogger.logValidation({
           teamName: formStore.name.trim() ? undefined : ['チーム名は必須です'],
           teamType: formStore.type ? undefined : ['チームタイプを選択してください'],
           members: formStore.members.length > 0 ? undefined : ['メンバーを追加してください']
@@ -57,7 +57,7 @@ export const useTeamForm = () => {
 
       if (formStore.editingTeam) {
         // 更新処理
-        await crudLogger.logUpdate('team', formStore.editingTeam.id, teamData, {
+        await crudLogger.logUpdate(formStore.editingTeam.id, teamData, {
           previousMemberCount: formStore.editingTeam.members?.length || 0,
           newMemberCount: teamData.members.length
         });
@@ -76,10 +76,7 @@ export const useTeamForm = () => {
         // 新規作成処理
         const newTeamId = teamStore.addTeam(teamData);
         
-        await crudLogger.logCreate('team', {
-          ...teamData,
-          id: newTeamId || 'unknown'
-        }, {
+        await crudLogger.logCreate(teamData, undefined, {
           memberCount: teamData.members.length,
           teamType: teamData.type
         });
@@ -120,7 +117,7 @@ export const useTeamForm = () => {
       return;
     }
 
-    const employee = employees.find(emp => emp.id === formStore.selectedEmployeeId);
+    const employee = users.find(user => user.uid === formStore.selectedEmployeeId);
     if (!employee) {
       formStore.setError('member', '選択された社員が見つかりません');
       return;
@@ -129,18 +126,18 @@ export const useTeamForm = () => {
     // メンバー追加ログ
     featureLogger.logUserAction('team_member_add_employee', {
       teamId: formStore.editingTeam?.id,
-      employeeId: employee.id,
+      employeeId: employee.uid,
       employeeName: employee.name,
       employeeEmail: employee.email,
       currentMemberCount: formStore.members.length
     });
 
     formStore.addMemberFromEmployee(
-      employee.id,
+      employee.uid,
       employee.name,
       employee.email
     );
-  }, [formStore, employees, featureLogger]);
+  }, [formStore, users, featureLogger]);
 
   // 手動メンバー追加
   const handleAddManualMember = useCallback(() => {
@@ -198,11 +195,7 @@ export const useTeamForm = () => {
         memberCount: team?.members?.length || 0
       });
 
-      await crudLogger.logDelete('team', teamId, {
-        teamName: team?.name,
-        memberCount: team?.members?.length || 0,
-        teamType: team?.type
-      });
+      await crudLogger.logDelete(teamId);
 
       teamStore.deleteTeam(teamId);
       
@@ -231,11 +224,11 @@ export const useTeamForm = () => {
   const openCreateDialog = useCallback(() => {
     // チーム作成ダイアログ開始ログ
     featureLogger.logUserAction('team_create_dialog_open', {
-      availableEmployeeCount: employees.filter(emp => emp.isActive).length
+      availableEmployeeCount: users.filter(user => user.isActive).length
     });
 
     formStore.openDialog();
-  }, [formStore, featureLogger, employees]);
+  }, [formStore, featureLogger, users]);
 
   const openEditDialog = useCallback((team: any) => {
     // チーム編集ダイアログ開始ログ
@@ -259,11 +252,11 @@ export const useTeamForm = () => {
   }, [formStore]);
 
   // アクティブな社員リストを取得
-  const activeEmployees = employees.filter(emp => emp.isActive);
+  const activeEmployees = users.filter(user => user.isActive);
 
   // 選択可能な社員リスト（既にメンバーでない社員のみ）
   const availableEmployees = activeEmployees.filter(employee => 
-    !formStore.members.some(member => member.employeeId === employee.id)
+    !formStore.members.some(member => member.employeeId === employee.uid)
   );
 
   return {

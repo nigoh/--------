@@ -20,8 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useUserManagementStore } from '../stores/useUserManagementStore';
 import { DEPARTMENT_LABELS, POSITION_LABELS, ROLE_LABELS } from '../constants/userConstants';
-import { UserRole } from '../../auth/types/roles';
-import { useAuth } from '../../auth';
+import { UserRole, useAuth } from '@/auth';
 
 export const UserDeleteDialog: React.FC = () => {
   const { user: currentUser } = useAuth();

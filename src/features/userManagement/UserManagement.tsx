@@ -21,15 +21,15 @@ import {
   Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { FeatureLayout, FeatureHeader, FeatureContent } from '../../components/layout';
-import { PermissionGate } from '../../auth/components/PermissionGate';
-import { useAuth } from '../../auth';
-import { UserRole, Permission } from '../../auth/types/roles';
+import { PermissionGate, useAuth, UserRole, Permission } from '../../auth';
 import { useUserManagementStore } from './stores/useUserManagementStore';
-import { UserListTable } from './components/UserListTable';
-import { UserFilters as UserFiltersComponent } from './components/UserFilters';
-import { UserFormDialog } from './components/UserFormDialog';
-import { UserDeleteDialog } from './components/UserDeleteDialog';
-import { UserStatsCards } from './components/UserStatsCards';
+import { 
+  UserListTable, 
+  UserStatsCards, 
+  UserFilters as UserFiltersComponent, 
+  UserFormDialog, 
+  UserDeleteDialog 
+} from './components';
 import { ROLE_LABELS } from './constants/userConstants';
 
 const UserManagement: React.FC = () => {
@@ -248,5 +248,7 @@ const UserManagement: React.FC = () => {
     </PermissionGate>
   );
 };
+
+export { UserManagement };
 
 export default UserManagement;

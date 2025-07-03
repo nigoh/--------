@@ -1,7 +1,7 @@
 /**
  * ユーザー管理機能の定数
  */
-import { UserRole } from '../../auth/types/roles';
+import { UserRole } from '@/auth';
 
 // 部署マスタデータ
 export const DEPARTMENTS = [
