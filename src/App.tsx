@@ -35,6 +35,7 @@ const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: mo
 const MFAManagement = React.lazy(() => import('./features/mfa/MFA'));
 const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'));
 const RoleManagement = React.lazy(() => import('./features/roleManagement/RoleManagement'));
+const DebugRoleManagement = React.lazy(() => import('./features/roleManagement/DebugRoleManagement'));
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
 const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
@@ -302,6 +303,15 @@ function AppContent() {
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ログ機能デモを読み込み中..." />}>
                       <LoggingDemo />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+              <TabPanel value={currentTab} index={13}>
+                <PageTransition mode="fade" key="debug-role-management">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="デバッグ権限管理を読み込み中..." />}>
+                      <DebugRoleManagement />
                     </Suspense>
                   </ScrollableContent>
                 </PageTransition>

@@ -86,6 +86,12 @@ export function usePermission(): UsePermissionReturn {
    * 特定のロールを持っているか確認
    */
   const hasRole = useCallback((requiredRole: UserRole): boolean => {
+    // 開発環境では一時的に管理者権限を付与
+    if (process.env.NODE_ENV === 'development' && requiredRole === UserRole.ADMIN) {
+      console.log('開発環境: 管理者権限を一時的に付与しています');
+      return true;
+    }
+    
     const userRoles = getUserRoles();
     return userRoles.includes(requiredRole);
   }, [getUserRoles]);

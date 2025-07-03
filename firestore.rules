@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ============================================================================
+    // ユーザーコレクション
+    // ============================================================================
+    match /users/{userId} {
+      // 読み取り: ログイン済みユーザーは全ユーザー情報を閲覧可能
+      allow read: if request.auth != null
+        && hasPermission('employee:view');
+      
+      // 作成: 管理者のみ
+      allow create: if request.auth != null 
+        && hasPermission('user:management')
+        && validateUserData(request.resource.data);
+        
+      // 更新: 管理者または自分自身（権限情報は除く）
+      allow update: if request.auth != null 
+        && (
+          // 管理者は全て更新可能
+          hasPermission('user:management')
+          // 自分自身は基本情報のみ更新可能（権限は変更不可）
+          || (request.auth.uid == userId 
+              && !('roles' in request.resource.data) 
+              && !('permissions' in request.resource.data)
+              && !('isActive' in request.resource.data))
+        )
+        && validateUserData(request.resource.data);
+        
+      // 削除: 管理者のみ（自分自身を除く）
+      allow delete: if request.auth != null 
+        && hasPermission('user:management')
+        && request.auth.uid != userId;
+    }
+    
+    // ============================================================================
+    // 補助関数
+    // ============================================================================
+    
+    // 権限チェック関数
+    function hasPermission(permission) {
+      return request.auth.token.permissions != null 
+        && permission in request.auth.token.permissions;
+    }
+    
+    // 管理者チェック関数
+    function isAdmin() {
+      return request.auth.token.roles != null 
+        && ('admin' in request.auth.token.roles || 'super_admin' in request.auth.token.roles);
+    }
+    
+    // ユーザーデータのバリデーション
+    function validateUserData(data) {
+      return data.keys().hasAll(['email', 'displayName', 'employeeId', 'name', 'department', 'position', 'joinDate', 'skills', 'roles', 'permissions', 'isActive'])
+        && data.email is string
+        && data.displayName is string  
+        && data.employeeId is string
+        && data.name is string
+        && data.department is string
+        && data.position is string
+        && data.joinDate is string
+        && data.skills is list
+        && data.roles is list
+        && data.permissions is list
+        && data.isActive is bool
+        && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')
+        && data.employeeId.matches('^[A-Z0-9-]+$')
+        && data.name.size() > 0 && data.name.size() <= 50
+        && data.employeeId.size() >= 3 && data.employeeId.size() <= 20
+        && validateRoles(data.roles)
+        && validateDepartment(data.department)
+        && validatePosition(data.position);
+    }
+    
+    // ロールバリデーション
+    function validateRoles(roles) {
+      let validRoles = ['super_admin', 'admin', 'manager', 'employee', 'guest'];
+      return roles.size() > 0 
+        && roles.size() <= 3 
+        && roles.toSet().difference(validRoles.toSet()).size() == 0;
+    }
+    
+    // 部署バリデーション
+    function validateDepartment(department) {
+      let validDepartments = ['management', 'dev', 'sales', 'marketing', 'hr', 'finance', 'design', 'qa', 'support'];
+      return department in validDepartments;
+    }
+    
+    // 役職バリデーション
+    function validatePosition(position) {
+      let validPositions = ['ceo', 'cto', 'vp', 'director', 'manager', 'lead', 'senior', 'regular', 'junior', 'intern'];
+      return position in validPositions;
+    }
+  }
+}

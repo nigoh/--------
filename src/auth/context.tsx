@@ -83,6 +83,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     setLoading(true);
     
+    // 開発環境での認証バイパス
+    if (import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH_BYPASS === 'true') {
+      console.log('🔧 開発用認証バイパスが有効です');
+      
+      const devUser: AuthUser = {
+        uid: import.meta.env.VITE_DEV_USER_UID || 'dev-admin-001',
+        email: import.meta.env.VITE_DEV_USER_EMAIL || 'admin@example.com',
+        emailVerified: true,
+        displayName: import.meta.env.VITE_DEV_USER_NAME || '開発用管理者',
+        photoURL: null,
+        phoneNumber: null,
+        isAnonymous: false,
+        metadata: {
+          creationTime: new Date().toISOString(),
+          lastSignInTime: new Date().toISOString(),
+        } as any,
+        providerData: [],
+        refreshToken: 'dev-refresh-token',
+        tenantId: null,
+        customClaims: {
+          roles: ['admin'],
+          permissions: [
+            'employee:view',
+            'employee:create',
+            'employee:edit',
+            'employee:delete',
+            'user:management',
+            'role:management',
+            'system:settings'
+          ]
+        },
+        delete: async () => {},
+        getIdToken: async () => 'dev-token',
+        getIdTokenResult: async () => ({
+          token: 'dev-token',
+          authTime: new Date().toISOString(),
+          issuedAtTime: new Date().toISOString(),
+          expirationTime: new Date(Date.now() + 3600000).toISOString(),
+          signInProvider: 'custom',
+          signInSecondFactor: null,
+          claims: {
+            roles: ['admin'],
+            permissions: [
+              'employee:view',
+              'employee:create', 
+              'employee:edit',
+              'employee:delete',
+              'user:management',
+              'role:management',
+              'system:settings'
+            ]
+          }
+        }),
+        reload: async () => {},
+        toJSON: () => ({}),
+      };
+      
+      setUser(devUser);
+      setAuthState('authenticated');
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe: Unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser: User | null) => {

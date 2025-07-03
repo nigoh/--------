@@ -8,6 +8,7 @@
  * システム内のユーザー権限レベルを表す
  */
 export enum UserRole {
+  SUPER_ADMIN = 'super_admin', // システム管理者：システム全体の設定と管理
   ADMIN = 'admin',         // 管理者：すべての機能にアクセス可能
   MANAGER = 'manager',     // 管理職：部門・チームの管理機能にアクセス可能
   EMPLOYEE = 'employee',   // 一般社員：基本機能にアクセス可能
@@ -72,6 +73,11 @@ export enum Permission {
  * ロールに応じたデフォルトの権限セットを定義
  */
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  [UserRole.SUPER_ADMIN]: [
+    // システム管理者は全ての権限を持つ
+    ...Object.values(Permission)
+  ],
+  
   [UserRole.ADMIN]: [
     // 管理者は全ての権限を持つ
     ...Object.values(Permission)

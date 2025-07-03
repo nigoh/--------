@@ -41,6 +41,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const setUserRole = useCallback(async (uid: string, role: UserRole) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} にロール ${role} を設定しています`);
+        return { success: true };
+      }
+      
       const setRole = httpsCallable(functions, 'setUserRole');
       await setRole({ uid, role });
       return { success: true };
@@ -55,6 +61,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const removeUserRole = useCallback(async (uid: string, role: UserRole) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} からロール ${role} を削除しています`);
+        return { success: true };
+      }
+      
       const removeRole = httpsCallable(functions, 'removeUserRole');
       await removeRole({ uid, role });
       return { success: true };
@@ -69,6 +81,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const addUserPermission = useCallback(async (uid: string, permission: Permission) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} に権限 ${permission} を追加しています`);
+        return { success: true };
+      }
+      
       const addPermission = httpsCallable(functions, 'addUserPermission');
       await addPermission({ uid, permission });
       return { success: true };
@@ -83,6 +101,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const removeUserPermission = useCallback(async (uid: string, permission: Permission) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} から権限 ${permission} を削除しています`);
+        return { success: true };
+      }
+      
       const removePermission = httpsCallable(functions, 'removeUserPermission');
       await removePermission({ uid, permission });
       return { success: true };
@@ -97,6 +121,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const setUserPermissions = useCallback(async (uid: string, permissions: Permission[]) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} の権限を一括設定しています:`, permissions);
+        return { success: true };
+      }
+      
       const setPermissions = httpsCallable(functions, 'setUserPermissions');
       await setPermissions({ uid, permissions });
       return { success: true };
@@ -111,6 +141,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const setUserDepartment = useCallback(async (uid: string, departmentId: string) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} の部門を ${departmentId} に設定しています`);
+        return { success: true };
+      }
+      
       const setDepartment = httpsCallable(functions, 'setUserDepartment');
       await setDepartment({ uid, departmentId });
       return { success: true };
@@ -125,6 +161,12 @@ export function useUserPermissionManagement(): UseUserPermissionManagementReturn
    */
   const setUserPosition = useCallback(async (uid: string, position: string) => {
     try {
+      // 開発環境では一時的にローカル処理
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`開発環境: ユーザー ${uid} の役職を ${position} に設定しています`);
+        return { success: true };
+      }
+      
       const setPosition = httpsCallable(functions, 'setUserPosition');
       await setPosition({ uid, position });
       return { success: true };

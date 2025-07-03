@@ -26,6 +26,11 @@ export const EnhancedRoleManagementList: React.FC = () => {
   
   const { loading, error, loadUsers } = useRoleManagementStore();
   
+  // 初期データ読み込み
+  React.useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+  
   // 検索処理
   const handleSearch = () => {
     loadUsers(1, { searchQuery, roleFilter, departmentFilter });

@@ -90,6 +90,126 @@ export const useRoleManagementStore = create<RoleManagementState>((set, get) => 
     const pageSize = get().pageSize;
     
     try {
+      // 開発環境では、ダミーデータを使用
+      if (process.env.NODE_ENV === 'development') {
+        console.log('開発環境: ダミーデータを読み込み中...');
+        
+        // ダミーユーザーデータを生成
+        const dummyUsers: UserWithPermissions[] = [
+          {
+            uid: 'user1',
+            email: 'admin@example.com',
+            displayName: '管理者 太郎',
+            photoURL: null,
+            roles: [UserRole.ADMIN],
+            permissions: [Permission.USER_MANAGEMENT, Permission.ROLE_MANAGEMENT, Permission.SYSTEM_SETTINGS],
+            department: 'management',
+            position: '管理者',
+            lastLogin: new Date(Date.now() - 86400000), // 1日前
+            createdAt: new Date(Date.now() - 7776000000), // 3ヶ月前
+          },
+          {
+            uid: 'user2',
+            email: 'manager@example.com',
+            displayName: 'マネージャー 花子',
+            photoURL: null,
+            roles: [UserRole.MANAGER],
+            permissions: [Permission.EMPLOYEE_VIEW, Permission.TIMECARD_VIEW_ALL, Permission.EXPENSE_APPROVE],
+            department: 'dev',
+            position: '部長',
+            lastLogin: new Date(Date.now() - 43200000), // 12時間前
+            createdAt: new Date(Date.now() - 15552000000), // 6ヶ月前
+          },
+          {
+            uid: 'user3',
+            email: 'employee@example.com',
+            displayName: '社員 次郎',
+            photoURL: null,
+            roles: [UserRole.EMPLOYEE],
+            permissions: [Permission.TIMECARD_VIEW, Permission.EXPENSE_CREATE],
+            department: 'sales',
+            position: '営業',
+            lastLogin: new Date(Date.now() - 21600000), // 6時間前
+            createdAt: new Date(Date.now() - 31104000000), // 1年前
+          },
+          {
+            uid: 'user4',
+            email: 'guest@example.com',
+            displayName: 'ゲスト ユーザー',
+            photoURL: null,
+            roles: [UserRole.GUEST],
+            permissions: [Permission.EMPLOYEE_VIEW],
+            department: 'hr',
+            position: 'インターン',
+            lastLogin: new Date(Date.now() - 172800000), // 2日前
+            createdAt: new Date(Date.now() - 2592000000), // 1ヶ月前
+          }
+        ];
+        
+        // フィルタリング処理
+        let filteredUsers = dummyUsers;
+        
+        // 検索フィルター
+        if (currentFilters.searchQuery) {
+          filteredUsers = filteredUsers.filter(user =>
+            matchesSearchQuery(user, currentFilters.searchQuery!)
+          );
+        }
+        
+        // ロールフィルター
+        if (currentFilters.roleFilter && currentFilters.roleFilter !== 'all') {
+          filteredUsers = filteredUsers.filter(user =>
+            user.roles.includes(currentFilters.roleFilter as UserRole)
+          );
+        }
+        
+        // 部門フィルター
+        if (currentFilters.departmentFilter && currentFilters.departmentFilter !== 'all') {
+          filteredUsers = filteredUsers.filter(user =>
+            user.department === currentFilters.departmentFilter
+          );
+        }
+        
+        // ソート処理
+        filteredUsers.sort((a, b) => {
+          const field = currentSort.field;
+          const direction = currentSort.direction === 'asc' ? 1 : -1;
+          
+          let aValue = a[field];
+          let bValue = b[field];
+          
+          // 配列の場合は最初の要素で比較
+          if (Array.isArray(aValue)) aValue = aValue[0];
+          if (Array.isArray(bValue)) bValue = bValue[0];
+          
+          // null/undefinedの処理
+          if (aValue == null && bValue == null) return 0;
+          if (aValue == null) return 1 * direction;
+          if (bValue == null) return -1 * direction;
+          
+          if (aValue < bValue) return -1 * direction;
+          if (aValue > bValue) return 1 * direction;
+          return 0;
+        });
+        
+        // ページネーション処理
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+        
+        set({ 
+          users: paginatedUsers,
+          page,
+          filters: currentFilters,
+          sortConfig: currentSort,
+          totalUsers: filteredUsers.length,
+          totalPages: Math.ceil(filteredUsers.length / pageSize)
+        });
+        
+        return;
+      }
+      
+      // 本番環境での実装
       const db = getFirestore();
       let usersQuery = query(
         collection(db, 'users'),
@@ -105,9 +225,6 @@ export const useRoleManagementStore = create<RoleManagementState>((set, get) => 
       if (currentFilters.departmentFilter && currentFilters.departmentFilter !== 'all') {
         usersQuery = query(usersQuery, where('department', '==', currentFilters.departmentFilter));
       }
-      
-      // 最終ログイン日フィルター（クライアント側でフィルタリングする方がよいかも）
-      // ...
       
       // ページネーション
       if (page > 1) {

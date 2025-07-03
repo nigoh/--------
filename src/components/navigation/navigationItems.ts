@@ -116,6 +116,12 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     icon: React.createElement(LogIcon),
     index: 12,
     badge: 'Dev',
+  }, {
+    id: 'debug-role-management',
+    label: 'デバッグ権限管理',
+    icon: React.createElement(AdminIcon),
+    index: 13,
+    badge: 'Dev',
   }] : []),
 ];
 

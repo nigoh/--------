@@ -33,6 +33,10 @@ export function useRoleManagementForm() {
     setUserPosition
   } = useUserPermissionManagement();
 
+  // デバッグログ
+  console.log('useRoleManagementForm - users:', users);
+  console.log('useRoleManagementForm - loading:', loading);
+
   // 編集開始
   const startEditing = useCallback((userId: string) => {
     const user = users.find(u => u.uid === userId);
