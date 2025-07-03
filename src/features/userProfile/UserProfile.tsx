@@ -3,10 +3,8 @@
  * アカウント情報の表示・編集機能
  */
 import React from 'react';
-import { Box } from '@mui/material';
-import { spacingTokens } from '../../theme/designSystem';
+import { Box, Typography } from '@mui/material';
 import { FeatureLayout, FeatureHeader, FeatureContent } from '../../components/layout';
-import { UserProfileManager } from './components/UserProfileManager';
 
 const UserProfile: React.FC = () => {
   return (
@@ -19,7 +17,7 @@ const UserProfile: React.FC = () => {
       
       <FeatureContent variant="transparent">
         <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%' }}>
-          <UserProfileManager />
+          <Typography variant="h6">プロフィール管理画面（開発中）</Typography>
         </Box>
       </FeatureContent>
     </FeatureLayout>
