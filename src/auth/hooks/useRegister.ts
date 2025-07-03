@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useAuthLoggers } from '../../hooks/logging';
 import type { RegisterFormData } from '../types';
 
 // 登録フックの戻り値型
@@ -32,6 +33,7 @@ export const useRegister = (): UseRegisterReturn => {
   const [error, setError] = useState<string | null>(null);
   
   const { setError: setStoreError } = useAuthStore();
+  const { featureLogger } = useAuthLoggers();
 
   // エラーメッセージの変換
   const getErrorMessage = useCallback((errorCode: string): string => {
@@ -91,11 +93,26 @@ export const useRegister = (): UseRegisterReturn => {
       setIsLoading(true);
       setError(null);
 
+      // 新規登録試行ログ
+      await featureLogger.logUserAction('register_attempt', {
+        email: data.email,
+        displayName: data.displayName,
+        hasAcceptedTerms: data.acceptTerms
+      });
+
       // バリデーション
       const validationError = validateRegisterData(data);
       if (validationError) {
         setError(validationError);
         setStoreError(validationError);
+        
+        // バリデーションエラーログ
+        featureLogger.logError(new Error(validationError), {
+          email: data.email,
+          validationError,
+          step: 'validation'
+        });
+        
         return false;
       }
 
@@ -115,6 +132,21 @@ export const useRegister = (): UseRegisterReturn => {
         // メール確認送信
         await sendEmailVerification(userCredential.user);
 
+        // 新規登録成功ログ
+        await featureLogger.logUserAction('register_success', {
+          userId: userCredential.user.uid,
+          email: userCredential.user.email,
+          displayName: userCredential.user.displayName,
+          emailVerified: userCredential.user.emailVerified
+        });
+
+        // セキュリティログ
+        featureLogger.logSecurityEvent('account_created', {
+          userId: userCredential.user.uid,
+          email: userCredential.user.email,
+          verificationEmailSent: true
+        });
+
         console.log('✅ 新規登録が完了しました');
         console.log('📧 メール確認を送信しました');
         return true;
@@ -125,12 +157,21 @@ export const useRegister = (): UseRegisterReturn => {
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
+      
+      // 新規登録失敗ログ
+      featureLogger.logError(error, {
+        email: data.email,
+        errorCode: error.code,
+        errorMessage: errorMessage,
+        step: 'firebase_auth'
+      });
+      
       console.error('❌ 登録エラー:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [validateRegisterData, getErrorMessage, setStoreError]);
+  }, [validateRegisterData, getErrorMessage, setStoreError, featureLogger]);
 
   // メール確認の再送信
   const resendVerificationEmail = useCallback(async (): Promise<boolean> => {
@@ -148,7 +189,19 @@ export const useRegister = (): UseRegisterReturn => {
         return false;
       }
 
+      // メール確認再送信試行ログ
+      await featureLogger.logUserAction('verification_email_resend_attempt', {
+        userId: auth.currentUser.uid,
+        email: auth.currentUser.email
+      });
+
       await sendEmailVerification(auth.currentUser);
+      
+      // メール確認再送信成功ログ
+      await featureLogger.logUserAction('verification_email_resend_success', {
+        userId: auth.currentUser.uid,
+        email: auth.currentUser.email
+      });
       
       console.log('✅ メール確認を再送信しました');
       return true;
@@ -156,12 +209,21 @@ export const useRegister = (): UseRegisterReturn => {
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
+      
+      // メール確認再送信失敗ログ
+      featureLogger.logError(error, {
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        errorCode: error.code,
+        errorMessage: errorMessage
+      });
+      
       console.error('❌ メール再送信エラー:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [getErrorMessage, setStoreError]);
+  }, [getErrorMessage, setStoreError, featureLogger]);
 
   return {
     isLoading,

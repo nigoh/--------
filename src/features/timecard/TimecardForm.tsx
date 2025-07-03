@@ -13,10 +13,10 @@ import {
   FormLabel,
   Radio,
 } from '@mui/material';
-import { useTimecardStore } from './useTimecardStore';
+import { useTimecardForm } from './hooks/useTimecardForm';
 
 export const TimecardForm: React.FC = () => {
-  const { addEntry } = useTimecardStore();
+  const { handleTimecardEntry } = useTimecardForm();
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
@@ -25,9 +25,10 @@ export const TimecardForm: React.FC = () => {
   const [absenceReason, setAbsenceReason] = useState('');
   const [absenceType, setAbsenceType] = useState<'planned' | 'sudden'>('planned');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addEntry({
+    
+    await handleTimecardEntry({
       date,
       startTime: isAbsence ? '' : startTime,
       endTime: isAbsence ? '' : endTime,
@@ -36,6 +37,8 @@ export const TimecardForm: React.FC = () => {
       absenceReason: isAbsence ? absenceReason : undefined,
       absenceType: isAbsence ? absenceType : undefined,
     });
+    
+    // フォームリセット
     setNote('');
     setAbsenceReason('');
     setIsAbsence(false);

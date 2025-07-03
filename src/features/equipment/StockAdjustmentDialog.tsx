@@ -21,7 +21,7 @@ interface StockAdjustmentDialogProps {
   open: boolean;
   onClose: () => void;
   item: EquipmentItem | null;
-  onAdjust: (itemId: string, delta: number) => void;
+  onAdjust: (itemId: string, delta: number, reason: string) => void;
 }
 
 export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
@@ -32,6 +32,7 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
 }) => {
   const [adjustment, setAdjustment] = useState('');
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'remove' | 'set'>('add');
+  const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,6 +40,7 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
     if (open) {
       setAdjustment('');
       setAdjustmentType('add');
+      setReason('');
       setError(null);
     }
   }, [open]);
@@ -78,7 +80,7 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
           break;
       }
 
-      onAdjust(item.id, delta);
+      onAdjust(item.id, delta, reason || getDefaultReason(adjustmentType));
       onClose();
     } catch (err) {
       setError('在庫調整に失敗しました');
@@ -185,6 +187,17 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
               inputProps={{ min: 1 }}
             />
 
+            <TextField
+              label="調整理由（任意）"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              fullWidth
+              size="small"
+              multiline
+              rows={2}
+              placeholder="調整の理由を入力してください..."
+            />
+
             {adjustment && (
               <Box sx={{ p: 2, backgroundColor: 'primary.50', borderRadius: 1 }}>
                 <Typography variant="body2" color="primary">
@@ -198,3 +211,15 @@ export const StockAdjustmentDialog: React.FC<StockAdjustmentDialogProps> = ({
     </FormDialog>
   );
 };
+
+/**
+ * デフォルト理由を生成
+ */
+function getDefaultReason(adjustmentType: 'add' | 'remove' | 'set'): string {
+  switch (adjustmentType) {
+    case 'add': return '在庫追加';
+    case 'remove': return '在庫減少';
+    case 'set': return '在庫調整';
+    default: return '在庫調整';
+  }
+}

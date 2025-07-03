@@ -37,6 +37,7 @@ const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'
 const RoleManagement = React.lazy(() => import('./features/roleManagement/RoleManagement'));
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
+const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -287,6 +288,16 @@ function AppContent() {
               </TabPanel>
 
               <TabPanel value={currentTab} index={11}>
+                <PageTransition mode="fade" key="logging-dashboard">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="ロギングダッシュボードを読み込み中..." />}>
+                      <LoggingDashboard />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={12}>
                 <PageTransition mode="fade" key="logging-demo">
                   <ScrollableContent>
                     <Suspense fallback={<PageLoader message="ログ機能デモを読み込み中..." />}>

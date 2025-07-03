@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { useExpenseStore, ExpenseStatus } from '../useExpenseStore';
 import { useExpenseFormStore } from '../stores/useExpenseFormStore';
+import { useBusinessLoggers } from '../../../hooks/logging';
+import { useTemporary } from '../../../hooks/useTemporary';
 
 /**
  * 経費フォーム管理用カスタムフック
@@ -9,6 +11,8 @@ import { useExpenseFormStore } from '../stores/useExpenseFormStore';
 export const useExpenseForm = (onMessage?: (message: string, type: 'success' | 'error') => void) => {
   // ストアのアクション
   const { addExpense, updateExpense } = useExpenseStore();
+  const { toast, progress } = useTemporary();
+  const { featureLogger, crudLogger, searchLogger } = useBusinessLoggers('ExpenseManagement');
   const {
     formData,
     errors,
@@ -44,9 +48,31 @@ export const useExpenseForm = (onMessage?: (message: string, type: 'success' | '
     try {
       setSubmitting(true);
       
+      // 送信開始ログ
+      featureLogger.logUserAction('expense_form_submit_attempt', {
+        isEdit: !!editingExpense,
+        category: formData.category,
+        amount: Number(formData.amount),
+        hasNote: !!formData.note.trim()
+      });
+
+      progress.start(editingExpense ? '経費を更新中...' : '経費を登録中...', 1);
+      
       // バリデーション
       if (!validateForm()) {
+        // バリデーションエラーログ
+        crudLogger.logValidationError(errors, {
+          isEdit: !!editingExpense,
+          formData: {
+            category: formData.category,
+            amount: formData.amount,
+            hasNote: !!formData.note.trim()
+          }
+        });
+        
         showMessage('入力内容に不備があります', 'error');
+        progress.error();
+        setTimeout(() => progress.clear(), 2000);
         return false;
       }
 
@@ -61,18 +87,64 @@ export const useExpenseForm = (onMessage?: (message: string, type: 'success' | '
       if (editingExpense) {
         // 更新
         updateExpense(editingExpense.id, expenseData);
+        
+        // CRUD更新ログ
+        await crudLogger.logUpdate('expense', editingExpense.id, expenseData, {
+          category: expenseData.category,
+          amount: expenseData.amount,
+          amountRange: getAmountRange(expenseData.amount),
+          hasNote: !!expenseData.note
+        });
+        
+        // 成功ログ
+        featureLogger.logUserAction('expense_update_success', {
+          expenseId: editingExpense.id,
+          category: expenseData.category,
+          amount: expenseData.amount
+        });
+        
         showMessage('経費を更新しました', 'success');
+        toast.success('経費を更新しました');
       } else {
         // 新規作成
-        addExpense(expenseData);
+        const expenseId = addExpense(expenseData);
+        
+        // CRUD作成ログ
+        await crudLogger.logCreate('expense', { ...expenseData, id: expenseId }, {
+          category: expenseData.category,
+          amount: expenseData.amount,
+          amountRange: getAmountRange(expenseData.amount),
+          hasNote: !!expenseData.note
+        });
+        
+        // 成功ログ
+        featureLogger.logUserAction('expense_create_success', {
+          expenseId: expenseId,
+          category: expenseData.category,
+          amount: expenseData.amount
+        });
+        
         showMessage('経費を登録しました', 'success');
+        toast.success(`経費（${expenseData.amount.toLocaleString()}円）を登録しました`);
       }
 
+      progress.complete();
       resetForm();
+      setTimeout(() => progress.clear(), 1000);
       return true;
     } catch (error) {
+      // エラーログ
+      featureLogger.logError(error instanceof Error ? error : new Error('Expense form submit failed'), {
+        action: editingExpense ? 'expense_update' : 'expense_create',
+        category: formData.category,
+        amount: formData.amount
+      });
+      
+      progress.error();
       console.error('経費保存エラー:', error);
       showMessage('保存に失敗しました', 'error');
+      toast.error('保存に失敗しました');
+      setTimeout(() => progress.clear(), 2000);
       return false;
     } finally {
       setSubmitting(false);
@@ -84,6 +156,11 @@ export const useExpenseForm = (onMessage?: (message: string, type: 'success' | '
     addExpense,
     updateExpense,
     resetForm,
+    featureLogger,
+    crudLogger,
+    toast,
+    progress,
+    errors,
     setSubmitting,
     showMessage,
   ]);
@@ -233,3 +310,15 @@ export const useExpenseList = (onMessage?: (message: string, type: 'success' | '
     handleRemoveReceipt,
   };
 };
+
+/**
+ * 金額範囲の取得
+ */
+function getAmountRange(amount: number): string {
+  if (amount < 1000) return '< 1,000円';
+  if (amount < 5000) return '1,000-5,000円';
+  if (amount < 10000) return '5,000-10,000円';
+  if (amount < 50000) return '10,000-50,000円';
+  if (amount < 100000) return '50,000-100,000円';
+  return '> 100,000円';
+}

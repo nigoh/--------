@@ -13,6 +13,7 @@ import {
 import { auth } from '../firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { authenticateWithPasskey, formatCredentialResponse } from '../passkey';
+import { useAuthLoggers } from '../../hooks/logging';
 import type { LoginFormData, AuthErrorCode } from '../types';
 import type { MultiFactorResolver } from 'firebase/auth';
 
@@ -41,6 +42,7 @@ export const useLogin = (): UseLoginReturn => {
   const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
   
   const { setLastLogin, setError: setStoreError, setMfaRequired } = useAuthStore();
+  const { featureLogger } = useAuthLoggers();
 
   // エラーメッセージの変換
   const getErrorMessage = useCallback((errorCode: string): string => {
@@ -74,6 +76,13 @@ export const useLogin = (): UseLoginReturn => {
       setIsLoading(true);
       setError(null);
 
+      // ログイン試行開始ログ
+      await featureLogger.logUserAction('login_attempt', {
+        method: 'email',
+        email: data.email,
+        rememberMe: data.rememberMe
+      });
+
       const userCredential: UserCredential = await signInWithEmailAndPassword(
         auth,
         data.email,
@@ -83,6 +92,16 @@ export const useLogin = (): UseLoginReturn => {
       if (userCredential.user) {
         setLastLogin('email');
         clearMfaResolver();
+        
+        // ログイン成功ログ
+        await featureLogger.logUserAction('login_success', {
+          method: 'email',
+          userId: userCredential.user.uid,
+          email: userCredential.user.email,
+          emailVerified: userCredential.user.emailVerified,
+          rememberMe: data.rememberMe
+        });
+        
         console.log('✅ メール認証でログインしました');
         return true;
       }
@@ -95,6 +114,14 @@ export const useLogin = (): UseLoginReturn => {
         setMfaResolver(resolver);
         setMfaRequired(true);
         setError('多要素認証が必要です');
+        
+        // MFA要求ログ
+        featureLogger.logSecurityEvent('mfa_required', {
+          method: 'email',
+          email: data.email,
+          factorCount: resolver?.hints?.length || 0
+        });
+        
         console.log('🔐 MFA認証が必要です');
         return false;
       }
@@ -102,18 +129,32 @@ export const useLogin = (): UseLoginReturn => {
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
+      
+      // ログイン失敗ログ
+      featureLogger.logError(error, {
+        method: 'email',
+        email: data.email,
+        errorCode: error.code,
+        errorMessage: errorMessage
+      });
+      
       console.error('❌ ログインエラー:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver]);
+  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver, featureLogger]);
 
   // Googleログイン
   const loginWithGoogle = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Google ログイン試行ログ
+      await featureLogger.logUserAction('login_attempt', {
+        method: 'google'
+      });
 
       const provider = new GoogleAuthProvider();
       
@@ -127,6 +168,16 @@ export const useLogin = (): UseLoginReturn => {
       if (userCredential.user) {
         setLastLogin('google');
         clearMfaResolver();
+        
+        // Google ログイン成功ログ
+        await featureLogger.logUserAction('login_success', {
+          method: 'google',
+          userId: userCredential.user.uid,
+          email: userCredential.user.email,
+          emailVerified: userCredential.user.emailVerified,
+          displayName: userCredential.user.displayName
+        });
+        
         console.log('✅ Google認証でログインしました');
         return true;
       }
@@ -135,6 +186,12 @@ export const useLogin = (): UseLoginReturn => {
     } catch (error: any) {
       // ユーザーがキャンセルした場合は特別処理
       if (error.code === 'auth/popup-closed-by-user') {
+        // キャンセルログ
+        await featureLogger.logUserAction('login_cancelled', {
+          method: 'google',
+          reason: 'popup_closed'
+        });
+        
         console.log('ℹ️ ユーザーがログインをキャンセルしました');
         return false;
       }
@@ -145,6 +202,13 @@ export const useLogin = (): UseLoginReturn => {
         setMfaResolver(resolver);
         setMfaRequired(true);
         setError('多要素認証が必要です');
+        
+        // MFA要求ログ
+        featureLogger.logSecurityEvent('mfa_required', {
+          method: 'google',
+          factorCount: resolver?.hints?.length || 0
+        });
+        
         console.log('🔐 MFA認証が必要です');
         return false;
       }
@@ -152,18 +216,31 @@ export const useLogin = (): UseLoginReturn => {
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
+      
+      // Google ログイン失敗ログ
+      featureLogger.logError(error, {
+        method: 'google',
+        errorCode: error.code,
+        errorMessage: errorMessage
+      });
+      
       console.error('❌ Googleログインエラー:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver]);
+  }, [setLastLogin, getErrorMessage, setStoreError, setMfaRequired, clearMfaResolver, featureLogger]);
 
   // パスキーログイン
   const loginWithPasskey = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // パスキー ログイン試行ログ
+      await featureLogger.logUserAction('login_attempt', {
+        method: 'passkey'
+      });
 
       // 認証チャレンジを取得（本来はサーバーから取得）
       const challenge = new Uint8Array(32);
@@ -196,6 +273,20 @@ export const useLogin = (): UseLoginReturn => {
       setLastLogin('passkey');
       clearMfaResolver();
       
+      // パスキー ログイン成功ログ
+      await featureLogger.logUserAction('login_success', {
+        method: 'passkey',
+        credentialId: credential.id,
+        authenticatorType: credential.response.clientDataJSON ? 'platform' : 'cross-platform'
+      });
+      
+      // セキュリティログ
+      featureLogger.logSecurityEvent('passkey_authentication', {
+        credentialId: credential.id,
+        origin: window.location.origin,
+        userAgent: navigator.userAgent
+      });
+      
       console.log('✅ パスキーでログインしました（デモモード）');
       return true;
 
@@ -204,6 +295,12 @@ export const useLogin = (): UseLoginReturn => {
       
       // パスキー固有のエラーハンドリング
       if (error.message.includes('キャンセル')) {
+        // キャンセルログ
+        await featureLogger.logUserAction('login_cancelled', {
+          method: 'passkey',
+          reason: 'user_cancelled'
+        });
+        
         console.log('ℹ️ ユーザーがパスキー認証をキャンセルしました');
         return false;
       }
@@ -214,12 +311,19 @@ export const useLogin = (): UseLoginReturn => {
         setError(error.message || 'パスキー認証に失敗しました');
       }
       
+      // パスキー ログイン失敗ログ
+      featureLogger.logError(error, {
+        method: 'passkey',
+        errorMessage: error.message,
+        userAgent: navigator.userAgent
+      });
+      
       setStoreError(error.message || 'パスキー認証に失敗しました');
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [setLastLogin, setStoreError, clearMfaResolver]);
+  }, [setLastLogin, setStoreError, clearMfaResolver, featureLogger]);
 
   // パスワード再設定
   const resetPassword = useCallback(async (email: string): Promise<boolean> => {
@@ -227,7 +331,22 @@ export const useLogin = (): UseLoginReturn => {
       setIsLoading(true);
       setError(null);
 
+      // パスワード再設定試行ログ
+      await featureLogger.logUserAction('password_reset_attempt', {
+        email: email
+      });
+
       await sendPasswordResetEmail(auth, email);
+      
+      // パスワード再設定成功ログ
+      await featureLogger.logUserAction('password_reset_success', {
+        email: email
+      });
+      
+      // セキュリティログ
+      featureLogger.logSecurityEvent('password_reset_email_sent', {
+        email: email
+      });
       
       console.log('✅ パスワード再設定メールを送信しました');
       return true;
@@ -235,12 +354,20 @@ export const useLogin = (): UseLoginReturn => {
       const errorMessage = getErrorMessage(error.code);
       setError(errorMessage);
       setStoreError(errorMessage);
+      
+      // パスワード再設定失敗ログ
+      featureLogger.logError(error, {
+        email: email,
+        errorCode: error.code,
+        errorMessage: errorMessage
+      });
+      
       console.error('❌ パスワード再設定エラー:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [getErrorMessage, setStoreError]);
+  }, [getErrorMessage, setStoreError, featureLogger]);
 
   return {
     isLoading,

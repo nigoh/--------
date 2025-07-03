@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useEmployeeStore, Employee } from '../useEmployeeStore';
 import { useEmployeeFormStore } from '../stores/useEmployeeFormStore';
 import { useTemporary } from '../../../hooks/useTemporary';
+import { useManagementLoggers } from '../../../hooks/logging';
 
 export interface ValidationErrors {
   [key: string]: string;
@@ -34,6 +35,7 @@ export const useEmployeeForm = (
 
   const { addEmployee, updateEmployee } = useEmployeeStore();
   const { toast, progress } = useTemporary();
+  const { featureLogger, crudLogger } = useManagementLoggers('EmployeeRegister');
   
   const isEditing = mode === 'edit';
   const isViewing = mode === 'view';
@@ -44,9 +46,16 @@ export const useEmployeeForm = (
    */
   const initializeFormWithOpen = useCallback((isOpen: boolean) => {
     if (isOpen) {
+      // フォーム初期化ログ
+      featureLogger.logUserAction('employee_form_init', {
+        mode: mode,
+        employeeId: employee?.id,
+        employeeName: employee?.name
+      });
+
       initializeForm(employee, mode);
     }
-  }, [employee?.id, mode, initializeForm]); // employeeの変更はIDで判定
+  }, [employee?.id, mode, initializeForm, featureLogger]); // employeeの変更はIDで判定
 
   /**
    * 入力フィールドの変更ハンドラー（メモ化）
@@ -100,14 +109,37 @@ export const useEmployeeForm = (
       newErrors.joinDate = '入社日は必須です';
     }
 
+    // バリデーションエラーログ
+    if (Object.keys(newErrors).length > 0) {
+      crudLogger.logValidationError(newErrors, {
+        mode: mode,
+        employeeId: employee?.id,
+        formData: {
+          department: formData.department,
+          position: formData.position,
+          hasEmail: !!formData.email,
+          hasJoinDate: !!formData.joinDate
+        }
+      });
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData, setErrors]);
+  }, [formData, setErrors, crudLogger, mode, employee?.id]);
 
   /**
    * 保存処理（メモ化）
    */
   const handleSave = useCallback(async (onSuccess?: () => void) => {
+    // 保存試行ログ
+    await featureLogger.logUserAction(isEditing ? 'employee_update_attempt' : 'employee_create_attempt', {
+      employeeId: employee?.id,
+      employeeName: formData.name,
+      department: formData.department,
+      position: formData.position,
+      mode: mode
+    });
+
     if (!validateForm()) {
       toast.error('入力内容に不備があります');
       return false;
@@ -122,7 +154,22 @@ export const useEmployeeForm = (
 
       if (isEditing && employee) {
         // 更新
+        await crudLogger.logUpdate('employee', employee.id, formData, {
+          previousDepartment: employee.department,
+          previousPosition: employee.position,
+          previousStatus: employee.status
+        });
+
         updateEmployee(employee.id, formData);
+        
+        // 社員更新成功ログ
+        await featureLogger.logUserAction('employee_update_success', {
+          employeeId: employee.id,
+          employeeName: formData.name,
+          department: formData.department,
+          position: formData.position
+        });
+
         toast.success(`${formData.name}さんの情報を更新しました`);
       } else {
         // 新規登録
@@ -132,7 +179,24 @@ export const useEmployeeForm = (
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+
+        await crudLogger.logCreate('employee', newEmployee, {
+          department: formData.department,
+          position: formData.position,
+          hasSkills: formData.skills.length > 0
+        });
+
         addEmployee(newEmployee);
+
+        // 社員作成成功ログ
+        await featureLogger.logUserAction('employee_create_success', {
+          employeeId: newEmployee.id,
+          employeeName: formData.name,
+          department: formData.department,
+          position: formData.position,
+          skillCount: formData.skills.length
+        });
+
         toast.success(`${formData.name}さんを登録しました`);
       }
 
@@ -149,6 +213,14 @@ export const useEmployeeForm = (
     } catch (err) {
       progress.error();
       toast.error(isEditing ? '更新に失敗しました' : '登録に失敗しました');
+
+      // 保存エラーログ
+      featureLogger.logError(err instanceof Error ? err : new Error('社員保存エラー'), {
+        operation: isEditing ? 'update' : 'create',
+        employeeId: employee?.id,
+        employeeName: formData.name,
+        mode: mode
+      });
 
       setTimeout(() => {
         progress.clear();
@@ -167,7 +239,10 @@ export const useEmployeeForm = (
     updateEmployee, 
     addEmployee, 
     toast, 
-    progress
+    progress,
+    featureLogger,
+    crudLogger,
+    mode
   ]);
 
   return {
