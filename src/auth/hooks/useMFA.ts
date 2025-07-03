@@ -72,10 +72,20 @@ export const useMFA = (): UseMFAReturn => {
     console.error('MFA Error:', error);
   }, [getErrorMessage, setStoreError]);
 
-  // TOTP設定
+  // TOTP設定（Firebase公式ドキュメント完全準拠）
   const setupTOTP = useCallback(async (): Promise<TotpSecret | null> => {
+    console.log('🔧 [TOTP Setup] Firebase公式実装による設定開始');
+    
     if (!auth.currentUser) {
-      handleError({ code: 'auth/user-not-found' });
+      console.error('❌ [TOTP Setup] ユーザーが認証されていません');
+      setError('認証が必要です');
+      return null;
+    }
+
+    // Firebase公式ドキュメント: メールアドレス確認が必要
+    if (!auth.currentUser.emailVerified) {
+      console.error('❌ [TOTP Setup] メールアドレスが確認されていません');
+      setError('MFAを使用するにはメールアドレスの確認が必要です');
       return null;
     }
 
@@ -83,30 +93,85 @@ export const useMFA = (): UseMFAReturn => {
       setIsLoading(true);
       setError(null);
 
+      console.log('🔧 [TOTP Setup] ユーザー情報:', {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+        emailVerified: auth.currentUser.emailVerified
+      });
+
+      // ステップ1: マルチファクターセッションを取得（公式ドキュメント準拠）
+      console.log('🔧 [TOTP Setup] multiFactor().getSession() 呼び出し中...');
       const multiFactorSession = await multiFactor(auth.currentUser).getSession();
+      console.log('✅ [TOTP Setup] マルチファクターセッション取得成功');
+
+      // ステップ2: TOTPシークレットを生成（公式ドキュメント準拠）
+      console.log('🔧 [TOTP Setup] TotpMultiFactorGenerator.generateSecret() 呼び出し中...');
       const totpSecret = await TotpMultiFactorGenerator.generateSecret(multiFactorSession);
-      
-      // QRコードURL生成
+      console.log('✅ [TOTP Setup] TOTPシークレット生成成功');
+
+      // ステップ3: QRコードURL生成（公式ドキュメント準拠）
+      console.log('🔧 [TOTP Setup] QRコードURL生成中...');
       const appName = 'WorkApp';
-      const accountName = auth.currentUser.email || 'user';
-      const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(accountName)}?secret=${totpSecret.secretKey}&issuer=${encodeURIComponent(appName)}`;
+      const qrCodeUrl = totpSecret.generateQrCodeUrl(
+        auth.currentUser.email || 'user',
+        appName
+      );
+      console.log('✅ [TOTP Setup] QRコードURL生成成功:', qrCodeUrl);
+
+      // シークレットキーも表示（公式ドキュメント推奨）
+      console.log('🔧 [TOTP Setup] シークレットキー:', totpSecret.secretKey);
       
       setTotpSecret(totpSecret.secretKey);
-      setQrCodeUrl(qrUrl);
+      setQrCodeUrl(qrCodeUrl);
       
+      console.log('✅ [TOTP Setup] 設定完了 - QRコードまたはシークレットキーを認証アプリに追加してください');
       return totpSecret;
-    } catch (error) {
-      handleError(error);
+      
+    } catch (error: any) {
+      console.error('❌ [TOTP Setup] エラー詳細:', {
+        error: error,
+        code: error?.code,
+        message: error?.message
+      });
+      
+      // Firebase公式ドキュメントに基づくエラーハンドリング
+      if (error?.code === 'auth/operation-not-allowed') {
+        const errorMsg = 'Firebase Consoleでマルチファクター認証を有効にしてください';
+        console.error('❌ [TOTP Setup]', errorMsg);
+        setError(errorMsg);
+      } else if (error?.code === 'auth/invalid-user-token') {
+        const errorMsg = '認証トークンが無効です。再ログインしてください';
+        console.error('❌ [TOTP Setup]', errorMsg);
+        setError(errorMsg);
+      } else if (error?.code === 'auth/user-not-found') {
+        const errorMsg = 'ユーザーが見つかりません';
+        console.error('❌ [TOTP Setup]', errorMsg);
+        setError(errorMsg);
+      } else {
+        const errorMsg = `TOTP設定エラー: ${error?.message || '不明なエラー'}`;
+        console.error('❌ [TOTP Setup]', errorMsg);
+        setError(errorMsg);
+      }
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [handleError]);
+  }, []);
 
-  // TOTP検証・登録完了
+  // TOTP検証・登録完了（Firebase公式ドキュメント完全準拠）
   const verifyTOTP = useCallback(async (code: string, secret: TotpSecret): Promise<boolean> => {
+    console.log('🔧 [TOTP Verify] Firebase公式実装による検証・登録開始');
+    
     if (!auth.currentUser) {
-      handleError({ code: 'auth/user-not-found' });
+      console.error('❌ [TOTP Verify] ユーザーが認証されていません');
+      setError('認証が必要です');
+      return false;
+    }
+
+    // 入力検証
+    if (!/^\d{6}$/.test(code)) {
+      console.error('❌ [TOTP Verify] 無効な確認コード形式');
+      setError('6桁の数字を入力してください');
       return false;
     }
 
@@ -114,18 +179,58 @@ export const useMFA = (): UseMFAReturn => {
       setIsLoading(true);
       setError(null);
 
-      const totpCredential = TotpMultiFactorGenerator.assertionForEnrollment(secret, code);
-      await multiFactor(auth.currentUser).enroll(totpCredential, 'TOTP Authentication');
-      
+      console.log('🔧 [TOTP Verify] 入力されたコード:', code);
+      console.log('🔧 [TOTP Verify] 使用するシークレット:', secret.secretKey.substring(0, 8) + '...');
+
+      // ステップ1: 登録用アサーションを作成（公式ドキュメント準拠）
+      console.log('🔧 [TOTP Verify] TotpMultiFactorGenerator.assertionForEnrollment() 呼び出し中...');
+      const multiFactorAssertion = TotpMultiFactorGenerator.assertionForEnrollment(secret, code);
+      console.log('✅ [TOTP Verify] マルチファクターアサーション生成成功');
+
+      // ステップ2: MFA登録を完了（公式ドキュメント準拠）
+      const mfaDisplayName = 'TOTP Authentication';
+      console.log('🔧 [TOTP Verify] multiFactor().enroll() 呼び出し中...', { displayName: mfaDisplayName });
+      await multiFactor(auth.currentUser).enroll(multiFactorAssertion, mfaDisplayName);
+      console.log('✅ [TOTP Verify] MFA登録完了');
+
       setMfaVerified(true);
+      console.log('🎉 [TOTP Verify] TOTP MFA設定が正常に完了しました！');
       return true;
-    } catch (error) {
-      handleError(error);
+      
+    } catch (error: any) {
+      console.error('❌ [TOTP Verify] エラー詳細:', {
+        error: error,
+        code: error?.code,
+        message: error?.message
+      });
+      
+      // Firebase公式ドキュメントに基づくエラーハンドリング
+      if (error?.code === 'auth/invalid-verification-code') {
+        const errorMsg = '確認コードが正しくありません。認証アプリの6桁のコードを確認してください';
+        console.error('❌ [TOTP Verify]', errorMsg);
+        setError(errorMsg);
+      } else if (error?.code === 'auth/code-expired') {
+        const errorMsg = '確認コードの有効期限が切れています。新しいコードを入力してください';
+        console.error('❌ [TOTP Verify]', errorMsg);
+        setError(errorMsg);
+      } else if (error?.code === 'auth/maximum-second-factor-count-exceeded') {
+        const errorMsg = 'MFA設定可能数の上限に達しています';
+        console.error('❌ [TOTP Verify]', errorMsg);
+        setError(errorMsg);
+      } else if (error?.code === 'auth/second-factor-already-in-use') {
+        const errorMsg = 'この認証方法は既に使用されています';
+        console.error('❌ [TOTP Verify]', errorMsg);
+        setError(errorMsg);
+      } else {
+        const errorMsg = `TOTP検証エラー: ${error?.message || '不明なエラー'}`;
+        console.error('❌ [TOTP Verify]', errorMsg);
+        setError(errorMsg);
+      }
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [handleError, setMfaVerified]);
+  }, [setMfaVerified]);
 
   // SMS設定
   const setupSMS = useCallback(async (phoneNumber: string): Promise<boolean> => {
@@ -195,12 +300,14 @@ export const useMFA = (): UseMFAReturn => {
     }
   }, [verificationId, handleError, setMfaVerified]);
 
-  // MFAチャレンジ解決（ログイン時）
+  // MFAチャレンジ解決（ログイン時 - Firebase公式ドキュメント準拠）
   const resolveMFAChallenge = useCallback(async (
     resolver: MultiFactorResolver,
     code: string,
     method: MfaMethod
   ): Promise<boolean> => {
+    console.log('🔧 [MFA Challenge] チャレンジ解決開始:', { method });
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -208,30 +315,63 @@ export const useMFA = (): UseMFAReturn => {
       let multiFactorAssertion;
 
       if (method === 'totp') {
-        // TOTP認証
-        const totpSecret = resolver.hints[0];
-        if (totpSecret.factorId === 'totp') {
+        console.log('🔧 [MFA Challenge] TOTP認証処理中...');
+        
+        // TOTP認証 - 公式ドキュメント準拠
+        const totpFactorHint = resolver.hints.find(hint => 
+          hint.factorId === TotpMultiFactorGenerator.FACTOR_ID
+        );
+        
+        if (totpFactorHint) {
+          console.log('🔧 [MFA Challenge] TOTP Factor found:', totpFactorHint.uid);
           multiFactorAssertion = TotpMultiFactorGenerator.assertionForSignIn(
-            totpSecret.uid,
+            totpFactorHint.uid,
             code
           );
+          console.log('🔧 [MFA Challenge] TOTP assertion生成成功');
+        } else {
+          throw new Error('TOTP認証要素が見つかりません');
         }
       } else if (method === 'sms') {
+        console.log('🔧 [MFA Challenge] SMS認証処理中...');
+        
         // SMS認証
-        const phoneCredential = PhoneAuthProvider.credential(verificationId || '', code);
+        if (!verificationId) {
+          throw new Error('SMS認証IDが見つかりません');
+        }
+        const phoneCredential = PhoneAuthProvider.credential(verificationId, code);
         multiFactorAssertion = PhoneMultiFactorGenerator.assertion(phoneCredential);
+        console.log('🔧 [MFA Challenge] SMS assertion生成成功');
       }
 
       if (multiFactorAssertion) {
-        await resolver.resolveSignIn(multiFactorAssertion);
+        console.log('🔧 [MFA Challenge] resolveSignIn()呼び出し中...');
+        const userCredential = await resolver.resolveSignIn(multiFactorAssertion);
+        console.log('🔧 [MFA Challenge] ログイン成功:', userCredential.user.uid);
+        
         setMfaVerified(true);
         setMfaRequired(false);
         return true;
       }
 
-      return false;
-    } catch (error) {
-      handleError(error);
+      throw new Error('認証アサーションの生成に失敗しました');
+    } catch (error: any) {
+      console.error('❌ [MFA Challenge] エラー詳細:', {
+        error: error,
+        code: error?.code,
+        message: error?.message
+      });
+      
+      // MFAチャレンジ特有のエラーハンドリング
+      if (error?.code === 'auth/invalid-verification-code') {
+        setError('認証コードが正しくありません');
+      } else if (error?.code === 'auth/code-expired') {
+        setError('認証コードの有効期限が切れています');
+      } else if (error?.code === 'auth/too-many-requests') {
+        setError('試行回数が多すぎます。しばらくしてから再試行してください');
+      } else {
+        handleError(error);
+      }
       return false;
     } finally {
       setIsLoading(false);

@@ -79,7 +79,88 @@ export type LoginMethod = 'email' | 'google' | 'passkey';
 /**
  * MFA方法
  */
-export type MfaMethod = 'totp' | 'sms';
+export type MfaMethod = 'totp' | 'sms' | 'webauthn' | 'backup-code';
+
+/**
+ * WebAuthn認証器の種類
+ */
+export type WebAuthnAuthenticatorType = 'platform' | 'cross-platform';
+
+/**
+ * WebAuthn認証データ
+ */
+export interface WebAuthnCredential {
+  id: string;
+  type: 'public-key';
+  rawId: ArrayBuffer;
+  response: {
+    clientDataJSON: ArrayBuffer;
+    authenticatorData: ArrayBuffer;
+    signature?: ArrayBuffer;
+    attestationObject?: ArrayBuffer;
+    userHandle?: ArrayBuffer | null;
+  };
+  authenticatorAttachment?: AuthenticatorAttachment;
+  clientExtensionResults?: AuthenticationExtensionsClientOutputs;
+}
+
+/**
+ * WebAuthn設定データ
+ */
+export interface WebAuthnSetupData {
+  challenge: string;
+  user: {
+    id: string;
+    name: string;
+    displayName: string;
+  };
+  rp: {
+    id: string;
+    name: string;
+  };
+  pubKeyCredParams: PublicKeyCredentialParameters[];
+  timeout?: number;
+  attestation?: AttestationConveyancePreference;
+  authenticatorSelection?: AuthenticatorSelectionCriteria;
+}
+
+/**
+ * バックアップコード
+ */
+export interface BackupCode {
+  id: string;
+  code: string;
+  used: boolean;
+  usedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * リスク評価結果
+ */
+export interface RiskAssessment {
+  deviceFingerprint: string;
+  locationRisk: 'low' | 'medium' | 'high';
+  timePatternRisk: 'low' | 'medium' | 'high';
+  behaviorRisk: 'low' | 'medium' | 'high';
+  overallRisk: number;
+  riskFactors: string[];
+}
+
+/**
+ * アダプティブ認証設定
+ */
+export interface AdaptiveAuthConfig {
+  enabled: boolean;
+  riskThresholds: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  actions: {
+    [key: string]: MfaMethod[];
+  };
+}
 
 /**
  * 認証アクション
@@ -91,7 +172,9 @@ export type AuthAction =
   | 'resetPassword'
   | 'verifyEmail'
   | 'setupMfa'
-  | 'verifyMfa';
+  | 'verifyMfa'
+  | 'setupWebauthn'
+  | 'generateBackupCodes';
 
 /**
  * パスキー認証データ

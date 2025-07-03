@@ -27,9 +27,13 @@ import {
   QrCode2 as QrCodeIcon,
   Sms as SmsIcon,
   Check as CheckIcon,
+  Fingerprint as FingerprintIcon,
+  Backup as BackupIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { useMFA } from '../hooks/useMFA';
+import { useWebAuthn } from '../hooks/useWebAuthn';
+import { useBackupCodes } from '../hooks/useBackupCodes';
 import { spacingTokens } from '../../theme/designSystem';
 import type { MfaMethod } from '../types';
 import type { MultiFactorResolver } from 'firebase/auth';
@@ -61,9 +65,28 @@ export const MFAVerificationDialog: React.FC<MFAVerificationDialogProps> = ({
     clearError,
   } = useMFA();
 
+  // WebAuthn機能
+  const {
+    isLoading: isWebAuthnLoading,
+    error: webAuthnError,
+    verifyWebAuthnMFA,
+    clearError: clearWebAuthnError,
+  } = useWebAuthn();
+
+  // バックアップコード機能
+  const {
+    isLoading: isBackupLoading,
+    error: backupError,
+    verifyBackupCode,
+    clearError: clearBackupError,
+  } = useBackupCodes();
+
   // 状態
   const [selectedMethod, setSelectedMethod] = useState<MfaMethod | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
+
+  // ローディング状態の統合
+  const isAnyLoading = isLoading || isWebAuthnLoading || isBackupLoading;
 
   // 利用可能なMFA方法を取得
   const availableMethods = resolver?.hints || [];
@@ -72,24 +95,40 @@ export const MFAVerificationDialog: React.FC<MFAVerificationDialogProps> = ({
   const handleMethodSelect = useCallback((method: MfaMethod) => {
     setSelectedMethod(method);
     clearError();
-  }, [clearError]);
+    clearWebAuthnError();
+    clearBackupError();
+  }, [clearError, clearWebAuthnError, clearBackupError]);
 
   // 認証コード検証
   const handleVerify = useCallback(async () => {
-    if (!resolver || !selectedMethod || !verificationCode) return;
+    if (!resolver || !selectedMethod) return;
 
-    const success = await resolveMFAChallenge(resolver, verificationCode, selectedMethod);
+    let success = false;
+
+    if (selectedMethod === 'webauthn') {
+      // WebAuthn認証
+      success = await verifyWebAuthnMFA('challenge-from-server');
+    } else if (selectedMethod === 'backup-code') {
+      // バックアップコード認証
+      success = await verifyBackupCode(verificationCode);
+    } else if (verificationCode) {
+      // TOTP/SMS認証
+      success = await resolveMFAChallenge(resolver, verificationCode, selectedMethod);
+    }
+
     if (success) {
       onSuccess();
     }
-  }, [resolver, selectedMethod, verificationCode, resolveMFAChallenge, onSuccess]);
+  }, [resolver, selectedMethod, verificationCode, resolveMFAChallenge, verifyWebAuthnMFA, verifyBackupCode, onSuccess]);
 
   // リセット
   const resetState = useCallback(() => {
     setSelectedMethod(null);
     setVerificationCode('');
     clearError();
-  }, [clearError]);
+    clearWebAuthnError();
+    clearBackupError();
+  }, [clearError, clearWebAuthnError, clearBackupError]);
 
   // ダイアログが閉じられたときのリセット
   useEffect(() => {
@@ -99,7 +138,7 @@ export const MFAVerificationDialog: React.FC<MFAVerificationDialogProps> = ({
   }, [open, resetState]);
 
   // 認証コードバリデーション
-  const isCodeValid = verificationCode.length === 6;
+  const isCodeValid = selectedMethod === 'webauthn' || verificationCode.length === 6;
 
   // メソッド表示名
   const getMethodDisplayName = (factorId: string) => {
@@ -108,6 +147,10 @@ export const MFAVerificationDialog: React.FC<MFAVerificationDialogProps> = ({
         return '認証アプリ（TOTP）';
       case 'phone':
         return 'SMS認証';
+      case 'webauthn':
+        return '生体認証・セキュリティキー';
+      case 'backup-code':
+        return 'バックアップコード';
       default:
         return '不明な認証方法';
     }
@@ -120,6 +163,10 @@ export const MFAVerificationDialog: React.FC<MFAVerificationDialogProps> = ({
         return <QrCodeIcon />;
       case 'phone':
         return <SmsIcon />;
+      case 'webauthn':
+        return <FingerprintIcon />;
+      case 'backup-code':
+        return <BackupIcon />;
       default:
         return <SecurityIcon />;
     }
