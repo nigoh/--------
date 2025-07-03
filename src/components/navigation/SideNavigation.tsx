@@ -120,12 +120,14 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
           alignItems: 'center',
           minHeight: 48,
           justifyContent: collapsed ? 'center' : 'initial',
-          px: collapsed ? 2 : 2.5,
+          px: collapsed ? 3 : 2.5,
           py: 1,
           ml: depth * 2,
-          borderRadius: '12px',
-          mx: 1,
+          borderRadius: collapsed ? '50%' : '12px',
+          mx: collapsed ? 'auto' : 1,
           mb: 0.5,
+          width: collapsed ? 48 : 'auto',
+          height: collapsed ? 48 : 'auto',
           background: isActive 
             ? gradientTokens.primary.bold
             : 'transparent',
@@ -154,7 +156,7 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              borderRadius: '12px',
+              borderRadius: collapsed ? '50%' : '12px',
               padding: '1px',
               background: gradientTokens.primary.bold,
               mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
@@ -236,32 +238,7 @@ export const SideNavigation: React.FC<SideNavigationProps> = ({
 
     return (
       <Box key={item.id}>
-        {collapsed ? (
-          <Tooltip 
-            title={item.label} 
-            placement="right"
-            disableInteractive
-            enterDelay={0}
-            leaveDelay={0}
-            TransitionProps={{ timeout: 0 }}
-            arrow
-            componentsProps={{
-              tooltip: {
-                sx: {
-                  background: gradientTokens.themeAware.surfaceElevated(theme.palette.mode === 'dark'),
-                  backdropFilter: 'blur(10px)',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  borderRadius: '8px',
-                  fontSize: '0.75rem',
-                },
-              },
-            }}
-          >
-            {buttonContent}
-          </Tooltip>
-        ) : (
-          buttonContent
-        )}
+        {buttonContent}
 
         {/* 子項目 */}
         {hasChildren && !collapsed && isExpanded && (

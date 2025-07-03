@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { Paper, Typography } from '@mui/material';
 import { useTimecardStore } from './useTimecardStore';
+import { useTimecardForm } from './hooks/useTimecardForm';
 import TimecardTable from './components/TimecardTable';
 import TimecardEditDialog, { EditForm } from './components/TimecardEditDialog';
 
 
 export const TimecardList: React.FC = () => {
-  const { entries, deleteEntry, updateEntry } = useTimecardStore();
+  const { entries } = useTimecardStore();
+  const { handleUpdateTimecard, handleDeleteTimecard } = useTimecardForm();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EditForm>({
     date: '',
     startTime: '',
     endTime: '',
-    note: '',
-    isAbsence: false,
-    absenceReason: '',
-    absenceType: 'planned',
+    breakTime: '',
+    overtime: '',
+    isHoliday: false,
+    workType: 'normal',
   });
 
   const openEdit = (id: string) => {
@@ -23,12 +25,12 @@ export const TimecardList: React.FC = () => {
     if (!entry) return;
     setForm({
       date: entry.date,
-      startTime: entry.startTime,
-      endTime: entry.endTime,
-      note: entry.note,
-      isAbsence: entry.isAbsence,
-      absenceReason: entry.absenceReason ?? '',
-      absenceType: entry.absenceType ?? 'planned',
+      startTime: entry.startTime || '',
+      endTime: entry.endTime || '',
+      breakTime: '',
+      overtime: '',
+      isHoliday: entry.isAbsence,
+      workType: entry.isAbsence ? 'absence' : 'normal',
     });
     setEditingId(id);
   };
@@ -37,10 +39,31 @@ export const TimecardList: React.FC = () => {
     setEditingId(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingId) return;
-    updateEntry(editingId, form);
+    
+    // TimecardEntry型に変換
+    const updateData = {
+      date: form.date,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      isAbsence: form.isHoliday,
+      note: form.workType === 'absence' ? '休暇' : undefined
+    };
+    
+    await handleUpdateTimecard(editingId, updateData);
     closeEdit();
+  };
+
+  const handleDelete = async (id: string) => {
+    const entry = entries.find((e) => e.id === id);
+    if (!entry) return;
+    
+    await handleDeleteTimecard(entry);
+  };
+
+  const handleFormChange = (field: keyof EditForm, value: any) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -51,12 +74,12 @@ export const TimecardList: React.FC = () => {
       {entries.length === 0 ? (
         <Typography color="text.secondary">まだ登録がありません</Typography>
       ) : (
-        <TimecardTable entries={entries} onEdit={openEdit} onDelete={deleteEntry} />
+        <TimecardTable entries={entries} onEdit={openEdit} onDelete={handleDelete} />
       )}
       <TimecardEditDialog
         open={!!editingId}
         form={form}
-        onChange={setForm}
+        onChange={handleFormChange}
         onClose={closeEdit}
         onSave={handleSave}
       />

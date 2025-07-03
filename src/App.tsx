@@ -8,6 +8,7 @@ import {
 import { createModernTheme } from './theme/modernTheme';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './auth';
+import { LogProvider } from './logging';
 import ErrorBoundary from './components/ErrorBoundary';
 import EnterpriseSettingsPanel from './components/EnterpriseSettingsPanel';
 import { PageLoader } from './components/LoadingSpinner';
@@ -35,6 +36,8 @@ const MFAManagement = React.lazy(() => import('./features/mfa/MFA'));
 const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'));
 const RoleManagement = React.lazy(() => import('./features/roleManagement/RoleManagement'));
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
+const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
+const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -283,6 +286,26 @@ function AppContent() {
                   </ScrollableContent>
                 </PageTransition>
               </TabPanel>
+
+              <TabPanel value={currentTab} index={11}>
+                <PageTransition mode="fade" key="logging-dashboard">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="ロギングダッシュボードを読み込み中..." />}>
+                      <LoggingDashboard />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={12}>
+                <PageTransition mode="fade" key="logging-demo">
+                  <ScrollableContent>
+                    <Suspense fallback={<PageLoader message="ログ機能デモを読み込み中..." />}>
+                      <LoggingDemo />
+                    </Suspense>
+                  </ScrollableContent>
+                </PageTransition>
+              </TabPanel>
             </Box>
           </Box>
         </Box>
@@ -316,9 +339,20 @@ function AppContent() {
 function App() {
   return (
     <CustomThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <LogProvider 
+        endpoint="/api/logs"
+        enableHttpTransport={import.meta.env.PROD}
+        enableStorageTransport={true}
+        config={{
+          enabledInProduction: true,
+          maxBufferSize: 1000,
+          flushInterval: 30000,
+        }}
+      >
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </LogProvider>
     </CustomThemeProvider>
   );
 }

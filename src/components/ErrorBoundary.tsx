@@ -4,6 +4,22 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
+// Import the logger to use in class component
+let logger: any = null;
+
+// Helper to get logger instance asynchronously
+const getLogger = async () => {
+  if (!logger) {
+    try {
+      const { Logger, ConsoleTransport } = await import('../logging');
+      logger = new Logger([new ConsoleTransport()]);
+    } catch (error) {
+      console.warn('Could not initialize logger in ErrorBoundary:', error);
+    }
+  }
+  return logger;
+};
+
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
@@ -32,10 +48,35 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Log the error using the new logging system
+    this.logErrorToSystem(error, errorInfo);
+    
     this.setState({
       error,
       errorInfo: errorInfo.componentStack || undefined,
     });
+  }
+
+  // Log error to the new logging system
+  private async logErrorToSystem(error: Error, errorInfo: React.ErrorInfo) {
+    try {
+      const loggerInstance = await getLogger();
+      if (loggerInstance) {
+        loggerInstance.fatal('React Error Boundary caught an error', {
+          errorName: error.name,
+          errorMessage: error.message,
+          errorStack: error.stack,
+          componentStack: errorInfo.componentStack,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          props: this.props,
+        });
+      }
+    } catch (logError) {
+      console.warn('Failed to log error to logging system:', logError);
+    }
   }
 
   handleReset = () => {

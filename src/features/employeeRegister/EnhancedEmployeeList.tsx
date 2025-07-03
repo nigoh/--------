@@ -8,6 +8,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { useEmployeeStore, Employee } from './useEmployeeStore';
 import { useTemporary } from '../../hooks/useTemporary';
+import { useManagementLoggers } from '../../hooks/logging';
 import { DEPARTMENTS, Department } from './constants/employeeFormConstants';
 import { EmployeeModal } from './components/EmployeeDialogs';
 import { spacingTokens } from '../../theme/designSystem';
@@ -52,6 +53,7 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployeeStore();
   const { toast, progress, clipboard } = useTemporary();
+  const { featureLogger, searchLogger, exportLogger } = useManagementLoggers('EmployeeRegister');
 
   // 状態管理
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -110,6 +112,13 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
 
   // 検索クエリ変更の通知
   const handleSearchChange = (newQuery: string) => {
+    // 検索ログ
+    searchLogger.logSearch(newQuery, {
+      previousQuery: searchQuery,
+      hasFilters: !!(departmentFilter || statusFilter),
+      totalEmployees: employees.length
+    });
+
     setSearchQuery(newQuery);
     if (onExternalSearchChange) {
       onExternalSearchChange(newQuery);
@@ -118,6 +127,13 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
 
   // 部署フィルター変更の通知
   const handleDepartmentChange = (newDepartment: string) => {
+    // 部署フィルターログ
+    searchLogger.logFilter('department', newDepartment, {
+      previousFilter: departmentFilter,
+      hasSearchQuery: !!searchQuery,
+      hasStatusFilter: !!statusFilter
+    });
+
     setDepartmentFilter(newDepartment);
     if (onExternalDepartmentChange) {
       onExternalDepartmentChange(newDepartment);
@@ -126,6 +142,13 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
 
   // ステータスフィルター変更の通知
   const handleStatusChange = (newStatus: string) => {
+    // ステータスフィルターログ
+    searchLogger.logFilter('status', newStatus, {
+      previousFilter: statusFilter,
+      hasSearchQuery: !!searchQuery,
+      hasDepartmentFilter: !!departmentFilter
+    });
+
     setStatusFilter(newStatus);
     if (onExternalStatusChange) {
       onExternalStatusChange(newStatus);
@@ -134,6 +157,13 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
 
   // フィルタークリアの通知
   const handleClearFilters = () => {
+    // フィルタークリアログ
+    searchLogger.logFilter('clear_all', '', {
+      previousSearchQuery: searchQuery,
+      previousDepartmentFilter: departmentFilter,
+      previousStatusFilter: statusFilter
+    });
+
     setSearchQuery('');
     setDepartmentFilter('');
     setStatusFilter('');
@@ -177,8 +207,19 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
       return sortConfig.direction === 'desc' ? -comparison : comparison;
     });
 
+    // 検索結果ログ
+    searchLogger.logSearchResults(filtered.length, {
+      searchQuery,
+      departmentFilter,
+      statusFilter,
+      sortField: sortConfig.field,
+      sortDirection: sortConfig.direction,
+      totalEmployees: employees.length,
+      hasResults: filtered.length > 0
+    });
+
     return filtered;
-  }, [employees, searchQuery, departmentFilter, statusFilter, sortConfig]);
+  }, [employees, searchQuery, departmentFilter, statusFilter, sortConfig, searchLogger]);
 
   // ページネーション用データ
   const paginatedEmployees = filteredAndSortedEmployees.slice(
@@ -190,43 +231,101 @@ export const EnhancedEmployeeList: React.FC<EnhancedEmployeeListProps> = ({
    * ソート処理
    */
   const handleSort = (field: SortField) => {
+    const newDirection = sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    
+    // ソートログ
+    searchLogger.logSort(field, newDirection, {
+      previousField: sortConfig.field,
+      previousDirection: sortConfig.direction,
+      resultCount: filteredAndSortedEmployees.length
+    });
+
     setSortConfig(prev => ({
       field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
+      direction: newDirection,
     }));
   };
 
   /**
    * CSVエクスポート
    */
-  const exportToCSV = () => {
-    const headers = ['氏名', '部署', '役職', 'メール', '電話', '入社日', 'ステータス', 'スキル'];
-    const csvData = filteredAndSortedEmployees.map(emp => [
-      emp.name,
-      emp.department,
-      emp.position,
-      emp.email,
-      emp.phone || '',
-      emp.joinDate,
-      emp.isActive ? '在籍' : '退職',
-      emp.skills.join(';'),
-    ]);
-    
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `社員一覧_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('CSVファイルをダウンロードしました');
+  const exportToCSV = async () => {
+    // エクスポート要求ログ
+    const exportRequest = {
+      format: 'csv' as const,
+      filters: {
+        search: searchQuery,
+        department: departmentFilter,
+        status: statusFilter
+      },
+      columns: ['氏名', '部署', '役職', 'メール', '電話', '入社日', 'ステータス', 'スキル'],
+      includeHeaders: true
+    };
+
+    await exportLogger.logExportRequest(exportRequest, {
+      totalEmployees: employees.length,
+      filteredCount: filteredAndSortedEmployees.length
+    });
+
+    const startTime = performance.now();
+
+    try {
+      const headers = ['氏名', '部署', '役職', 'メール', '電話', '入社日', 'ステータス', 'スキル'];
+      const csvData = filteredAndSortedEmployees.map(emp => [
+        emp.name,
+        emp.department,
+        emp.position,
+        emp.email,
+        emp.phone || '',
+        emp.joinDate,
+        emp.isActive ? '在籍' : '退職',
+        emp.skills.join(';'),
+      ]);
+      
+      const csvContent = [headers, ...csvData]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const fileName = `社員一覧_${new Date().toISOString().split('T')[0]}.csv`;
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      const endTime = performance.now();
+      const executionTime = endTime - startTime;
+      
+      // エクスポート完了ログ
+      const exportResult = {
+        recordCount: filteredAndSortedEmployees.length,
+        fileSize: blob.size,
+        fileName: fileName,
+        executionTime: executionTime,
+        success: true
+      };
+
+      await exportLogger.logExportComplete(exportRequest, exportResult);
+      
+      // ダウンロードログ
+      await exportLogger.logDownload(fileName, blob.size, 'browser_download');
+
+      toast.success('CSVファイルをダウンロードしました');
+    } catch (error) {
+      // エクスポートエラーログ
+      exportLogger.logExportError(
+        error instanceof Error ? error : new Error('CSV export failed'), 
+        exportRequest
+      );
+      
+      toast.error('CSVエクスポートに失敗しました');
+    }
   };
 
   /**

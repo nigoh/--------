@@ -56,6 +56,7 @@ import {
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { useEquipmentStore, EquipmentItem } from './useEquipmentStore';
+import { useEquipmentForm } from './hooks/useEquipmentForm';
 import { EquipmentModal } from './EquipmentModal';
 import { StockAdjustmentDialog } from './StockAdjustmentDialog';
 import { surfaceStyles } from '../../theme/componentStyles';
@@ -91,7 +92,13 @@ const stockLevelConfig = {
 export const EnhancedEquipmentList: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { items, deleteItem, adjustStock } = useEquipmentStore();
+  const { items } = useEquipmentStore();
+  const { 
+    handleDeleteEquipment, 
+    handleStockAdjustment, 
+    handleEquipmentSearch,
+    handleLowStockCheck
+  } = useEquipmentForm();
 
   // 状態管理
   const [selectedItem, setSelectedItem] = useState<EquipmentItem | null>(null);
@@ -230,9 +237,12 @@ export const EnhancedEquipmentList: React.FC = () => {
     setStockAdjustmentItem(null);
   };
 
-  const handleStockAdjustment = (itemId: string, delta: number) => {
-    adjustStock(itemId, delta);
-    handleCloseStockDialog();
+  const handleStockAdjustmentLocal = async (itemId: string, delta: number, reason: string = '') => {
+    const item = items.find(i => i.id === itemId);
+    if (item) {
+      await handleStockAdjustment(item, delta, reason);
+      handleCloseStockDialog();
+    }
   };
 
   // 詳細表示
@@ -488,7 +498,9 @@ export const EnhancedEquipmentList: React.FC = () => {
                           <Tooltip title="在庫追加">
                             <IconButton
                               size="small"
-                              onClick={() => adjustStock(item.id, 1)}
+                              onClick={async () => {
+                                await handleStockAdjustment(item, 1, '手動増加');
+                              }}
                               color="success"
                             >
                               <AddStockIcon />
@@ -497,7 +509,9 @@ export const EnhancedEquipmentList: React.FC = () => {
                           <Tooltip title="在庫減少">
                             <IconButton
                               size="small"
-                              onClick={() => adjustStock(item.id, -1)}
+                              onClick={async () => {
+                                await handleStockAdjustment(item, -1, '手動減少');
+                              }}
                               disabled={item.quantity <= 0}
                               color="error"
                             >
@@ -659,7 +673,7 @@ export const EnhancedEquipmentList: React.FC = () => {
         open={stockDialogOpen}
         onClose={handleCloseStockDialog}
         item={stockAdjustmentItem}
-        onAdjust={handleStockAdjustment}
+        onAdjust={handleStockAdjustmentLocal}
       />
 
       {/* 削除確認ダイアログ */}
@@ -669,9 +683,9 @@ export const EnhancedEquipmentList: React.FC = () => {
           setDeleteConfirmOpen(false);
           setDeleteTargetItem(null);
         }}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteTargetItem) {
-            deleteItem(deleteTargetItem.id);
+            await handleDeleteEquipment(deleteTargetItem);
             setDeleteConfirmOpen(false);
             setDeleteTargetItem(null);
           }

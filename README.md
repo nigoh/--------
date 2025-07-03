@@ -228,3 +228,16 @@ npm run dev
 ## 技術スタック
 - React
 - Vite
+
+## 📚 ドキュメント
+
+### 開発ガイド
+- **[Logging System Guide](docs/LOGGING_GUIDE.md)** - 包括的なログシステムの使い方
+- **[Logging Quick Reference](docs/LOGGING_QUICK_REFERENCE.md)** - ログ機能のクイックリファレンス
+
+### 主要機能
+- **多層ログレベル**: trace, debug, info, warn, error, fatal
+- **複数トランスポート**: Console, Storage, HTTP送信
+- **PII自動マスキング**: 個人情報の自動検出と匿名化
+- **React統合**: Context APIとカスタムフック
+- **パフォーマンス計測**: 処理時間の自動追跡
