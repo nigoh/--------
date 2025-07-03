@@ -151,18 +151,17 @@ export const useUnifiedLoggers = (config: UnifiedLoggingConfig) => {
   };
 
   const searchLogger = {
-    logSearch: async (query: any, result: any, ctx?: Record<string, unknown>) => {
+    logSearch: (query: any, ctx?: Record<string, unknown>) => {
       console.log(`[${featureName}] 検索`, { 
-        queryText: query.text, 
-        resultCount: result.returnedCount, 
+        queryText: typeof query === 'string' ? query : query.text, 
         ...context, 
         ...ctx 
       });
     },
-    logFilter: async (filterType: string, filterValue: any, resultCount: number, ctx?: Record<string, unknown>) => {
-      console.log(`[${featureName}] フィルター: ${filterType}`, { filterValue, resultCount, ...context, ...ctx });
+    logFilter: (filterType: string, filterValue: any, ctx?: Record<string, unknown>) => {
+      console.log(`[${featureName}] フィルター: ${filterType}`, { filterValue, ...context, ...ctx });
     },
-    logSort: async (sortField: string, sortDirection: string, ctx?: Record<string, unknown>) => {
+    logSort: (sortField: string, sortDirection: string, ctx?: Record<string, unknown>) => {
       console.log(`[${featureName}] ソート: ${sortField}`, { sortDirection, ...context, ...ctx });
     },
     logPagination: async (page: number, limit: number, totalPages: number, ctx?: Record<string, unknown>) => {
@@ -173,6 +172,10 @@ export const useUnifiedLoggers = (config: UnifiedLoggingConfig) => {
     },
     logSearchError: (error: Error, query: any, ctx?: Record<string, unknown>) => {
       featureLogger.logError(error, { queryText: query.text, ...ctx });
+    },
+    // 検索結果ログ - EnhancedEmployeeListで使用される関数
+    logSearchResults: (resultCount: number, ctx?: Record<string, unknown>) => {
+      console.log(`[${featureName}] 検索結果`, { resultCount, ...context, ...ctx });
     }
   };
 
