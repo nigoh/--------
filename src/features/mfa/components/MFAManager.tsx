@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { multiFactor } from 'firebase/auth';
 import { auth } from '../../../auth/firebase';
-import { MFASetupDialog } from '../../../auth/components/MFASetupDialog';
+import { MFASetupDialog } from '../../authentication/components/MFASetupDialog';
 import { spacingTokens, shapeTokens } from '../../../theme/designSystem';
 import { useAuth } from '../../../auth/context';
 import { useMFAForm } from '../hooks/useMFAForm';

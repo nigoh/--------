@@ -5,8 +5,8 @@
 import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import { LockOutlined } from '@mui/icons-material';
-import { Permission, UserRole } from '../types/roles';
-import { hasPermission, hasRole } from '../permissions';
+import { Permission, UserRole } from '../../../auth/types/roles';
+import { hasPermission, hasRole } from '../../../auth/permissions';
 
 // 権限チェック結果のローディング・エラー表示用コンポーネント
 interface PermissionGateProps {

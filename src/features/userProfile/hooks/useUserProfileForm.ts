@@ -3,7 +3,7 @@
  */
 import { useState, useCallback } from 'react';
 import { useAuth } from '../../../auth/context';
-import { useUserProfile } from '../../../auth/hooks/useUserProfile';
+import { useUserProfile } from './useUserProfile';
 
 // 型定義
 export interface ProfileUpdateData {

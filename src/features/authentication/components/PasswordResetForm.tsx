@@ -22,9 +22,9 @@ import {
   Send as SendIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useLogin } from '../hooks/useLogin';
-import { spacingTokens, shapeTokens } from '../../theme/designSystem';
-import type { ResetPasswordFormData } from '../types';
+import { useLogin } from '../../../auth/hooks/useLogin';
+import { spacingTokens, shapeTokens } from '../../../theme/designSystem';
+import type { ResetPasswordFormData } from '../../../auth/types';
 
 // Props型定義
 interface PasswordResetFormProps {

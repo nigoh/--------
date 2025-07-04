@@ -11,8 +11,8 @@ import {
   EmailAuthProvider,
   verifyBeforeUpdateEmail,
 } from 'firebase/auth';
-import { auth } from '../firebase';
-import { useAuth } from '../context';
+import { auth } from '../../../auth/firebase';
+import { useAuth } from '../../../auth/context';
 
 // プロファイル更新データ型
 export interface ProfileUpdateData {

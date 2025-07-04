@@ -1,5 +1,14 @@
 /**
  * 認証機能のエクスポート統合
+ * 
+ * 🔄 リファクタリング完了
+ * - 認証画面コンポーネント → features/authentication
+ * - 管理機能 → features/adminManagement  
+ * - 権限管理 → features/permissionManagement
+ * - ユーザープロフィール → features/userProfile
+ * - MFA機能 → features/mfa
+ * - パスキー機能 → features/passkey
+ * - 共通権限ゲート → components/common
  */
 
 // Firebase設定
@@ -31,14 +40,10 @@ export { AuthProvider, useAuth, withAuth } from './context';
 // ストア
 export { useAuthStore, useAuthSelectors } from './stores/useAuthStore';
 
-// フック
-export { useLogin } from './hooks/useLogin';
-export { useRegister } from './hooks/useRegister';
-export { useMFA } from './hooks/useMFA';
-export { useUserProfile } from './hooks/useUserProfile';
-export { usePermission } from './hooks/usePermission';
+// フック（基本認証のみ）
+export * from './hooks';
 
-// パスキー
+// パスキー（ユーティリティ）
 export {
   isPasskeySupported,
   checkPlatformAuthenticatorAvailability,
@@ -52,14 +57,24 @@ export type {
   PasskeyAuthenticationData,
 } from './passkey';
 
-// コンポーネント
-export { LoginForm } from './components/LoginForm';
-export { RegisterForm } from './components/RegisterForm';
-export { PasswordResetForm } from './components/PasswordResetForm';
-export { AuthPage } from './components/AuthPage';
-export { PermissionGate } from './components/PermissionGate';
-// UserProfileManagement は features/userProfile に移動しました
-export { MFASetupDialog } from './components/MFASetupDialog';
-export { MFAVerificationDialog } from './components/MFAVerificationDialog';
-// MFAManagement は features/mfa に移動しました
-// RoleManagementPage は features/roleManagement に移動しました
+// 権限ユーティリティ
+export { 
+  hasPermission, 
+  hasRole, 
+  isAdmin,
+  isSuperAdmin,
+  hasAnyPermission,
+  hasAllPermissions,
+  getUserAllPermissions,
+  getUserCustomClaims,
+  getUserPermissionsFromFirestore,
+  usePermissions 
+} from './permissions';
+
+// 🚨 以下のコンポーネントは新しい場所に移動しました：
+// - LoginForm, RegisterForm, AuthPage → features/authentication
+// - PermissionGate → components/common
+// - AdminUserCreator → features/adminManagement
+// - MFAManagement → features/mfa
+// - PasskeyManagement → features/passkey
+// - UserProfile → features/userProfile

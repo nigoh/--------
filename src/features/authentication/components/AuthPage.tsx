@@ -15,8 +15,8 @@ import {
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { PasswordResetForm } from './PasswordResetForm';
-import { spacingTokens } from '../../theme/designSystem';
-import { useAuth } from '../context';
+import { spacingTokens } from '../../../theme/designSystem';
+import { useAuth } from '../../../auth/context';
 
 // 認証モード
 type AuthMode = 'login' | 'register' | 'reset-password';

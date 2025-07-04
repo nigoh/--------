@@ -36,13 +36,13 @@ const Timecard = React.lazy(() => import("./features/timecard/Timecard"));
 const Expense = React.lazy(() => import('./features/expense/Expense'));
 const Equipment = React.lazy(() => import('./features/equipment/Equipment'));
 const DialogShowcase = React.lazy(() => import('./components/DialogShowcase'));
-const AuthPage = React.lazy(() => import('./auth').then(module => ({ default: module.AuthPage })));
+const AuthPage = React.lazy(() => import('./features/authentication').then(module => ({ default: module.AuthPage })));
 const MFAManagement = React.lazy(() => import('./features/mfa/MFA'));
 const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'));
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
 const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
-const AdminUserCreator = React.lazy(() => import('./auth/components/AdminUserCreator').then(module => ({ default: module.AdminUserCreator })));
+const AdminUserCreator = React.lazy(() => import('./features/adminManagement').then(module => ({ default: module.AdminUserCreator })));
 
 // メインアプリコンテンツ
 function AppContent() {

@@ -26,7 +26,8 @@ import {
   PersonOutline as PersonOutlineIcon,
 } from '@mui/icons-material';
 import { User, SortConfig, PaginationConfig } from '../types';
-import { UserRole, useAuth, PermissionGate, Permission } from '@/auth';
+import { UserRole, useAuth, Permission } from '@/auth';
+import { PermissionGate } from '@/components/common';
 import { useUserManagementStore } from '../stores/useUserManagementStore';
 import {
   DEPARTMENT_LABELS,

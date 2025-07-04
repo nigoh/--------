@@ -3,8 +3,8 @@
  * アクセス制御のためのHOCとして機能する
  */
 import React, { ReactNode } from 'react';
-import { usePermission } from '../hooks/usePermission';
-import { Permission, UserRole } from '../types/roles';
+import { usePermission } from '../../auth/hooks/usePermission';
+import { Permission, UserRole } from '../../auth/types/roles';
 
 interface PermissionGateProps {
   /**

@@ -30,9 +30,9 @@ import {
   Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useRegister } from '../hooks/useRegister';
-import { spacingTokens, shapeTokens } from '../../theme/designSystem';
-import type { RegisterFormData } from '../types';
+import { useRegister } from '../../../auth/hooks/useRegister';
+import { spacingTokens, shapeTokens } from '../../../theme/designSystem';
+import type { RegisterFormData } from '../../../auth/types';
 
 // Props型定義
 interface RegisterFormProps {
@@ -144,7 +144,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
   // パスワード一致チェック
   const passwordMatch = formData.password === formData.confirmPassword;
-  const showPasswordMismatch = formData.confirmPassword && !passwordMatch;
+  const showPasswordMismatch = Boolean(formData.confirmPassword && !passwordMatch);
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>

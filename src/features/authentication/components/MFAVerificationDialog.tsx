@@ -31,11 +31,11 @@ import {
   Backup as BackupIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useMFA } from '../hooks/useMFA';
-import { useWebAuthn } from '../hooks/useWebAuthn';
-import { useBackupCodes } from '../hooks/useBackupCodes';
-import { spacingTokens } from '../../theme/designSystem';
-import type { MfaMethod } from '../types';
+import { useMFA } from '../../../auth/hooks/useMFA';
+import { useWebAuthn } from '../../../auth/hooks/useWebAuthn';
+import { useBackupCodes } from '../../../auth/hooks/useBackupCodes';
+import { spacingTokens } from '../../../theme/designSystem';
+import type { MfaMethod } from '../../../auth/types';
 import type { MultiFactorResolver } from 'firebase/auth';
 
 // Props型定義

@@ -3,9 +3,9 @@
  * 開発・初期設定用の管理者アカウント作成機能
  */
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { UserRole, Permission, DEFAULT_ROLE_PERMISSIONS } from '../types/roles';
+import { doc, setDoc, serverTimestamp, collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../../auth/firebase';
+import { UserRole, Permission, DEFAULT_ROLE_PERMISSIONS } from '../../../auth/types/roles';
 
 interface CreateAdminUserData {
   email: string;
@@ -189,6 +189,3 @@ export const checkAndCreateInitialAdmin = async () => {
     return { hasAdmin: false, error };
   }
 };
-
-// Firestore imports を追加
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';

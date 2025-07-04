@@ -21,7 +21,8 @@ import {
   Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { FeatureLayout, FeatureHeader, FeatureContent } from '../../components/layout';
-import { PermissionGate, useAuth, UserRole, Permission } from '../../auth';
+import { useAuth, UserRole, Permission } from '../../auth';
+import { PermissionGate } from '../../components/common';
 import { useUserManagementStore } from './stores/useUserManagementStore';
 import { 
   UserListTable, 

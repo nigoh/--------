@@ -20,7 +20,7 @@ import {
   createSuperAdminUser, 
   createDemoSuperAdmin, 
   checkAndCreateInitialAdmin 
-} from '../admin/createAdminUser';
+} from '../services/createAdminUser';
 
 interface AdminCreationFormData {
   email: string;

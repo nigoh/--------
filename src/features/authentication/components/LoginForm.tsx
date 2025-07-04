@@ -29,11 +29,11 @@ import {
   Fingerprint as FingerprintIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useLogin } from '../hooks/useLogin';
-import { isPasskeySupported, checkBiometricAvailability } from '../passkey';
-import { spacingTokens, shapeTokens } from '../../theme/designSystem';
+import { useLogin } from '../../../auth/hooks/useLogin';
+import { isPasskeySupported, checkBiometricAvailability } from '../../../auth/passkey';
+import { spacingTokens, shapeTokens } from '../../../theme/designSystem';
 import { MFAVerificationDialog } from './MFAVerificationDialog';
-import type { LoginFormData } from '../types';
+import type { LoginFormData } from '../../../auth/types';
 
 // Props型定義
 interface LoginFormProps {

@@ -2,7 +2,7 @@
  * 開発環境用：Super Admin作成スクリプト
  * コンソールから直接実行してSuper Adminを作成
  */
-import { createDemoSuperAdmin, createSuperAdminUser } from '../auth/admin/createAdminUser';
+import { createDemoSuperAdmin, createSuperAdminUser } from '../features/adminManagement/services/createAdminUser';
 
 // ブラウザのコンソールで実行できるグローバル関数を定義
 declare global {

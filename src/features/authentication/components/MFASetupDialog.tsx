@@ -37,13 +37,13 @@ import {
   Backup as BackupIcon,
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { useMFA } from '../hooks/useMFA';
-import { useWebAuthn } from '../hooks/useWebAuthn';
-import { useBackupCodes } from '../hooks/useBackupCodes';
-import { useEmailVerification } from '../hooks/useEmailVerification';
-import { auth } from '../firebase';
-import { spacingTokens } from '../../theme/designSystem';
-import type { MfaMethod, WebAuthnAuthenticatorType } from '../types';
+import { useMFA } from '../../../auth/hooks/useMFA';
+import { useWebAuthn } from '../../../auth/hooks/useWebAuthn';
+import { useBackupCodes } from '../../../auth/hooks/useBackupCodes';
+import { useEmailVerification } from '../../../auth/hooks/useEmailVerification';
+import { auth } from '../../../auth/firebase';
+import { spacingTokens } from '../../../theme/designSystem';
+import type { MfaMethod, WebAuthnAuthenticatorType } from '../../../auth/types';
 import QRCode from 'qrcode';
 
 // Props型定義
