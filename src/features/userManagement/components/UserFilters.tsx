@@ -12,6 +12,7 @@ import {
   Chip,
   Button,
   Grid,
+  Stack,
   Paper,
   Typography,
   Autocomplete,
@@ -44,15 +45,17 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
   loading = false,
 }) => {
   const handleClearFilters = () => {
-    onFiltersChange({
+    const clearedFilters: UserFiltersType = {
       searchQuery: '',
-      roleFilter: 'all',
-      departmentFilter: 'all',
-      positionFilter: 'all',
-      skillFilter: 'all',
-      statusFilter: 'all',
+      roleFilter: 'all' as const,
+      departmentFilter: 'all' as const,
+      positionFilter: 'all' as const,
+      skillFilter: 'all' as const,
+      statusFilter: 'all' as const,
       lastLoginDays: undefined,
-    });
+    };
+    console.log('Clearing filters:', clearedFilters);
+    onFiltersChange(clearedFilters);
   };
 
   const hasActiveFilters = 

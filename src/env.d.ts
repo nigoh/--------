@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_MEASUREMENT_ID: string
   readonly VITE_USE_FIREBASE_EMULATORS: string
   readonly VITE_DEV_AUTH_BYPASS: string
+  readonly VITE_ENABLE_ADMIN_CREATOR: string
+  readonly VITE_ADMIN_CREATOR_TAB: string
 }
 
 interface ImportMeta {

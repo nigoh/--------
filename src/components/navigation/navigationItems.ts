@@ -14,9 +14,9 @@ import {
   Settings as SettingsIcon,
   Speed as SpeedIcon,
   ViewModule as DialogIcon,
+  AdminPanelSettings as AdminIcon,
   Logout as LogoutIcon,
   Security as SecurityIcon,
-  AdminPanelSettings as AdminIcon,
   Person as PersonIcon,
   BugReport as LogIcon,
   Analytics as AnalyticsIcon,
@@ -110,6 +110,14 @@ export const getMainNavigationItems = (): NavigationItem[] => [
     icon: React.createElement(LogIcon),
     index: 11,
     badge: 'Dev',
+  }] : []),
+  // Admin Creator - 環境変数で制御
+  ...(import.meta.env?.VITE_ENABLE_ADMIN_CREATOR === 'true' && import.meta.env?.DEV ? [{
+    id: 'admin-creator',
+    label: '管理者作成',
+    icon: React.createElement(AdminIcon),
+    index: parseInt(import.meta.env.VITE_ADMIN_CREATOR_TAB || '99', 10),
+    badge: '🔧',
   }] : []),
 ];
 

@@ -37,13 +37,13 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <PersonIcon color="primary" sx={{ mr: 1 }} />
-              <Typography variant="h6" component="div">
-                総ユーザー数
+              <Typography variant="body2" component="div">
+                総ユーザー数:
+              </Typography>
+              <Typography variant="body2" component="div" color="primary">
+                {stats.total.toLocaleString()}
               </Typography>
             </Box>
-            <Typography variant="h4" component="div" color="primary">
-              {stats.total.toLocaleString()}
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               アクティブ: {stats.active} / 非アクティブ: {stats.inactive}
             </Typography>
@@ -68,7 +68,7 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <AdminIcon color="secondary" sx={{ mr: 1 }} />
-              <Typography variant="h6" component="div">
+              <Typography variant="body2" component="div">
                 ロール別
               </Typography>
             </Box>
@@ -106,7 +106,7 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <WorkIcon color="info" sx={{ mr: 1 }} />
-              <Typography variant="h6" component="div">
+              <Typography variant="body2" component="div">
                 部署別
               </Typography>
             </Box>
@@ -146,13 +146,13 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <TrendingUpIcon color="success" sx={{ mr: 1 }} />
-              <Typography variant="h6" component="div">
-                最近の動向
+              <Typography variant="body2" component="div">
+                最近の動向: 
+              </Typography>
+              <Typography variant="body2" component="div" color="success.main">
+                +{stats.recentJoins}
               </Typography>
             </Box>
-            <Typography variant="h4" component="div" color="success.main">
-              +{stats.recentJoins}
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               最近1ヶ月の新規入社
             </Typography>

@@ -17,6 +17,11 @@ import { ProgressOverlay } from './components/ProgressOverlay';
 import { PageTransition } from './components/ui/Animation/MotionComponents';
 import { initPerformanceMonitoring, PerformanceDevTools } from './utils/performance';
 
+// 開発環境でのAdmin作成ツールを読み込み
+if (import.meta.env.DEV) {
+  import('./utils/adminDevTools');
+}
+
 // 分離されたコンポーネントのインポート
 import { Dashboard } from './components/dashboard';
 import { AppHeader, ScrollableContent } from './components/layout';
@@ -37,6 +42,7 @@ const UserProfile = React.lazy(() => import('./features/userProfile/UserProfile'
 const Passkey = React.lazy(() => import('./features/passkey/Passkey'));
 const LoggingDemo = React.lazy(() => import('./components/LoggingDemo').then(module => ({ default: module.LoggingDemo })));
 const LoggingDashboard = React.lazy(() => import('./components/dashboard/LoggingDashboard'));
+const AdminUserCreator = React.lazy(() => import('./auth/components/AdminUserCreator').then(module => ({ default: module.AdminUserCreator })));
 
 // メインアプリコンテンツ
 function AppContent() {
@@ -57,6 +63,10 @@ function AppContent() {
   });
   
   const isMobile = useMediaQuery(currentTheme.breakpoints.down('md'));
+
+  // 環境変数でAdminUserCreator機能の有効/無効を制御
+  const isAdminCreatorEnabled = import.meta.env.VITE_ENABLE_ADMIN_CREATOR === 'true' && import.meta.env.DEV;
+  const adminCreatorTabIndex = parseInt(import.meta.env.VITE_ADMIN_CREATOR_TAB || '99', 10);
 
   // パフォーマンス監視を初期化
   React.useEffect(() => {
@@ -295,6 +305,19 @@ function AppContent() {
                   </ScrollableContent>
                 </PageTransition>
               </TabPanel>
+
+              {/* 管理者作成ツール - 環境変数で制御 */}
+              {isAdminCreatorEnabled && (
+                <TabPanel value={currentTab} index={adminCreatorTabIndex}>
+                  <PageTransition mode="fade" key="admin-creator">
+                    <ScrollableContent>
+                      <Suspense fallback={<PageLoader message="管理者作成ツールを読み込み中..." />}>
+                        <AdminUserCreator />
+                      </Suspense>
+                    </ScrollableContent>
+                  </PageTransition>
+                </TabPanel>
+              )}
             </Box>
           </Box>
         </Box>

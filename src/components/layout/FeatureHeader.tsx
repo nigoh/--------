@@ -76,8 +76,8 @@ export const FeatureHeader: React.FC<FeatureHeaderProps> = ({
       sx={{
         ...getHeaderStyles(),
         borderRadius: '16px',
-        p: { xs: spacingTokens.md, md: spacingTokens.lg },
-        mb: spacingTokens.lg,
+        p: { xs: spacingTokens.md, md: spacingTokens.md },
+        mb: spacingTokens.md,
         transition: `all ${motionTokens.duration.medium3} ${motionTokens.easing.standard}`,
         position: 'relative',
         overflow: 'hidden',
@@ -103,7 +103,7 @@ export const FeatureHeader: React.FC<FeatureHeaderProps> = ({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         flexWrap: 'wrap',
-        gap: spacingTokens.lg,
+        gap: spacingTokens.md,
       }}>
         {/* タイトル部分（改良版） */}
         <Box sx={{ flex: 1, minWidth: 300 }}>
@@ -138,7 +138,7 @@ export const FeatureHeader: React.FC<FeatureHeaderProps> = ({
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: spacingTokens.sm }}>
                 <Typography
-                  variant="h4"
+                  variant="h5"
                   component="h1"
                   sx={{
                     fontWeight: 700,

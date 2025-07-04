@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db, UserRole } from '@/auth';
+import { db, UserRole, auth } from '@/auth';
 import { 
   User, 
   CreateUserInput, 
@@ -72,44 +72,66 @@ export const fetchUsers = async (
   lastDoc?: QueryDocumentSnapshot<DocumentData>
 ): Promise<UserListResult> => {
   try {
+    console.log('fetchUsers called with:', { filters, sortConfig, page, pageSize });
+    console.log('Firebase auth current user:', auth.currentUser);
+    console.log('Firebase db instance:', db);
+    
     const usersRef = collection(db, USERS_COLLECTION);
+    console.log('Users collection reference created:', usersRef);
+    
+    // インデックス問題を回避するため、シンプルなクエリから開始
     let userQuery = query(usersRef);
+    
+    // 最も重要なフィルターのみを適用（インデックス問題回避）
+    const hasFilters = (filters.roleFilter && filters.roleFilter !== 'all') ||
+                      (filters.departmentFilter && filters.departmentFilter !== 'all') ||
+                      (filters.positionFilter && filters.positionFilter !== 'all') ||
+                      (filters.statusFilter && filters.statusFilter !== 'all') ||
+                      (filters.skillFilter && filters.skillFilter !== 'all') ||
+                      filters.lastLoginDays;
 
-    // フィルター条件の適用
-    if (filters.roleFilter && filters.roleFilter !== 'all') {
-      userQuery = query(userQuery, where('roles', 'array-contains', filters.roleFilter));
+    if (!hasFilters) {
+      // フィルターがない場合のみソートを適用
+      userQuery = query(userQuery, orderBy(sortConfig.field as string, sortConfig.direction), limit(pageSize));
+    } else {
+      // フィルターがある場合は、最も重要なもの1つだけを適用
+      if (filters.roleFilter && filters.roleFilter !== 'all') {
+        userQuery = query(userQuery, where('roles', 'array-contains', filters.roleFilter), limit(pageSize));
+      } else if (filters.departmentFilter && filters.departmentFilter !== 'all') {
+        userQuery = query(userQuery, where('department', '==', filters.departmentFilter), limit(pageSize));
+      } else if (filters.statusFilter === 'active') {
+        userQuery = query(userQuery, where('isActive', '==', true), limit(pageSize));
+      } else if (filters.statusFilter === 'inactive') {
+        userQuery = query(userQuery, where('isActive', '==', false), limit(pageSize));
+      } else {
+        // 他のフィルターはクライアントサイドで処理
+        userQuery = query(userQuery, limit(Math.min(pageSize * 3, 100))); // 余裕をもって多めに取得
+      }
     }
 
-    if (filters.departmentFilter && filters.departmentFilter !== 'all') {
-      userQuery = query(userQuery, where('department', '==', filters.departmentFilter));
-    }
+    console.log('Firestore query filters:', {
+      roleFilter: filters.roleFilter,
+      departmentFilter: filters.departmentFilter,
+      positionFilter: filters.positionFilter,
+      statusFilter: filters.statusFilter,
+      skillFilter: filters.skillFilter,
+      lastLoginDays: filters.lastLoginDays,
+      searchQuery: filters.searchQuery
+    });
 
-    if (filters.positionFilter && filters.positionFilter !== 'all') {
-      userQuery = query(userQuery, where('position', '==', filters.positionFilter));
-    }
-
-    if (filters.statusFilter === 'active') {
-      userQuery = query(userQuery, where('isActive', '==', true));
-    } else if (filters.statusFilter === 'inactive') {
-      userQuery = query(userQuery, where('isActive', '==', false));
-    }
-
-    // ソート条件の適用
-    userQuery = query(userQuery, orderBy(sortConfig.field as string, sortConfig.direction));
-
-    // ページネーション
-    if (lastDoc) {
-      userQuery = query(userQuery, startAfter(lastDoc));
-    }
-    userQuery = query(userQuery, limit(pageSize));
-
+    console.log('Executing Firestore query...');
     const querySnapshot = await getDocs(userQuery);
+    console.log('Query executed successfully, snapshot size:', querySnapshot.size);
+    
     const users: User[] = [];
 
     querySnapshot.forEach((doc) => {
       const user = documentToUser(doc);
       
       // クライアントサイドでの追加フィルタリング
+      let shouldInclude = true;
+      
+      // 検索クエリフィルター
       if (filters.searchQuery) {
         const searchLower = filters.searchQuery.toLowerCase();
         const matchesSearch = 
@@ -118,15 +140,65 @@ export const fetchUsers = async (
           user.employeeId.toLowerCase().includes(searchLower) ||
           (user.nameKana && user.nameKana.toLowerCase().includes(searchLower));
         
-        if (!matchesSearch) return;
+        if (!matchesSearch) shouldInclude = false;
       }
 
-      if (filters.skillFilter && filters.skillFilter !== 'all') {
-        if (!user.skills.includes(filters.skillFilter)) return;
+      // DBで適用されなかったフィルターをクライアントサイドで処理
+      if (shouldInclude && filters.departmentFilter && filters.departmentFilter !== 'all') {
+        if (user.department !== filters.departmentFilter) shouldInclude = false;
       }
 
-      users.push(user);
+      if (shouldInclude && filters.positionFilter && filters.positionFilter !== 'all') {
+        if (user.position !== filters.positionFilter) shouldInclude = false;
+      }
+
+      if (shouldInclude && filters.skillFilter && filters.skillFilter !== 'all') {
+        if (!user.skills || !user.skills.includes(filters.skillFilter)) shouldInclude = false;
+      }
+
+      if (shouldInclude && filters.statusFilter && filters.statusFilter !== 'all') {
+        const isActive = filters.statusFilter === 'active';
+        if (user.isActive !== isActive) shouldInclude = false;
+      }
+
+      if (shouldInclude && filters.lastLoginDays) {
+        const daysAgo = new Date();
+        daysAgo.setDate(daysAgo.getDate() - filters.lastLoginDays);
+        if (!user.lastLogin || user.lastLogin < daysAgo) shouldInclude = false;
+      }
+
+      if (shouldInclude) {
+        users.push(user);
+      }
     });
+
+    console.log(`Fetched ${querySnapshot.size} docs from Firestore, filtered to ${users.length} users`);
+
+    // クライアントサイドでのソート（DBでソートできなかった場合）
+    if (hasFilters) {
+      users.sort((a, b) => {
+        const aValue = a[sortConfig.field as keyof User];
+        const bValue = b[sortConfig.field as keyof User];
+        
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        
+        if (aValue instanceof Date && bValue instanceof Date) {
+          return sortConfig.direction === 'asc'
+            ? aValue.getTime() - bValue.getTime()
+            : bValue.getTime() - aValue.getTime();
+        }
+        
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        
+        return 0;
+      });
+    }
 
     // 総件数を取得（簡略版 - 実際にはカウント専用のクエリが必要）
     const totalSnapshot = await getDocs(collection(db, USERS_COLLECTION));
@@ -144,8 +216,13 @@ export const fetchUsers = async (
     };
 
   } catch (error) {
-    console.error('ユーザー一覧取得エラー:', error);
-    throw new Error('ユーザー一覧の取得に失敗しました');
+    console.error('ユーザー一覧取得エラーの詳細:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('Error message:', error instanceof Error ? error.message : error);
+    console.error('Firebase DB instance:', db);
+    
+    throw new Error(`ユーザー一覧の取得に失敗しました: ${error instanceof Error ? error.message : error}`);
   }
 };
 

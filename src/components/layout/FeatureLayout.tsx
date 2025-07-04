@@ -84,8 +84,8 @@ export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
       {/* ヘッダー部分（改良版） */}
       {showHeader && (
         <Box sx={{ 
-          py: { xs: spacingTokens.md, md: spacingTokens.lg },
-          px: { xs: spacingTokens.sm, sm: spacingTokens.md, md: spacingTokens.lg },
+          py: { xs: spacingTokens.md, md: spacingTokens.md },
+          px: { xs: spacingTokens.sm, sm: spacingTokens.md, md: spacingTokens.md },
           borderBottom: `1px solid ${theme.palette.divider}`,
           background: variant === 'glass' 
             ? gradientTokens.themeAware.surfaceElevated(isDark)
@@ -153,8 +153,8 @@ export const FeatureLayout: React.FC<FeatureLayoutProps> = ({
           sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            py: { xs: spacingTokens.md, sm: spacingTokens.lg, md: spacingTokens.xl },
-            px: { xs: spacingTokens.md, sm: spacingTokens.lg, md: spacingTokens.xl },
+            py: { xs: spacingTokens.sm, sm: spacingTokens.sm, md: spacingTokens.md },
+            px: { xs: spacingTokens.sm, sm: spacingTokens.sm, md: spacingTokens.md },
             minHeight: '100%',
             width: '100%',
             position: 'relative',
